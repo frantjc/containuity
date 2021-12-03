@@ -1,15 +1,90 @@
-# containuity
+# sequence
 
-In large part for education and enjoyment purposes, Containuity will be an attempt at an open-source, container-native CI tool that allows for a continuous user experience between developing locally and normal CI processes.
+Sequence is intended to be a CLI for local development or a CI/CD server that can use the same pluggable container runtime(s) to produce artifacts--bridging the gap between local development and automation. Should support GitHub Actions as well as Concourse Resources. Written in Go.
 
-That is, it should allow developers to overwrite inputs to a task (e.g. source code in a Git repository) with an input on their machine without pushing that input to a remote destination, while still allowing the use of a remote destination as an input to a task.
+## usage
 
-Additionally, it should allow developers to tell Containuity to send task outputs to their local machine rather than to some remote destination, while still allowing the use of a remote destination as the output destination of a task.
+see below for examples of a step, job or workflow's yaml
 
-## architecture
+### step
 
-- everything external to a pipeline that gets pulled in should be modelable as a "resource" a la [Concourse](https://github.com/concourse/concourse)
-- external database not required; Containuity can fulfil its own database requirements by running one in a container at runtime if no external database is supplied
-- if Containuity is fulfilling its own database requirements, agents should maintain replicas of the controller's database on them
-- Containuity's controller can execute tasks, but should delegate tasks to agents if possible
-- container runtime should be pluggable but will rely on [containerd](https://github.com/containerd/containerd) primarily
+```sh
+# runs a step
+$ sqnc run step step.yml
+# runs a step of a job
+$ sqnc run step -s=step job.yml
+# runs a step of a job of a workflow
+$ sqnc run step -j=job -s=step workflow.yml
+```
+
+### job
+
+```sh
+# runs a job
+$ sqnc run job job.yml
+# runs a job of a workflow
+$ sqnc run job -j=job workflow.yml
+```
+
+### workflow
+
+```sh
+# runs a workflow
+$ sqnc run workflow workflow.yml
+```
+
+## examples
+
+### step
+
+```yaml
+# step.yml
+image: golang:alpine
+entrypoint:
+  - go
+cmd:
+  - build
+  - ./cmd/sqnc
+```
+
+### job
+
+```yaml
+# job.yml
+steps:
+  - image: golang:alpine
+    entrypoint:
+      - go
+    cmd:
+      - build
+      - ./cmd/sqnc
+  - image: golang:alpine
+    entrypoint:
+      - ./bin/sqnc
+    cmd:
+      - -v
+```
+
+### workflow
+
+```yaml
+# workflow.yml
+jobs:
+  example:
+    steps:
+      - image: golang:alpine
+        entrypoint:
+          - go
+        cmd:
+          - build
+          - ./cmd/sqnc
+      - image: golang:alpine
+        entrypoint:
+          - ./bin/sqnc
+        cmd:
+          - -v
+```
+
+## developing
+
+TODO

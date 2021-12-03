@@ -1,5 +1,6 @@
-# build
-bin/
+# bin
+bin/*
+!bin/.gitkeep
 
 # macOS
 .DS_Store

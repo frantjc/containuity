@@ -1,0 +1,6 @@
+image: docker.io/library/alpine
+entrypoint:
+  - sh
+cmd:
+  - -c
+  - "pwd && ls -al"

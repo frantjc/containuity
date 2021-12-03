@@ -1,0 +1,18 @@
+jobs:
+  test:
+    steps:
+      - name: echo
+        image: alpine
+        entrypoint:
+          - sh
+        cmd:
+          - -c
+          - "pwd && ls -al && echo test > test.txt"
+      - name: cat
+        image: alpine
+        entrypoint:
+          - sh
+        cmd:
+          - -c
+          - "pwd && ls -al && cat test.txt"
+
