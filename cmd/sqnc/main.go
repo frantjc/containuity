@@ -23,7 +23,7 @@ func init() {
 		runCmd,
 	)
 	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("{{ with .Name }}{{ . }}{{ end }}{{ .Version }}  %s\n", runtime.Version()),
+		fmt.Sprintf("{{ with .Name }}{{ . }}{{ end }}{{ .Version }} %s\n", runtime.Version()),
 	)
 }
 
