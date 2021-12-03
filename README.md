@@ -87,4 +87,14 @@ jobs:
 
 ## developing
 
-TODO
+### build
+
+```sh
+make build
+```
+
+### lint
+
+```sh
+make vet
+```
