@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/frantjc/sequence"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 func init() {
 	o := zerolog.ConsoleWriter{
-		Out:        sequence.Stdout,
+		Out:        os.Stdout,
 		TimeFormat: time.RFC3339Nano,
 	}
 

@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/runtime"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -36,43 +38,41 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 
 		if stepID != "" {
 			if jobName != "" {
-				ctx = withJob(ctx, encode(file.Name(), jobName, stepID))
 				workflow, err := sequence.NewWorkflowFromReader(file)
 				if err != nil {
 					return err
 				}
 
-				job, err = workflow.Job(jobName)
+				job, err = workflow.GetJob(jobName)
 				if err != nil {
 					return err
 				}
 			} else {
-				ctx = withJob(ctx, encode(file.Name(), stepID))
 				job, err = sequence.NewJobFromReader(file)
 				if err != nil {
 					return err
 				}
 			}
 
-			step, err = job.Step(stepID)
+			step, err = job.GetStep(stepID)
 			if err != nil {
 				return err
 			}
 		} else {
-			ctx = withJob(ctx, encode(file.Name()))
 			step, err = sequence.NewStepFromReader(file)
 			if err != nil {
 				return err
 			}
 		}
 
-		runtime, err := sequence.GetRuntime(ctx, runtimeName)
+		docker, err := runtime.GetRuntime("docker")
 		if err != nil {
 			return err
 		}
 
-		err = runtime.Run(ctx, step)
+		err = docker.Run(ctx, step)
 		if err != nil {
+			log.Err(err).Msg("run err")
 			return err
 		}
 	} else {

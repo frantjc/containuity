@@ -8,8 +8,8 @@ import (
 )
 
 type Workflow struct {
-	Name string         `yaml:"name"`
-	Jobs map[string]Job `yaml:"jobs"`
+	Name string
+	Jobs map[string]Job
 }
 
 func NewWorkflowFromBytes(b []byte) (*Workflow, error) {
@@ -27,7 +27,7 @@ func NewWorkflowFromString(s string) (*Workflow, error) {
 	return NewWorkflowFromBytes([]byte(s))
 }
 
-func (w *Workflow) Job(name string) (*Job, error) {
+func (w *Workflow) GetJob(name string) (*Job, error) {
 	if job, ok := w.Jobs[name]; ok {
 		return &job, nil
 	}

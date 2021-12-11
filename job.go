@@ -26,17 +26,9 @@ type Job struct {
 	StepsF []Step `yaml:"steps"`
 }
 
-var (
-	_ Steppable = &Job{}
-)
-
-func (j *Job) Steps() ([]Step, error) {
-	return j.StepsF, nil
-}
-
-func (j *Job) Step(id string) (*Step, error) {
+func (j *Job) GetStep(id string) (*Step, error) {
 	for _, step := range j.StepsF {
-		if step.ID() == id {
+		if step.ID == id || step.Name == id {
 			return &step, nil
 		}
 	}

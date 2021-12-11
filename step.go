@@ -1,10 +1,8 @@
 package sequence
 
 import (
-	"fmt"
 	"io"
 
-	"github.com/google/go-containerregistry/pkg/name"
 	"gopkg.in/yaml.v2"
 )
 
@@ -24,63 +22,17 @@ func NewStepFromString(s string) (*Step, error) {
 }
 
 type Step struct {
-	Name       string   `yaml:"name"`
-	IDF        string   `yaml:"id"`
-	ImageF     string   `yaml:"image"`
-	Entrypoint []string `yaml:"entrypoint"`
-	Cmd        []string `yaml:"cmd"`
-	Privileged bool     `yaml:"privileged"`
+	Name       string
+	ID         string
+	Image      string
+	Entrypoint []string
+	Cmd        []string
+	Privileged bool
 
-	Get string `yaml:"get"`
-	Put string `yaml:"put"`
+	Get string
+	Put string
 
-	Run  string                 `yaml:"run"`
-	Uses string                 `yaml:"uses"`
-	With map[string]interface{} `yaml:"with"`
-}
-
-var (
-	_ Steppable = &Step{}
-)
-
-func (s *Step) Steps() ([]Step, error) {
-	if s != nil {
-		return []Step{*s}, nil
-	}
-
-	return nil, fmt.Errorf("nil step")
-}
-
-func (s *Step) ID() string {
-	if s.IDF != "" {
-		return s.IDF
-	}
-
-	return s.Name
-}
-
-func (s *Step) Validate() error {
-	if _, err := s.Image(); err != nil {
-		return err
-	}
-
-	if s.ID() == "" {
-		return fmt.Errorf("one of id or name must be set")
-	}
-
-	return nil
-}
-
-func (s *Step) Image() (string, error) {
-	var refs string
-	if s.ImageF != "" {
-		refs = s.ImageF
-	}
-
-	ref, err := name.ParseReference(refs)
-	if err != nil {
-		return "", fmt.Errorf("unable to parse image ref %s", refs)
-	}
-
-	return ref.Name(), nil
+	Run  string
+	Uses string
+	With map[string]interface{}
 }
