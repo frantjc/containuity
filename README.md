@@ -1,100 +1,97 @@
 # sequence
 
-Sequence is intended to be a CLI for local development or a CI/CD server that can use the same pluggable container runtime(s) to produce artifacts--bridging the gap between local development and automation. Should support GitHub Actions as well as Concourse Resources. Written in Go.
+## goal
 
-## usage
+sequence aims to be a tool that can be used to run _sequential_ containerized workloads that operate on the same volume(s) using whatever tools are native to each container along the way à la [concourse](https://concourse-ci.org)
 
-see below for examples of a step, job or workflow's yaml
+by virtue of containerization, sequence should be able to utilize a pluggable container runtime. By running workloads using the [docker](https://docker.com) it should be easy to use as a local development tool. By running workloads using [kubernetes](https://kubernetes.io/), sequence should be able to scale with some ease
 
-### step
+by virute of [golang](https://go.dev/), sequence should be a viable tool on any operating system
 
-```sh
-# runs a step
-$ sqnc run step step.yml
-# runs a step of a job
-$ sqnc run step -s=step job.yml
-# runs a step of a job of a workflow
-$ sqnc run step -j=job -s=step workflow.yml
-```
+because of these things, sequence aims to be both a cli tool as well as something of a continuous integration server, bridging the gap that often exists between local development and continuous integration by allowing pipelines to be runnable manually on a developer's machine as well as automatically on some server
 
-### job
+by virtue of tools with similar goals that have come before it, sequence should be able to take advantage of concourse [resources](https://concourse-ci.org/resources.html) as well as github [actions](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions#actions) to avoid having to implement its own versions of common tasks, such as checking out a git repository
 
-```sh
-# runs a job
-$ sqnc run job job.yml
-# runs a job of a workflow
-$ sqnc run job -j=job workflow.yml
-```
+## first draft
+
+as a first draft, sequence should strictly be a cli for running github actions workflows locally, as that has the most potential value, as github actions is presumably the most widely used ci system today. support for concourse resources as well as server functionality can be added later
+
+## architecture
 
 ### workflow
 
-```sh
-# runs a workflow
-$ sqnc run workflow workflow.yml
-```
+[example](testdata/workflow.yml)
 
-## examples
-
-### step
-
-```yaml
-# step.yml
-image: golang:alpine
-entrypoint:
-  - go
-cmd:
-  - build
-  - ./cmd/sqnc
-```
+a sequence workflow aims to be a superset of a github actions [workflow](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions#create-an-example-workflow), consisting of "jobs" of containerized workloads as well as services that are exposed to those workloads
 
 ### job
 
-```yaml
-# job.yml
-steps:
-  - image: golang:alpine
-    entrypoint:
-      - go
-    cmd:
-      - build
-      - ./cmd/sqnc
-  - image: golang:alpine
-    entrypoint:
-      - ./bin/sqnc
-    cmd:
-      - -v
-```
+[example](testdata/job.yml)
 
-### workflow
+a sequence job aims to be a superset of a github actions job
 
-```yaml
-# workflow.yml
-jobs:
-  example:
-    steps:
-      - image: golang:alpine
-        entrypoint:
-          - go
-        cmd:
-          - build
-          - ./cmd/sqnc
-      - image: golang:alpine
-        entrypoint:
-          - ./bin/sqnc
-        cmd:
-          - -v
-```
+### step
 
-## developing
+[example](testdata/step.yml)
 
-### build
+a sequence step aims to be a superset of a github actions step as well as a concourse [step](https://concourse-ci.org/steps.html)
+
+in an ideal world, a step should consist of a single containerized workload. however, a github acion isn't actually ran in a single environment; rather, a step specifying [uses](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsuses) it gathers some information about the action on the host machine, perhaps builds the container for the action in another and exeutes the action. where github has the benefit of ease of control over the environment in which they are running such steps, an easy-to-use dev tool such as this does not...
+
+### special step
+
+sequence aims to allow such steps to exist via "special" steps that emit information about what the subsequent step should be in the form of json to stdout. luckily, sequence would have had to do something like this eventually, anyways, since concourse [resource types](https://concourse-ci.org/implementing-resource-types.html) already transmit information this way
+
+if sequence is running on linux, it should be able to mount _itself_ into an arbitrary container to execute such steps. however, if sequence is not running on linux, a linux container wouldn't be able to execute, say, a darwin build of sequence, and so will have to pull the sequence image itself to accomplish the same
+
+#### uses
+
+sequence's "uses" plugin should clone a given action to a given path, parse that action's action.yml file, and then emit the "step" version of that action to stdout, letting sequence know what the following step should be
+
+#### github
+
+some older, "core" github actions maintained by github (e.g. [actions/checkout@v1](https://github.com/actions/checkout/blob/v1/action.yml#L23)) utilize "plugins" that live on github actions runners themselves, and so will have to be implemented by sequence itself if support for such actions is desired
+
+## cli
+
+### `sqnc run`
+
+run a step
 
 ```sh
-make build
+sqnc run step [flags...] STEP | -s=$step_id JOB | -j=$job_id -s=$step_id WORKFLOW
 ```
 
-### lint
+run the steps of a job
 
 ```sh
-make vet
+sqnc run job [flags...] JOB | -j=$job_id WORKFLOW
+```
+
+run the jobs of a workflow
+
+```sh
+sqnc run workflow [flags...] WORKFLOW
+```
+
+### `sqnc debug`
+
+get a shell inside of the container of a would-be step
+
+```sh
+sqnc debug step [flags...] STEP | -s=$step_id JOB | -j=$job_id -s=$step_id WORKFLOW
+```
+
+### `sqnc plugin`
+
+clones a given action and emits the step version of that action to stdout
+
+```sh
+sqnc plugin uses ACTION [PATH]
+```
+
+runs sequence's own implementation of a github actions plugin
+
+```sh
+sqnc plugin PLUGIN
 ```
