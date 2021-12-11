@@ -36,7 +36,7 @@ a sequence job aims to be a superset of a github actions job
 
 a sequence step aims to be a superset of a github actions step as well as a concourse [step](https://concourse-ci.org/steps.html)
 
-in an ideal world, a step should consist of a single containerized workload. however, a github acion isn't actually ran in a single environment; rather, a step specifying [uses](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsuses) it gathers some information about the action on the host machine, perhaps builds the container for the action in another and exeutes the action. where github has the benefit of ease of control over the environment in which they are running such steps, an easy-to-use dev tool such as this does not...
+in an ideal world, a step should consist of a single containerized workload. however, a github action isn't actually ran in a single environment; rather, a step specifying [uses](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsuses) it gathers some information about the action on the host machine, perhaps builds the container for the action in another and exeutes the action. where github has the benefit of ease of control over the environment in which they are running such steps, an easy-to-use dev tool such as this does not...
 
 ### special step
 
