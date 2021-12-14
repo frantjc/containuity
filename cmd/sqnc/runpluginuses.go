@@ -2,18 +2,15 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
 
+	"github.com/frantjc/sequence/internal/actions"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
 var runPluginUsesCmd = &cobra.Command{
 	RunE: runRunPluginUses,
-	SilenceErrors:    true,
-	SilenceUsage:     true,
-	Use:              "uses",
+	Use:  "uses",
 }
 
 func runRunPluginUses(cmd *cobra.Command, args []string) error {
@@ -27,22 +24,18 @@ func runRunPluginUses(cmd *cobra.Command, args []string) error {
 			path = args[1]
 		}
 
-		opts := []string{"clone", "--single-branch"}
-		usesSpl := strings.Split(uses, "@")
-		action := usesSpl[0]
-		if len(usesSpl) > 1 {
-			revision := usesSpl[1]
-			opts = append(opts, "--branch", revision)
-		}
-		opts = append(opts, fmt.Sprintf("https://github.com/%s", action))
-		if path != "" && path != "." && path != "./" {
-			opts = append(opts, path)
+		parsed, err := actions.Parse(uses)
+		if err != nil {
+			return err
 		}
 
-		cmd := exec.Command("git", opts...)
-		cmd.Stdout = os.Stderr
-		cmd.Stderr = os.Stderr
-		return cmd.Run()
+		a, err := actions.CloneContext(cmd.Context(), parsed, actions.WithPath(path))
+		if err != nil {
+			log.Err(err).Msg("")
+			return err
+		}
+
+		fmt.Println(a)
 	}
 
 	return nil

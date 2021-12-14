@@ -5,16 +5,14 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/runtime"
+	"github.com/frantjc/sequence/pkg/runtime"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
 var runStepCmd = &cobra.Command{
-	RunE:          runRunStep,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Use:           "step",
+	RunE: runRunStep,
+	Use:  "step",
 }
 
 func init() {

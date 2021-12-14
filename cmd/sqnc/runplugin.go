@@ -5,13 +5,11 @@ import (
 )
 
 var runPluginCmd = &cobra.Command{
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Use:           "plugin",
+	Use: "plugin",
 }
 
 func init() {
-	runCmd.AddCommand(
+	runPluginCmd.AddCommand(
 		runPluginUsesCmd,
 	)
 }
