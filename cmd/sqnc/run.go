@@ -5,9 +5,7 @@ import (
 )
 
 var runCmd = &cobra.Command{
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Use:           "run",
+	Use: "run",
 }
 
 var (

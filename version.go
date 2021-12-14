@@ -5,10 +5,6 @@ import (
 )
 
 var (
-	Name = "sqnc"
-
-	Package = "github.com/frantjc/sequence"
-
 	SemVer = "0.0.0"
 
 	Revision = ""
