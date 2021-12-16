@@ -13,12 +13,12 @@ type Uses struct {
 	Version    string
 }
 
-func (u *Uses) String() string {
-	return fmt.Sprintf("%s/%s@%s", u.Repo(), u.Path, u.Version)
-}
-
 func (u *Uses) Repo() string {
 	return fmt.Sprintf("%s/%s", u.Owner, u.Repository)
+}
+
+func (u *Uses) String() string {
+	return fmt.Sprintf("%s/%s@%s", u.Repo(), u.Path, u.Version)
 }
 
 func Parse(uses string) (*Uses, error) {
