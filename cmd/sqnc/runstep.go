@@ -5,8 +5,6 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/pkg/runtime"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -63,16 +61,8 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		docker, err := runtime.GetRuntime("docker")
-		if err != nil {
-			return err
-		}
-
-		err = docker.Run(ctx, step)
-		if err != nil {
-			log.Err(err).Msg("run err")
-			return err
-		}
+		_ = ctx.Done()
+		_ = step.Cmd
 	} else {
 		return fmt.Errorf("not enough arguments")
 	}
