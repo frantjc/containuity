@@ -5,9 +5,9 @@ import "fmt"
 var (
 	Name = "sqnc"
 
-	Package = "github.com/frantjc/sequence"
+	Module = "github.com/frantjc/sequence"
 
-	Registy = "docker.io"
+	Registry = "docker.io"
 
 	Repository = "frantjc/sequence"
 
@@ -16,11 +16,17 @@ var (
 	Digest = ""
 )
 
-func Image() string {
-	ref := Registy
-	if Repository != "" {
-		ref = fmt.Sprintf("%s/%s", ref, Repository)
+func init() {
+	if Registry == "" {
+		panic(fmt.Sprintf("%s.Registry must not be empty", Module))
 	}
+	if Repository == "" {
+		panic(fmt.Sprintf("%s.Repository must not be empty", Module))
+	}
+}
+
+func Image() string {
+	ref := fmt.Sprintf("%s/%s", Registry, Repository)
 	if Tag != "" {
 		return fmt.Sprintf("%s:%s", ref, Tag)
 	}

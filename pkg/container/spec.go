@@ -6,6 +6,7 @@ type Spec struct {
 	Image      string
 	Entrypoint []string
 	Cmd        []string
+	Cwd        string
 	Env        []string
 	Mounts     []Mount
 	Privileged bool
@@ -28,6 +29,12 @@ func WithEntrypoint(entrypoint ...string) SpecOpt {
 func WithCmd(cmd ...string) SpecOpt {
 	return func(s *Spec) {
 		s.Cmd = cmd
+	}
+}
+
+func WithCwd(cwd string) SpecOpt {
+	return func(s *Spec) {
+		s.Cwd = cwd
 	}
 }
 

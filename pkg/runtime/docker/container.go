@@ -1,4 +1,4 @@
-package runtime
+package docker
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/frantjc/sequence/internal/image"
 	"github.com/frantjc/sequence/pkg/container"
-	"github.com/frantjc/sequence/pkg/io"
+	"github.com/frantjc/sequence/pkg/sio"
 )
 
 type dockerContainer struct {
@@ -19,31 +19,32 @@ type dockerContainer struct {
 	r  *dockerRuntime
 }
 
-func (r *dockerRuntime) Create(ctx context.Context, c *container.Spec) (container.Container, error) {
+func (r *dockerRuntime) Create(ctx context.Context, s *container.Spec) (container.Container, error) {
 	if r == nil {
 		return nil, fmt.Errorf("nil runtime")
 	}
 
-	ref, err := image.ParseRef(c.Image)
+	ref, err := image.ParseRef(s.Image)
 	if err != nil {
 		return nil, err
 	}
 
 	conf := &dcontainer.Config{
 		Image:      ref,
-		Entrypoint: c.Entrypoint,
-		Cmd:        c.Cmd,
-		Env:        c.Env,
+		Entrypoint: s.Entrypoint,
+		Cmd:        s.Cmd,
+		WorkingDir: s.Cwd,
+		Env:        s.Env,
 		Labels:     defaultLabels(),
 	}
 
 	hconf := &dcontainer.HostConfig{
 		AutoRemove: true,
-		Privileged: c.Privileged,
+		Privileged: s.Privileged,
 		Mounts:     defaultMounts(),
 	}
 
-	for _, m := range c.Mounts {
+	for _, m := range s.Mounts {
 		dt := dmount.Type(m.Type)
 		dm := dmount.Mount{
 			Type:   dt,
@@ -54,7 +55,9 @@ func (r *dockerRuntime) Create(ctx context.Context, c *container.Spec) (containe
 		switch dt {
 		case dmount.TypeBind:
 		case dmount.TypeVolume:
-			dm.VolumeOptions.Labels = defaultLabels()
+			dm.VolumeOptions = &dmount.VolumeOptions{
+				Labels: defaultLabels(),
+			}
 		case dmount.TypeTmpfs:
 			dm.Source = ""
 		}
@@ -78,7 +81,7 @@ func (r *dockerRuntime) Create(ctx context.Context, c *container.Spec) (containe
 	return &dockerContainer{id, r}, nil
 }
 
-func (c *dockerContainer) Start(ctx context.Context, s io.Streams) error {
+func (c *dockerContainer) Start(ctx context.Context, s *sio.Streams) error {
 	attachResp, err := c.r.client.ContainerAttach(ctx, c.id, dtypes.ContainerAttachOptions{
 		Stream: true,
 		Stdout: true,

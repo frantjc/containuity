@@ -6,47 +6,47 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func NewActionFromBytes(b []byte) (*Action, error) {
+func NewFromBytes(b []byte) (*Action, error) {
 	a := &Action{}
 	return a, yaml.Unmarshal(b, a)
 }
 
-func NewActionFromReader(r io.Reader) (*Action, error) {
-	s := &Action{}
+func NewFromReader(r io.Reader) (*Action, error) {
+	a := &Action{}
 	d := yaml.NewDecoder(r)
-	return s, d.Decode(s)
+	return a, d.Decode(a)
 }
 
-func NewActionFromString(s string) (*Action, error) {
-	return NewActionFromBytes([]byte(s))
+func NewFromString(s string) (*Action, error) {
+	return NewFromBytes([]byte(s))
 }
 
 type Action struct {
-	Name        string
-	Author      string
-	Description string
-	Inputs      *Inputs
-	Outputs     *Outputs
-	Runs        *Runs
+	Name        string   `json:",omitempty"`
+	Author      string   `json:",omitempty"`
+	Description string   `json:",omitempty"`
+	Inputs      *Inputs  `json:",omitempty"`
+	Outputs     *Outputs `json:",omitempty"`
+	Runs        *Runs    `json:",omitempty"`
 }
 
 type Inputs map[string]struct {
-	Description        string
-	Required           bool
-	Default            string
-	DeprecationMessage string
+	Description        string `json:",omitempty"`
+	Required           bool   `json:",omitempty"`
+	Default            string `json:",omitempty"`
+	DeprecationMessage string `json:",omitempty"`
 }
 
 type Outputs map[string]struct {
-	Description string
+	Description string `json:",omitempty"`
 }
 
 type Runs struct {
-	Plugin     string
-	Using      string
-	Main       string
-	Image      string
-	Entrypoint string
-	Args       []string
-	Env        map[string]string
+	Plugin     string            `json:",omitempty"`
+	Using      string            `json:",omitempty"`
+	Main       string            `json:",omitempty"`
+	Image      string            `json:",omitempty"`
+	Entrypoint string            `json:",omitempty"`
+	Args       []string          `json:",omitempty"`
+	Env        map[string]string `json:",omitempty"`
 }
