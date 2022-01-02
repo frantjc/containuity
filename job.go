@@ -23,12 +23,12 @@ func NewJobFromString(s string) (*Job, error) {
 }
 
 type Job struct {
-	StepsF []Step `yaml:"steps"`
+	Steps []Step `yaml:"steps"`
 }
 
 func (j *Job) GetStep(id string) (*Step, error) {
-	for _, step := range j.StepsF {
-		if step.ID == id || step.Name == id {
+	for _, step := range j.Steps {
+		if step.ID() == id {
 			return &step, nil
 		}
 	}

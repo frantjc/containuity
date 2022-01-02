@@ -4,12 +4,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var runPluginCmd = &cobra.Command{
+var pluginCmd = &cobra.Command{
 	Use: "plugin",
 }
 
 func init() {
-	runPluginCmd.AddCommand(
-		runPluginUsesCmd,
+	pluginCmd.AddCommand(
+		pluginUsesCmd,
 	)
 }

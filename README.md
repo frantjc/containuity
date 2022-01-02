@@ -20,19 +20,19 @@ as a first draft, sequence should strictly be a cli for running github actions w
 
 ### workflow
 
-[example](testdata/workflow.yml)
+[example](internal/testdata/workflow.yml)
 
 a sequence workflow aims to be a superset of a github actions [workflow](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions#create-an-example-workflow), consisting of "jobs" of containerized workloads as well as services that are exposed to those workloads
 
 ### job
 
-[example](testdata/job.yml)
+[example](internal/testdata/job.yml)
 
 a sequence job aims to be a superset of a github actions job
 
 ### step
 
-[example](testdata/step.yml)
+[example](internal/testdata/step.yml)
 
 a sequence step aims to be a superset of a github actions step as well as a concourse [step](https://concourse-ci.org/steps.html)
 

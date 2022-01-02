@@ -1,9 +1,32 @@
 package github
 
-import "net/url"
+import (
+	"fmt"
+	"net/url"
 
-var DefaultURL *url.URL
+	"github.com/frantjc/sequence"
+)
+
+var (
+	URL        *url.URL
+	APIURL     *url.URL
+	GraphQLURL *url.URL
+)
 
 func init() {
-	DefaultURL, _ = url.Parse("https://github.com/")
+	var err error
+	URL, err = url.Parse("https://github.com")
+	if err != nil {
+		panic(fmt.Sprintf("%s/internal/github.URL is not a valid URL", sequence.Module))
+	}
+
+	APIURL, err = url.Parse("https://api.github.com")
+	if err != nil {
+		panic(fmt.Sprintf("%s/internal/github.APIURL is not a valid URL", sequence.Module))
+	}
+
+	GraphQLURL, err = url.Parse("https://api.github.com/graphql")
+	if err != nil {
+		panic(fmt.Sprintf("%s/internal/github.GraphQLURL is not a valid URL", sequence.Module))
+	}
 }

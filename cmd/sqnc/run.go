@@ -17,6 +17,5 @@ var (
 func init() {
 	runCmd.AddCommand(
 		runStepCmd,
-		runPluginCmd,
 	)
 }

@@ -1,8 +1,10 @@
-package runtime
+package docker
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/docker/docker/api/types"
 	"github.com/frantjc/sequence/internal/image"
@@ -18,11 +20,12 @@ func (r *dockerRuntime) Pull(ctx context.Context, ref string) error {
 		return err
 	}
 
-	_, err = r.client.ImagePull(ctx, pref, types.ImagePullOptions{})
+	o, err := r.client.ImagePull(ctx, pref, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
 	// TODO write to stream provided by opts
+	io.Copy(new(bytes.Buffer), o)
 
 	return nil
 }

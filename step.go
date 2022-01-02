@@ -22,17 +22,33 @@ func NewStepFromString(s string) (*Step, error) {
 }
 
 type Step struct {
-	Name       string
-	ID         string
-	Image      string
-	Entrypoint []string
-	Cmd        []string
-	Privileged bool
+	Name       string   `json:",omitempty"`
+	IDF        string   `json:"id,omitempty"`
+	Image      string   `json:",omitempty"`
+	Entrypoint []string `json:",omitempty"`
+	Cmd        []string `json:",omitempty"`
+	Privileged bool     `json:",omitempty"`
 
-	Get string
-	Put string
+	Run  string                 `json:",omitempty"`
+	Uses string                 `json:",omitempty"`
+	With map[string]interface{} `json:",omitempty"`
 
-	Run  string
-	Uses string
-	With map[string]interface{}
+	Get string `json:",omitempty"`
+	Put string `json:",omitempty"`
+}
+
+func (s *Step) ID() string {
+	if s.IDF != "" {
+		return s.IDF
+	}
+
+	return s.Name
+}
+
+func (s *Step) IsStdoutParsable() bool {
+	return s.Uses != "" || s.Get != "" || s.Put != ""
+}
+
+func (s *Step) IsAction() bool {
+	return s.Uses != "" || s.Run != ""
 }

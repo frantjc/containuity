@@ -2,13 +2,16 @@ package actions
 
 import (
 	"context"
+	"errors"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	"github.com/frantjc/sequence/internal/github"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/rs/zerolog/log"
 )
 
 type cloneOpts struct {
@@ -44,7 +47,7 @@ func WithInsecure() CloneOpt {
 func defaultCloneOps() *cloneOpts {
 	return &cloneOpts{
 		path:      ".",
-		gitHubURL: github.DefaultURL,
+		gitHubURL: github.URL,
 	}
 }
 
@@ -61,19 +64,28 @@ func CloneContext(ctx context.Context, u *Uses, opts ...CloneOpt) (*Action, erro
 		}
 	}
 
-	cloneURL := copts.gitHubURL
-	cloneURL.Path = u.Path
+	os.RemoveAll(copts.path)
 
-	repo, err := git.PlainCloneContext(ctx, copts.path, false, &git.CloneOptions{
+	cloneURL := copts.gitHubURL
+	cloneURL.Path = u.Repo()
+	clopts := &git.CloneOptions{
 		URL:               cloneURL.String(),
 		ReferenceName:     plumbing.NewTagReferenceName(u.Version),
 		SingleBranch:      true,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 		InsecureSkipTLS:   copts.insecure,
-		Tags:              git.AllTags,
-	})
+		Tags:              git.TagFollowing,
+	}
+	log.Debug().Msgf("cloning %s %s to %s", clopts.URL, clopts.ReferenceName, copts.path)
+	repo, err := git.PlainCloneContext(ctx, copts.path, false, clopts)
 	if err != nil {
-		return nil, err
+		log.Debug().Msgf("cloning %s with ref assumed as tag, falling back to branch", cloneURL.String())
+		clopts.ReferenceName = plumbing.NewBranchReferenceName(u.Version)
+		log.Debug().Msgf("cloning %s %s to %s", clopts.URL, clopts.ReferenceName, copts.path)
+		repo, err = git.PlainCloneContext(ctx, copts.path, false, clopts)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	ref, err := repo.Head()
@@ -81,15 +93,15 @@ func CloneContext(ctx context.Context, u *Uses, opts ...CloneOpt) (*Action, erro
 		return nil, err
 	}
 
-	com, err := repo.CommitObject(ref.Hash())
+	commit, err := repo.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, err
 	}
 
 	var f *object.File
-	f, err = com.File(filepath.Join(u.Path, "action.yml"))
-	if err == object.ErrFileNotFound {
-		f, err = com.File(filepath.Join(u.Path, "action.yaml"))
+	f, err = commit.File(filepath.Join(u.Path, "action.yml"))
+	if errors.Is(err, object.ErrFileNotFound) {
+		f, err = commit.File(filepath.Join(u.Path, "action.yaml"))
 		if err != nil {
 			return nil, ErrNotAnAction
 		}
@@ -102,5 +114,5 @@ func CloneContext(ctx context.Context, u *Uses, opts ...CloneOpt) (*Action, erro
 		return nil, err
 	}
 
-	return NewActionFromReader(r)
+	return NewFromReader(r)
 }

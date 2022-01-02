@@ -1,4 +1,4 @@
-package runtime
+package docker
 
 import (
 	"github.com/docker/docker/client"

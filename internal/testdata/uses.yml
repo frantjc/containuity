@@ -1,1 +1,1 @@
-uses: frantjc/sequence #@v1
+uses: actions/checkout@v2
