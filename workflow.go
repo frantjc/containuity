@@ -31,6 +31,5 @@ func (w *Workflow) GetJob(name string) (*Job, error) {
 	if job, ok := w.Jobs[name]; ok {
 		return &job, nil
 	}
-
 	return nil, fmt.Errorf("workflow has no job with name %s", name)
 }

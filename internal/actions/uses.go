@@ -28,22 +28,22 @@ func (u *Uses) String() string {
 	return s
 }
 
-func Parse(uses string) (*Uses, error) {
+func Parse(action string) (*Uses, error) {
 	u := &Uses{}
 
-	spl1 := strings.Split(uses, "@")
+	spl1 := strings.Split(action, "@")
 	switch len(spl1) {
 	case 2:
 		u.Version = spl1[1]
 	case 1:
 	default:
-		return u, fmt.Errorf("unable to parse action %s", uses)
+		return u, fmt.Errorf("unable to parse action %s", action)
 	}
 
 	spl2 := strings.Split(spl1[0], "/")
 	switch len(spl2) {
 	case 0, 1:
-		return u, fmt.Errorf("unable to parse action %s", uses)
+		return u, fmt.Errorf("unable to parse action %s", action)
 	default:
 		u.Owner = spl2[0]
 		u.Repository = spl2[1]

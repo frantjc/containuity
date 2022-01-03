@@ -33,6 +33,5 @@ func Image() string {
 	if Digest != "" {
 		return fmt.Sprintf("%s@%s", ref, Digest)
 	}
-
 	return ref
 }
