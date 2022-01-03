@@ -32,6 +32,5 @@ func (j *Job) GetStep(id string) (*Step, error) {
 			return &step, nil
 		}
 	}
-
 	return nil, fmt.Errorf("job has no step with name or id %s", id)
 }

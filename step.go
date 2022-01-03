@@ -41,7 +41,6 @@ func (s *Step) ID() string {
 	if s.IDF != "" {
 		return s.IDF
 	}
-
 	return s.Name
 }
 

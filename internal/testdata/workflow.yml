@@ -15,4 +15,3 @@ jobs:
         cmd:
           - -c
           - "pwd && ls -al && cat test.txt"
-

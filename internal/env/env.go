@@ -8,8 +8,10 @@ import (
 func ArrToMap(a []string) map[string]string {
 	m := map[string]string{}
 	for _, s := range a {
-		kv := strings.SplitAfterN(s, "=", 2)
-		m[kv[0]] = kv[1]
+		kv := strings.Split(s, "=")
+		if len(kv) >= 2 && kv[0] != "" && kv[1] != "" {
+			m[kv[0]] = kv[1]
+		}
 	}
 	return m
 }
