@@ -59,19 +59,19 @@ some older, "core" github actions maintained by github (e.g. [actions/checkout@v
 run a step
 
 ```sh
-sqnc run step [flags...] STEP | -s=$step_id JOB | -j=$job_id -s=$step_id WORKFLOW
+sqnc run step [FLAGS...] STEP | -s=STEP_ID JOB | -j=JOB_ID -s=STEP_ID WORKFLOW
 ```
 
 run the steps of a job
 
 ```sh
-sqnc run job [flags...] JOB | -j=$job_id WORKFLOW
+sqnc run job [FLAGS...] JOB | -j=JOB_ID WORKFLOW
 ```
 
 run the jobs of a workflow
 
 ```sh
-sqnc run workflow [flags...] WORKFLOW
+sqnc run workflow [FLAGS...] WORKFLOW
 ```
 
 ### `sqnc debug`
@@ -79,7 +79,7 @@ sqnc run workflow [flags...] WORKFLOW
 get a shell inside of the container of a would-be step
 
 ```sh
-sqnc debug step [flags...] STEP | -s=$step_id JOB | -j=$job_id -s=$step_id WORKFLOW
+sqnc debug step [FLAGS...] STEP | -s=STEP_ID JOB | -j=JOB_ID -s=STEP_ID WORKFLOW
 ```
 
 ### `sqnc plugin`
@@ -87,11 +87,11 @@ sqnc debug step [flags...] STEP | -s=$step_id JOB | -j=$job_id -s=$step_id WORKF
 clones a given action and emits the step version of that action to stdout
 
 ```sh
-sqnc plugin uses ACTION [PATH]
+sqnc plugin uses [FLAGS...] ACTION [PATH]
 ```
 
 runs sequence's own implementation of a github actions plugin
 
 ```sh
-sqnc plugin PLUGIN
+sqnc plugin [FLAGS...] PLUGIN
 ```

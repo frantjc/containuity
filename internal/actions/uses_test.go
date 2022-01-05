@@ -9,12 +9,12 @@ import (
 
 func TestParseAction(t *testing.T) {
 	var (
-		action = "actions/checkout@v2"
+		action   = "actions/checkout@v2"
 		expected = &actions.Uses{
-			Owner: "actions",
+			Owner:      "actions",
 			Repository: "checkout",
-			Path: "",
-			Version: "v2",
+			Path:       "",
+			Version:    "v2",
 		}
 		actual, err = actions.Parse(action)
 	)
@@ -27,12 +27,12 @@ func TestParseAction(t *testing.T) {
 
 func TestParseActionWithPath(t *testing.T) {
 	var (
-		action = "frantjc/sequence/internal/testdata@main"
+		action   = "frantjc/sequence/internal/testdata@main"
 		expected = &actions.Uses{
-			Owner: "frantjc",
+			Owner:      "frantjc",
 			Repository: "sequence",
-			Path: "internal/testdata",
-			Version: "main",
+			Path:       "internal/testdata",
+			Version:    "main",
 		}
 		actual, err = actions.Parse(action)
 	)

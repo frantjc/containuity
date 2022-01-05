@@ -9,13 +9,13 @@ import (
 
 func TestArrToMap(t *testing.T) {
 	var (
-		a = []string{"KEY=val", "KEY=", "=val", "notakeyvalpair"}
+		a        = []string{"KEY=val", "KEY=", "=val", "notakeyvalpair"}
 		expected = map[string]string{
 			"KEY": "val",
 		}
 		actual = env.ArrToMap(a)
 	)
-	
+
 	assert.Equal(t, expected, actual)
 }
 
@@ -26,7 +26,7 @@ func TestToMap(t *testing.T) {
 		}
 		actual = env.ToMap("KEY=val", "KEY=", "=val", "notakeyvalpair")
 	)
-	
+
 	assert.Equal(t, expected, actual)
 }
 
@@ -34,12 +34,12 @@ func TestMapToArr(t *testing.T) {
 	var (
 		m = map[string]string{
 			"KEY1": "val",
-			"": "val",
+			"":     "val",
 			"KEY2": "",
 		}
 		expected = []string{"KEY1=val"}
-		actual = env.MapToArr(m)
+		actual   = env.MapToArr(m)
 	)
-	
+
 	assert.Equal(t, expected, actual)
 }
