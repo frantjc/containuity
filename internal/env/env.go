@@ -33,7 +33,7 @@ func MapToArr(m map[string]string) []string {
 func ToArr(ss ...string) []string {
 	a := []string{}
 	for i, s := range ss {
-		if i % 2 == 1 {
+		if i%2 == 1 {
 			sm1 := ss[i-1]
 			if s != "" && sm1 != "" {
 				a = append(a, fmt.Sprintf("%s=%s", sm1, s))
