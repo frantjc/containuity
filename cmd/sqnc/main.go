@@ -28,8 +28,8 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose")
-	rootCmd.PersistentFlags().StringVarP(&socket, "socket", "s", "/tmp/sequence.sock", "Unix socket")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose")
+	rootCmd.PersistentFlags().StringVarP(&socket, "socket", "s", "/tmp/sequence.sock", "unix socket")
 	rootCmd.AddCommand(
 		runCmd,
 		pluginCmd,
@@ -60,16 +60,29 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	socket = strings.TrimPrefix(socket, "unix://")
-	l, err := net.Listen("unix", socket)
+	var (
+		ctx    = cmd.Context()
+		socket = strings.TrimPrefix(socket, "unix://")
+		l, err = net.Listen("unix", socket)
+		opts   = []grpc.ServerOption{}
+		s      = grpc.NewServer(opts...)
+		errC   = make(chan error, 1)
+	)
 	if err != nil {
 		return err
 	}
 	defer l.Close()
+	defer s.Stop()
 
-	opts := []grpc.ServerOption{}
-	s := grpc.NewServer(opts...)
-	defer s.GracefulStop()
+	go func() {
+		errC <- s.Serve(l)
+	}()
 
-	return s.Serve(l)
+	select {
+	case err := <-errC:
+		return err
+	case <-ctx.Done():
+	}
+
+	return nil
 }

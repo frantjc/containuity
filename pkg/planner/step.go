@@ -58,7 +58,8 @@ func PlanStep(ctx context.Context, s *sequence.Step, opts ...PlanOpt) (*containe
 			},
 		}...)
 		spec.Env = append(spec.Env, ghenv.Arr()...)
-		spec.Cwd = ghenv.Workflow
+		spec.Env = append(spec.Env, s.Env...)
+		spec.Cwd = ghenv.Workspace
 
 		// s.Run doesn't necessarily need this image the way s.Uses does, but we may as well use it
 		// since we own it and users will likely already have it stored locally

@@ -18,8 +18,8 @@ var runStepCmd = &cobra.Command{
 
 func init() {
 	runStepCmd.Flags().StringVarP(&stepID, "id", "s", "", "ID of the step to run")
-	runStepCmd.Flags().StringVarP(&jobName, "job", "j", "", "Name of the job to run")
-	runStepCmd.Flags().StringVarP(&runtimeName, "runtime", "", "docker", "Container runtime to use")
+	runStepCmd.Flags().StringVarP(&jobName, "job", "j", "", "name of the job to run")
+	runStepCmd.Flags().StringVarP(&runtimeName, "runtime", "", "docker", "container runtime to use")
 }
 
 func runRunStep(cmd *cobra.Command, args []string) error {

@@ -43,3 +43,12 @@ func TestMapToArr(t *testing.T) {
 
 	assert.Equal(t, expected, actual)
 }
+
+func TestToArr(t *testing.T) {
+	var (
+		expected = []string{"KEY1=val"}
+		actual   = env.ToArr("KEY1", "val", "", "val", "KEY", "")
+	)
+
+	assert.Equal(t, expected, actual)
+}

@@ -7,5 +7,6 @@ outputs:
   test:
     description: test output
 runs:
-  using: node12
-  main: index.js
+  using: docker://alpine
+  args:
+    - env
