@@ -19,7 +19,6 @@ func TestNewWorkflowFromString(t *testing.T) {
 	// assert.Equal(t, expected, actual)
 }
 
-
 func TestNewWorkflowFromBytes(t *testing.T) {
 	var (
 		// expected = &sequence.Workflow{}

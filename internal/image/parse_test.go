@@ -11,8 +11,8 @@ import (
 
 func TestParseRef(t *testing.T) {
 	var (
-		ref = sequence.Repository
-		expected = fmt.Sprintf("index.docker.io/%s:latest", ref)
+		ref         = sequence.Repository
+		expected    = fmt.Sprintf("index.docker.io/%s:latest", ref)
 		actual, err = image.ParseRef(ref)
 	)
 	assert.Nil(t, err)

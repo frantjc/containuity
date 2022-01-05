@@ -21,7 +21,6 @@ func TestNewStepFromString(t *testing.T) {
 	// assert.Equal(t, expected, actual)
 }
 
-
 func TestNewStepFromBytes(t *testing.T) {
 	var (
 		// expected = &sequence.Step{}
@@ -57,7 +56,6 @@ func TestUsesNewStepFromString(t *testing.T) {
 
 	// assert.Equal(t, expected, actual)
 }
-
 
 func TestUsesNewStepFromBytes(t *testing.T) {
 	var (

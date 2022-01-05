@@ -19,7 +19,6 @@ func TestNewJobFromString(t *testing.T) {
 	// assert.Equal(t, expected, actual)
 }
 
-
 func TestNewJobFromBytes(t *testing.T) {
 	var (
 		// expected = &sequence.Job{}

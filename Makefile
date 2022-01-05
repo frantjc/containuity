@@ -16,6 +16,10 @@ bin:
 .PHONY: all
 all: img bin
 
+.PHONY: test
+test:
+	$(DOCKER) build -t $(REPOSITORY):test --build-arg repository=$(REPOSITORY) --build-arg tag=test --target=test .
+
 .PHONY: fmt
 fmt:
 	$(GO) fmt ./...

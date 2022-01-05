@@ -28,6 +28,7 @@ type Step struct {
 	Entrypoint []string `json:",omitempty"`
 	Cmd        []string `json:",omitempty"`
 	Privileged bool     `json:",omitempty"`
+	Env        []string `json:",omitempty"`
 
 	Run  string                 `json:",omitempty"`
 	Uses string                 `json:",omitempty"`
