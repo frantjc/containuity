@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/internal/actions"
+	"github.com/frantjc/sequence/github/actions"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -24,15 +24,15 @@ func preRunPluginUses(cmd *cobra.Command, args []string) error {
 
 func runPluginUses(cmd *cobra.Command, args []string) error {
 	var (
-		uses = args[0]
-		path = "."
+		actionRef = args[0]
+		path      = "."
 	)
 
 	if len(args) > 1 {
 		path = args[1]
 	}
 
-	parsed, err := actions.Parse(uses)
+	parsed, err := actions.ParseReference(actionRef)
 	if err != nil {
 		log.Debug().Err(err).Msg("parsing action failed")
 		return err
@@ -45,7 +45,7 @@ func runPluginUses(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	s, err := a.Step(path)
+	s, err := sequence.NewStepFromAction(a, path)
 	if err != nil {
 		log.Debug().Err(err).Msg("converting action to step failed")
 		return err

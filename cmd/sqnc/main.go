@@ -8,16 +8,15 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/frantjc/sequence"
-	_ "github.com/frantjc/sequence/pkg/runtime/docker"
+	"github.com/frantjc/sequence/meta"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
 
 var rootCmd = &cobra.Command{
-	Use:               sequence.Name,
-	Version:           sequence.Version,
+	Use:               meta.Name,
+	Version:           meta.Version(),
 	PersistentPreRunE: persistentPreRun,
 	RunE:              run,
 }

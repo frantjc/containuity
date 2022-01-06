@@ -1,15 +1,19 @@
 package sequence
 
 import (
+	"fmt"
 	"io"
+	"path/filepath"
+	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/frantjc/sequence/env"
+	"github.com/frantjc/sequence/github/actions"
+	"gopkg.in/yaml.v3"
 )
 
-func NewStepFromBytes(b []byte) (*Step, error) {
-	s := &Step{}
-	return s, yaml.Unmarshal(b, s)
-}
+const (
+	imagePrefix = "docker://"
+)
 
 func NewStepFromReader(r io.Reader) (*Step, error) {
 	s := &Step{}
@@ -17,8 +21,31 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 	return s, d.Decode(s)
 }
 
-func NewStepFromString(s string) (*Step, error) {
-	return NewStepFromBytes([]byte(s))
+func NewStepFromAction(a *actions.Action, path string) (*Step, error) {
+	s := &Step{}
+	switch a.Runs.Using {
+	case "node12":
+		s.Image = "node:12"
+		s.Entrypoint = []string{"node"}
+		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
+	case "node16":
+		s.Image = "node:16"
+		s.Entrypoint = []string{"node"}
+		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
+	case "docker":
+		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
+			s.Image = strings.TrimPrefix(a.Runs.Image, imagePrefix)
+			s.Entrypoint = []string{a.Runs.Entrypoint}
+			s.Cmd = a.Runs.Args
+			s.Env = env.MapToArr(a.Runs.Env)
+		} else {
+			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix 'docker://'")
+		}
+	default:
+		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker'")
+	}
+
+	return s, nil
 }
 
 type Step struct {
@@ -34,8 +61,9 @@ type Step struct {
 	Uses string                 `json:",omitempty"`
 	With map[string]interface{} `json:",omitempty"`
 
-	Get string `json:",omitempty"`
-	Put string `json:",omitempty"`
+	Get    string                 `json:",omitempty"`
+	Put    string                 `json:",omitempty"`
+	Params map[string]interface{} `json:",omitempty"`
 }
 
 func (s *Step) ID() string {

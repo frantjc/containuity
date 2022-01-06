@@ -2,9 +2,9 @@
 bin/*
 !bin/.gitkeep
 
-# macOS
-.DS_Store
-
 # IDE
 .vscode/
 .idea/
+
+# macOS
+.DS_Store

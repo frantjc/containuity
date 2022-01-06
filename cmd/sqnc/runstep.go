@@ -4,8 +4,7 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/pkg/orchestrator"
-	"github.com/frantjc/sequence/pkg/runtime"
+	"github.com/frantjc/sequence/runtime"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +18,7 @@ var runStepCmd = &cobra.Command{
 func init() {
 	runStepCmd.Flags().StringVarP(&stepID, "id", "s", "", "ID of the step to run")
 	runStepCmd.Flags().StringVarP(&jobName, "job", "j", "", "name of the job to run")
-	runStepCmd.Flags().StringVarP(&runtimeName, "runtime", "", "docker", "container runtime to use")
+	runStepCmd.Flags().StringVarP(&runtimeName, "runtime", "", "containerd", "container runtime to use")
 }
 
 func runRunStep(cmd *cobra.Command, args []string) error {
@@ -73,11 +72,13 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	r, err := runtime.Get(ctx, runtimeName)
+	_, err = runtime.Get(ctx, runtimeName)
 	if err != nil {
 		log.Debug().Err(err).Msgf("getting runtime %s", runtimeName)
 		return err
 	}
 
-	return orchestrator.RunStep(ctx, r, step)
+	// silence
+	var _ = step
+	return nil
 }
