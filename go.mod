@@ -11,24 +11,35 @@ require (
 )
 
 require (
+	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/hcsshim v0.8.23 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/containerd/cgroups v1.0.1 // indirect
+	github.com/containerd/console v1.0.2 // indirect
 	github.com/containerd/continuity v0.1.0 // indirect
 	github.com/containerd/fifo v1.0.0 // indirect
 	github.com/containerd/ttrpc v1.1.0 // indirect
 	github.com/containerd/typeurl v1.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/sys/mountinfo v0.4.1 // indirect
+	github.com/moby/term v0.0.0-20200312100748-672ec06f55cd // indirect
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/opencontainers/selinux v1.8.2 // indirect
+	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/urfave/cli v1.22.4 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
@@ -39,6 +50,8 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20211221144345-a4f6767435ab // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/containerd/containerd v1.5.9
+	github.com/docker/cli v20.10.12+incompatible
+	github.com/docker/docker v20.10.12+incompatible
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect

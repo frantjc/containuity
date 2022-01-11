@@ -7,19 +7,15 @@ import (
 )
 
 var (
-	Major = 0
-
-	Minor = 0
-
-	Patch = 0
+	Version = "0.0.0"
 
 	Prerelease = ""
 
 	Build = ""
 )
 
-func Version() string {
-	version := fmt.Sprintf("%d.%d.%d", Major, Minor, Patch)
+func Semver() string {
+	version := Version
 	if Prerelease != "" {
 		version = fmt.Sprintf("%s-%s", version, Prerelease)
 	}

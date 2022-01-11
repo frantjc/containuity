@@ -71,6 +71,19 @@ func WithMounts(mounts ...specs.Mount) SpecOpt {
 	}
 }
 
+func WithSpec(spec *Spec) SpecOpt {
+	return func(s *Spec) error {
+		s.Image = spec.Image
+		s.Entrypoint = spec.Entrypoint
+		s.Cmd = spec.Cmd
+		s.Cwd = spec.Cwd
+		s.Env = spec.Env
+		s.Mounts = spec.Mounts
+		s.Privileged = spec.Privileged
+		return nil
+	}
+}
+
 func NewSpec(opts ...SpecOpt) (*Spec, error) {
 	s := &Spec{}
 	for _, opt := range opts {

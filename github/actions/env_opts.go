@@ -1,26 +1,29 @@
 package actions
 
-import "os"
+import "os/user"
 
 type envOpts struct {
-	remote    string
-	branch    string
-	tmpdir    string
-	workdir   string
-	toolcache string
-	runID     int
-	runNumber int
+	remote       string
+	branch       string
+	workdir      string
+	workflow     string
+	runID        int
+	runNumber    int
+	job          string
+	refProtected bool
+	headRef      string
+	baseRef      string
+	runnerName   string
 }
 
 type EnvOpt func(e *envOpts) error
 
 func defaultEnvOpts() *envOpts {
-	cachedir, _ := os.UserCacheDir()
-
+	u, _ := user.Current()
 	return &envOpts{
-		remote:    "origin",
-		branch:    "main",
-		tmpdir:    os.TempDir(),
-		toolcache: cachedir,
+		remote:     "origin",
+		branch:     "main",
+		workdir:    "/sqnc",
+		runnerName: u.Username,
 	}
 }

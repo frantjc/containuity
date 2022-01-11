@@ -108,6 +108,6 @@ a single binary that's able to run as a gRPC daemon, daemonless-ly, and with int
 
 * `sqnc` -- daemonless, includes plugins
 
-* `sequence` -- gRPC server itself
+* `sqncd` -- gRPC server itself
 
 * `sqnctl` -- cli to interact with gRPC server, does not include plugins

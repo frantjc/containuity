@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github/actions"
 	"gopkg.in/yaml.v3"
 )
@@ -37,9 +36,9 @@ func NewStepFromAction(a *actions.Action, path string) (*Step, error) {
 			s.Image = strings.TrimPrefix(a.Runs.Image, imagePrefix)
 			s.Entrypoint = []string{a.Runs.Entrypoint}
 			s.Cmd = a.Runs.Args
-			s.Env = env.MapToArr(a.Runs.Env)
+			s.Env = a.Runs.Env
 		} else {
-			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix 'docker://'")
+			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix '%s'", imagePrefix)
 		}
 	default:
 		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker'")
@@ -49,34 +48,52 @@ func NewStepFromAction(a *actions.Action, path string) (*Step, error) {
 }
 
 type Step struct {
-	Name       string   `json:",omitempty"`
-	IDF        string   `json:"id,omitempty"`
-	Image      string   `json:",omitempty"`
-	Entrypoint []string `json:",omitempty"`
-	Cmd        []string `json:",omitempty"`
-	Privileged bool     `json:",omitempty"`
-	Env        []string `json:",omitempty"`
+	ID         string            `json:",omitempty"`
+	Name       string            `json:",omitempty"`
+	Image      string            `json:",omitempty"`
+	Entrypoint []string          `json:",omitempty"`
+	Cmd        []string          `json:",omitempty"`
+	Privileged bool              `json:",omitempty"`
+	Env        map[string]string `json:",omitempty"`
 
-	Run  string                 `json:",omitempty"`
-	Uses string                 `json:",omitempty"`
-	With map[string]interface{} `json:",omitempty"`
+	Shell string            `json:",omitempty"`
+	Run   string            `json:",omitempty"`
+	Uses  string            `json:",omitempty"`
+	With  map[string]string `json:",omitempty"`
 
 	Get    string                 `json:",omitempty"`
 	Put    string                 `json:",omitempty"`
 	Params map[string]interface{} `json:",omitempty"`
 }
 
-func (s *Step) ID() string {
-	if s.IDF != "" {
-		return s.IDF
+func (s *Step) GetID() string {
+	if s.ID != "" {
+		return s.ID
 	}
 	return s.Name
 }
 
-func (s *Step) IsStdoutParsable() bool {
+func (s *Step) IsStdoutResponse() bool {
 	return s.Uses != "" || s.Get != "" || s.Put != ""
 }
 
 func (s *Step) IsAction() bool {
 	return s.Uses != "" || s.Run != ""
+}
+
+func (s *Step) Merge(step *Step) *Step {
+	if s.ID == "" {
+		s.ID = step.ID
+	}
+	if s.Name == "" {
+		s.Name = step.Name
+	}
+	if s.Image == "" {
+		s.Image = step.Image
+	}
+	if step.Privileged {
+		s.Privileged = true
+	}
+
+	return s
 }

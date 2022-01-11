@@ -5,6 +5,7 @@ import (
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/oci"
+	"github.com/frantjc/sequence/defaults"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -20,6 +21,7 @@ func (r *containerdRuntime) Create(ctx context.Context, opts ...runtime.SpecOpt)
 	}
 
 	ociopts := []oci.SpecOpts{
+		oci.WithDefaultSpec(),
 		oci.WithImageConfig(image),
 		oci.WithProcessArgs(append(spec.Entrypoint, spec.Cmd...)...),
 		oci.WithProcessCwd(spec.Cwd),
@@ -32,6 +34,7 @@ func (r *containerdRuntime) Create(ctx context.Context, opts ...runtime.SpecOpt)
 	copts := []containerd.NewContainerOpts{
 		containerd.WithNewSnapshot("", image),
 		containerd.WithNewSpec(ociopts...),
+		containerd.WithAdditionalContainerLabels(defaults.Labels),
 	}
 	container, err := r.client.NewContainer(ctx, "", copts...)
 	if err != nil {

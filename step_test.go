@@ -16,7 +16,7 @@ func TestNewStepFromReader(t *testing.T) {
 	)
 	assert.Nil(t, err)
 	assert.False(t, actual.IsAction())
-	assert.False(t, actual.IsStdoutParsable())
+	assert.False(t, actual.IsStdoutResponse())
 
 	// assert.Equal(t, expected, actual)
 }
@@ -28,7 +28,7 @@ func TestUsesNewStepFromReader(t *testing.T) {
 	)
 	assert.Nil(t, err)
 	assert.True(t, actual.IsAction())
-	assert.True(t, actual.IsStdoutParsable())
+	assert.True(t, actual.IsStdoutResponse())
 
 	// assert.Equal(t, expected, actual)
 }

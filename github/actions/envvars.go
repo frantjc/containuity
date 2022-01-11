@@ -29,4 +29,7 @@ const (
 	EnvVarRunnerArch      = "RUNNER_ARCH"
 	EnvVarRunnerTemp      = "RUNNER_TEMP"
 	EnvVarRunnerToolCache = "RUNNER_TOOL_CACHE"
+
+	EnvVarEnv  = "GITHUB_ENV"
+	EnvVarPath = "GITHUB_PATH"
 )

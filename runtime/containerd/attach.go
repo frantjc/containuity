@@ -8,7 +8,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-func (c *containerdContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt) error {
+func (c *containerdContainer) Attach(ctx context.Context, opts ...runtime.ExecOpt) error {
 	e, err := runtime.NewExec(opts...)
 	if err != nil {
 		return err
@@ -18,26 +18,24 @@ func (c *containerdContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt)
 	if e.Terminal {
 		iopts = append(iopts, cio.WithTerminal)
 	}
-	task, err := c.container.NewTask(ctx, cio.NewCreator(iopts...))
+	task, err := c.container.Task(ctx, cio.NewAttach(iopts...))
 	if err != nil {
 		return err
 	}
-	defer task.Delete(ctx)
 
 	exitStatusC, err := task.Wait(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err := task.Start(ctx); err != nil {
-		return err
-	}
-
-	exitStatus := <-exitStatusC
-	if exitCode, _, err := exitStatus.Result(); err != nil {
-		return err
-	} else if exitCode != 0 {
-		return fmt.Errorf("job exited with code %d", exitCode)
+	select {
+	case exitStatus := <-exitStatusC:
+		if exitCode, _, err := exitStatus.Result(); err != nil {
+			return err
+		} else if exitCode != 0 {
+			return fmt.Errorf("job exited with code %d", exitCode)
+		}
+	case <-ctx.Done():
 	}
 
 	return nil

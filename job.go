@@ -19,7 +19,7 @@ type Job struct {
 
 func (j *Job) GetStep(id string) (*Step, error) {
 	for _, step := range j.Steps {
-		if step.ID() == id {
+		if step.GetID() == id {
 			return &step, nil
 		}
 	}

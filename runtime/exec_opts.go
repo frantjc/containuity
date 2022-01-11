@@ -6,9 +6,10 @@ import (
 )
 
 type Exec struct {
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
+	Stdin    io.Reader
+	Stdout   io.Writer
+	Stderr   io.Writer
+	Terminal bool
 }
 
 type ExecOpt func(e *Exec) error
@@ -17,6 +18,11 @@ func WithStdio(e *Exec) error {
 	e.Stdin = os.Stdin
 	e.Stdout = os.Stdout
 	e.Stderr = os.Stderr
+	return nil
+}
+
+func WithTerminal(e *Exec) error {
+	e.Terminal = true
 	return nil
 }
 

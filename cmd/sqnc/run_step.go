@@ -1,9 +1,12 @@
 package main
 
 import (
+	"io"
 	"os"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/defaults"
+	"github.com/frantjc/sequence/orchestrator"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -18,27 +21,34 @@ var runStepCmd = &cobra.Command{
 func init() {
 	runStepCmd.Flags().StringVarP(&stepID, "id", "s", "", "ID of the step to run")
 	runStepCmd.Flags().StringVarP(&jobName, "job", "j", "", "name of the job to run")
-	runStepCmd.Flags().StringVarP(&runtimeName, "runtime", "", "containerd", "container runtime to use")
+	runStepCmd.Flags().StringVarP(&runtimeName, "runtime", "", defaults.Runtime, "container runtime to use")
 }
 
 func runRunStep(cmd *cobra.Command, args []string) error {
 	var (
-		ctx       = cmd.Context()
-		step      *sequence.Step
-		job       *sequence.Job
-		path      = args[0]
-		file, err = os.Open(path)
+		ctx  = cmd.Context()
+		step *sequence.Step
+		job  *sequence.Job
+		path = args[0]
+		r    io.Reader
+		err  error
 	)
-	if err != nil {
-		log.Debug().Err(err).Msgf("opening file failed %s", path)
-		return err
+	if path == fromStdin {
+		r = os.Stdin
+	} else {
+		var err error
+		r, err = os.Open(path)
+		if err != nil {
+			log.Debug().Err(err).Msgf("opening file failed %s", path)
+			return err
+		}
 	}
 
 	if stepID != "" {
 		log.Debug().Msg("--id non-empty, must be job or workflow")
 		if jobName != "" {
 			log.Debug().Msg("--job non-empty, must be workflow")
-			workflow, err := sequence.NewWorkflowFromReader(file)
+			workflow, err := sequence.NewWorkflowFromReader(r)
 			if err != nil {
 				log.Debug().Err(err).Msgf("parsing workflow failed %s", path)
 				return err
@@ -51,7 +61,7 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 			}
 		} else {
 			log.Debug().Msg("--job empty, must be job")
-			job, err = sequence.NewJobFromReader(file)
+			job, err = sequence.NewJobFromReader(r)
 			if err != nil {
 				log.Debug().Err(err).Msgf("parsing job failed %s", path)
 				return err
@@ -65,20 +75,18 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		log.Debug().Msg("--step empty, must be step")
-		step, err = sequence.NewStepFromReader(file)
+		step, err = sequence.NewStepFromReader(r)
 		if err != nil {
 			log.Debug().Err(err).Msgf("parsing step failed %s", path)
 			return err
 		}
 	}
 
-	_, err = runtime.Get(ctx, runtimeName)
+	rt, err := runtime.Get(ctx, runtimeName)
 	if err != nil {
 		log.Debug().Err(err).Msgf("getting runtime %s", runtimeName)
 		return err
 	}
 
-	// silence
-	var _ = step
-	return nil
+	return orchestrator.RunStep(ctx, rt, step)
 }

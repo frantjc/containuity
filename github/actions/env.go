@@ -3,11 +3,13 @@ package actions
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"runtime"
 
 	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github"
 	"github.com/go-git/go-git/v5"
+	"github.com/google/uuid"
 )
 
 type RefType int
@@ -124,6 +126,9 @@ type Env struct {
 	RunnerArch      Arch // X86, X64, ARM or ARM64
 	RunnerTemp      string
 	RunnerToolCache string
+
+	Env  string
+	Path string
 }
 
 func (e *Env) Map() map[string]string {
@@ -156,6 +161,9 @@ func (e *Env) Map() map[string]string {
 		EnvVarRunnerArch:      e.RunnerArch.String(),
 		EnvVarRunnerTemp:      e.RunnerTemp,
 		EnvVarRunnerToolCache: e.RunnerToolCache,
+
+		EnvVarEnv:  e.Env,
+		EnvVarPath: e.Path,
 	}
 }
 
@@ -164,19 +172,30 @@ func (e *Env) Arr() []string {
 }
 
 func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
-	e := &Env{
-		CI:              true,
-		Actions:         true,
-		RunnerOS:        OSFrom(runtime.GOOS),
-		RunnerArch:      ArchFrom(runtime.GOARCH),
-		ServerURL:       github.DefaultURL,
-		APIURL:          github.DefaultAPIURL,
-		GraphQLURL:      github.DefaultGraphQLURL,
-		Workspace:       "/tmp/sqnc/workspace",
-		ActionPath:      "/tmp/sqnc/action",
-		RunnerTemp:      "/tmp/sqnc/runner/temp",
-		RunnerToolCache: "/tmp/sqnc/runner/toolcache",
+	eopts := defaultEnvOpts()
+	for _, opt := range opts {
+		err := opt(eopts)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	e := defaultEnv()
+	e.Workflow = eopts.workflow
+	e.RunID = eopts.runID
+	e.RunNumber = eopts.runNumber
+	e.Job = eopts.job
+	e.Action = uuid.NewString()
+	e.ActionPath = filepath.Join(eopts.workdir, "action")
+	e.Workspace = filepath.Join(eopts.workdir, "workspace")
+	e.RefProtected = eopts.refProtected
+	e.HeadRef = eopts.headRef
+	e.BaseRef = eopts.baseRef
+	e.RunnerName = eopts.runnerName
+	e.RunnerTemp = filepath.Join(eopts.workdir, "runner", "temp")
+	e.RunnerToolCache = filepath.Join(eopts.workdir, "runner", "toolcache")
+	e.Env = filepath.Join(eopts.workdir, "github", "env")
+	e.Path = filepath.Join(eopts.workdir, "github", "path")
 
 	repo, err := git.PlainOpen(path)
 	if err != nil {
@@ -189,13 +208,14 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 	}
 
 	e.Sha = ref.Hash().String()
+	e.RefName = ref.String()
+	e.Ref = ref.String()
 
-	eopts := defaultEnvOpts()
 	if ref.Name().IsBranch() {
 		eopts.branch = ref.String()
-		e.RefName = ref.String()
-		e.Ref = ref.String()
 		e.RefType = RefTypeBranch
+	} else {
+		e.RefType = RefTypeTag
 	}
 
 	for _, opt := range opts {
@@ -233,5 +253,17 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 }
 
 func NewEnvFromRemote(remote string, opts ...EnvOpt) (*Env, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, fmt.Errorf("NewEnvFromRemote not implemented")
+}
+
+func defaultEnv() *Env {
+	return &Env{
+		CI:         true,
+		Actions:    true,
+		ServerURL:  github.DefaultURL,
+		APIURL:     github.DefaultAPIURL,
+		GraphQLURL: github.DefaultGraphQLURL,
+		RunnerOS:   OSFrom(runtime.GOOS),
+		RunnerArch: ArchFrom(runtime.GOARCH),
+	}
 }
