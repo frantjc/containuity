@@ -128,8 +128,9 @@ type Env struct {
 	RunnerTemp      string
 	RunnerToolCache string
 
-	Env  string
-	Path string
+	Env   string
+	Path  string
+	Token string
 }
 
 func (e *Env) Map() map[string]string {
@@ -163,8 +164,9 @@ func (e *Env) Map() map[string]string {
 		EnvVarRunnerTemp:      e.RunnerTemp,
 		EnvVarRunnerToolCache: e.RunnerToolCache,
 
-		EnvVarEnv:  e.Env,
-		EnvVarPath: e.Path,
+		EnvVarEnv:   e.Env,
+		EnvVarPath:  e.Path,
+		EnvVarToken: e.Token,
 	}
 }
 
@@ -197,6 +199,7 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 	e.RunnerToolCache = filepath.Join(eopts.workdir, "runner", "toolcache")
 	e.Env = filepath.Join(eopts.workdir, "github", "env")
 	e.Path = filepath.Join(eopts.workdir, "github", "path")
+	// e.Token = "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"
 
 	repo, err := git.PlainOpen(path)
 	if err != nil {
@@ -235,7 +238,7 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 					e.Repository = strings.TrimSuffix(
 						strings.TrimPrefix(prurl.Path, "/"),
 						".git",
-					) 
+					)
 					break
 				}
 			}
