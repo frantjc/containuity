@@ -8,7 +8,6 @@ import (
 	"github.com/frantjc/sequence/defaults"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/rs/zerolog/log"
 )
 
 func (r *dockerRuntime) Create(ctx context.Context, opts ...runtime.SpecOpt) (runtime.Container, error) {
@@ -17,7 +16,6 @@ func (r *dockerRuntime) Create(ctx context.Context, opts ...runtime.SpecOpt) (ru
 		return nil, err
 	}
 
-	log.Debug().Msgf("parsing %s", spec.Image)
 	pref, err := name.ParseReference(spec.Image)
 	if err != nil {
 		return nil, err
@@ -69,7 +67,6 @@ func (r *dockerRuntime) Create(ctx context.Context, opts ...runtime.SpecOpt) (ru
 	if err != nil {
 		return nil, err
 	}
-	id := createResp.ID
 
-	return &dockerContainer{id: id, client: r.client}, nil
+	return &dockerContainer{id: createResp.ID, client: r.client}, nil
 }

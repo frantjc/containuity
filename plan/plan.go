@@ -23,6 +23,20 @@ func defaultSpec() *runtime.Spec {
 	}
 }
 
+var (
+	workdir = ""
+)
+
+func init() {
+	var err error
+	workdir, err = os.UserHomeDir()
+	if err != nil {
+		workdir, _ = os.Getwd()
+	}
+
+	workdir = filepath.Join(workdir, ".sqnc")
+}
+
 func PlanStep(ctx context.Context, s *sequence.Step, opts ...PlanOpt) (*runtime.Spec, error) {
 	popts := &planOpts{
 		path:     ".",
@@ -49,54 +63,58 @@ func PlanStep(ctx context.Context, s *sequence.Step, opts ...PlanOpt) (*runtime.
 			return nil, err
 		}
 
-		tmp := filepath.Join(os.TempDir(), "sqnc")
-		// generate a unique, reproducible, directory-name-compliant ID from the current context
-		// so that steps that are a part of the same job share the same mounts
-		id := base64.URLEncoding.EncodeToString(
-			sha1.New().Sum(
-				[]byte(popts.path + popts.workflow.Name + popts.jobName),
-			),
+		var (
+			// generate a unique, reproducible, directory-name-compliant ID from the current context
+			// so that steps that are a part of the same job share the same mounts
+			id = base64.URLEncoding.EncodeToString(
+				sha1.New().Sum(
+					[]byte(popts.path + popts.workflow.Name + popts.jobName),
+				),
+			)
+			gitHubEnv  = filepath.Join(workdir, id, "github", "env")
+			gitHubPath = filepath.Join(workdir, id, "github", "path")
 		)
 		spec.Mounts = append(spec.Mounts, []specs.Mount{
 			{
-				Source:      filepath.Join(tmp, id, "workspace"),
+				Source:      filepath.Join(workdir, id, "workspace"),
 				Destination: ghenv.Workspace,
 				Type:        runtime.MountTypeBind,
 			},
 			{
 				// actions can be global since every step that uses actions/checkout@v2
 				// expects to function the same
-				Source:      filepath.Join(tmp, "actions", action.Owner(), action.Repository(), action.Path(), action.Version()),
+				Source:      filepath.Join(workdir, "actions", action.Owner(), action.Repository(), action.Path(), action.Version()),
 				Destination: ghenv.ActionPath,
 				Type:        runtime.MountTypeBind,
 			},
 			{
-				Source:      filepath.Join(tmp, id, "runner", "temp"),
+				Source:      filepath.Join(workdir, id, "runner", "temp"),
 				Destination: ghenv.RunnerTemp,
 				Type:        runtime.MountTypeBind,
 			},
 			{
-				Source:      filepath.Join(tmp, id, "runner", "toolcache"),
+				Source:      filepath.Join(workdir, id, "runner", "toolcache"),
 				Destination: ghenv.RunnerToolCache,
 				Type:        runtime.MountTypeBind,
 			},
-			// these are _files_, not directories, that are used like
+			// these are _files_, NOT directories, that are used like
 			// $ echo "MY_VAR=myval" >> $GITHUB_ENV
 			// $ echo "/.mybin" >> $GITHUB_PATH
 			// respectively. TODO source the contents of these files into spec.Env
 			{
-				Source:      filepath.Join(tmp, id, "github", "env"),
+				Source:      gitHubEnv,
 				Destination: ghenv.Env,
 				Type:        runtime.MountTypeBind,
 			},
 			{
-				Source:      filepath.Join(tmp, id, "github", "path"),
+				Source:      gitHubPath,
 				Destination: ghenv.Path,
 				Type:        runtime.MountTypeBind,
 			},
 		}...)
-		spec.Env = append(spec.Env, ghenv.Arr()...)
-		spec.Env = append(spec.Env, env.MapToArr(s.Env)...)
+		e := ghenv.Arr()
+		e = append(e, env.MapToArr(s.Env)...)
+		spec.Env = append(spec.Env, e...)
 		spec.Cwd = ghenv.Workspace
 
 		// s.Run doesn't necessarily need this image the way s.Uses does, but we may as well use it

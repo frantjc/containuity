@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github"
@@ -227,6 +228,18 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 
 	if conf, err := repo.Config(); err == nil {
 		e.Actor = conf.Author.Name
+		for _, remote := range conf.Remotes {
+			for _, rurl := range remote.URLs {
+				prurl, err := url.Parse(rurl)
+				if err == nil {
+					e.Repository = strings.TrimSuffix(
+						strings.TrimPrefix(prurl.Path, "/"),
+						".git",
+					) 
+					break
+				}
+			}
+		}
 	}
 
 	if branch, err := repo.Branch(eopts.branch); err == nil {
@@ -250,10 +263,6 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 	}
 
 	return e, nil
-}
-
-func NewEnvFromRemote(remote string, opts ...EnvOpt) (*Env, error) {
-	return nil, fmt.Errorf("NewEnvFromRemote not implemented")
 }
 
 func defaultEnv() *Env {

@@ -30,14 +30,15 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 
 	for _, mount := range spec.Mounts {
 		if mount.Type == runtime.MountTypeBind {
-			err = os.MkdirAll(mount.Source, 0755)
+			err = os.MkdirAll(mount.Source, 0777)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	container, err := r.Create(ctx, runtime.WithSpec(spec))
+	copts := append([]runtime.SpecOpt{runtime.WithSpec(spec)}, opts...)
+	container, err := r.Create(ctx, copts...)
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 		}
 
 		if resp.Step != nil {
-			return RunStep(ctx, r, resp.Step.Merge(s), runtime.WithMounts(spec.Mounts...), runtime.WithEnv(env.ArrToMap(spec.Env)))
+			return RunStep(ctx, r, resp.Step.Merge(s), append(opts, runtime.WithMounts(spec.Mounts...), runtime.WithEnv(env.ArrToMap(spec.Env)))...)
 		}
 	}
 
