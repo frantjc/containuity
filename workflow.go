@@ -4,18 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
-
-type Workflow struct {
-	Name string
-	Jobs map[string]Job
-}
-
-func NewWorkflowFromBytes(b []byte) (*Workflow, error) {
-	w := &Workflow{}
-	return w, yaml.Unmarshal(b, w)
-}
 
 func NewWorkflowFromReader(r io.Reader) (*Workflow, error) {
 	w := &Workflow{}
@@ -23,8 +13,9 @@ func NewWorkflowFromReader(r io.Reader) (*Workflow, error) {
 	return w, d.Decode(w)
 }
 
-func NewWorkflowFromString(s string) (*Workflow, error) {
-	return NewWorkflowFromBytes([]byte(s))
+type Workflow struct {
+	Name string         `json:",omitempty"`
+	Jobs map[string]Job `json:",omitempty"`
 }
 
 func (w *Workflow) GetJob(name string) (*Job, error) {

@@ -5,33 +5,9 @@ import (
 	"testing"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/internal/testdata"
+	"github.com/frantjc/sequence/testdata"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestNewStepFromString(t *testing.T) {
-	var (
-		// expected = &sequence.Step{}
-		actual, err = sequence.NewStepFromString(string(testdata.Step))
-	)
-	assert.Nil(t, err)
-	assert.False(t, actual.IsAction())
-	assert.False(t, actual.IsStdoutParsable())
-
-	// assert.Equal(t, expected, actual)
-}
-
-func TestNewStepFromBytes(t *testing.T) {
-	var (
-		// expected = &sequence.Step{}
-		actual, err = sequence.NewStepFromBytes(testdata.Step)
-	)
-	assert.Nil(t, err)
-	assert.False(t, actual.IsAction())
-	assert.False(t, actual.IsStdoutParsable())
-
-	// assert.Equal(t, expected, actual)
-}
 
 func TestNewStepFromReader(t *testing.T) {
 	var (
@@ -40,31 +16,7 @@ func TestNewStepFromReader(t *testing.T) {
 	)
 	assert.Nil(t, err)
 	assert.False(t, actual.IsAction())
-	assert.False(t, actual.IsStdoutParsable())
-
-	// assert.Equal(t, expected, actual)
-}
-
-func TestUsesNewStepFromString(t *testing.T) {
-	var (
-		// expected = &sequence.Step{}
-		actual, err = sequence.NewStepFromString(string(testdata.Uses))
-	)
-	assert.Nil(t, err)
-	assert.True(t, actual.IsAction())
-	assert.True(t, actual.IsStdoutParsable())
-
-	// assert.Equal(t, expected, actual)
-}
-
-func TestUsesNewStepFromBytes(t *testing.T) {
-	var (
-		// expected = &sequence.Step{}
-		actual, err = sequence.NewStepFromBytes(testdata.Uses)
-	)
-	assert.Nil(t, err)
-	assert.True(t, actual.IsAction())
-	assert.True(t, actual.IsStdoutParsable())
+	assert.False(t, actual.IsStdoutResponse())
 
 	// assert.Equal(t, expected, actual)
 }
@@ -76,7 +28,7 @@ func TestUsesNewStepFromReader(t *testing.T) {
 	)
 	assert.Nil(t, err)
 	assert.True(t, actual.IsAction())
-	assert.True(t, actual.IsStdoutParsable())
+	assert.True(t, actual.IsStdoutResponse())
 
 	// assert.Equal(t, expected, actual)
 }

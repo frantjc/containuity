@@ -4,13 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
-
-func NewJobFromBytes(b []byte) (*Job, error) {
-	j := &Job{}
-	return j, yaml.Unmarshal(b, j)
-}
 
 func NewJobFromReader(r io.Reader) (*Job, error) {
 	j := &Job{}
@@ -18,17 +13,13 @@ func NewJobFromReader(r io.Reader) (*Job, error) {
 	return j, d.Decode(j)
 }
 
-func NewJobFromString(s string) (*Job, error) {
-	return NewJobFromBytes([]byte(s))
-}
-
 type Job struct {
-	Steps []Step `yaml:"steps"`
+	Steps []Step `json:",omitempty"`
 }
 
 func (j *Job) GetStep(id string) (*Step, error) {
 	for _, step := range j.Steps {
-		if step.ID() == id {
+		if step.GetID() == id {
 			return &step, nil
 		}
 	}

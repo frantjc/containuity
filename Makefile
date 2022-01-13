@@ -5,16 +5,16 @@ MODULE ?= github.com/frantjc/sequence
 REPOSITORY ?= frantjc/sequence
 TAG ?= latest
 
-.PHONY: img
-img:
+.PHONY: image
+image:
 	$(DOCKER) build -t $(REPOSITORY):$(TAG) --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) .
 
-.PHONY: bin
-bin:
-	$(GO) build -ldflags "-s -w -X $(MODULE).Repository=$(REPOSITORY) -X $(MODULE).Tag=$(TAG)" -o ./bin ./cmd/sqnc
+.PHONY: binaries
+binaries:
+	$(GO) build -ldflags "-s -w -X $(MODULE).Repository=$(REPOSITORY) -X $(MODULE).Tag=$(TAG)" -o ./bin ./cmd/sqnc ./cmd/sqncd ./cmd/sqnctl
 
 .PHONY: all
-all: img bin
+all: image binaries
 
 .PHONY: test
 test:

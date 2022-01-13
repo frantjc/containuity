@@ -1,15 +1,13 @@
-# bin
-bin/
-
-# macOS
-.DS_Store
-
 # IDE
 .vscode/
 .idea/
 
+# macOS
+.DS_Store
+
 # misc
-*.md
-Makefile
+bin/
 Dockerfile
+Makefile
 .*ignore
+*.md
