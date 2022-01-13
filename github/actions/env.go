@@ -199,7 +199,7 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 	e.RunnerToolCache = filepath.Join(eopts.workdir, "runner", "toolcache")
 	e.Env = filepath.Join(eopts.workdir, "github", "env")
 	e.Path = filepath.Join(eopts.workdir, "github", "path")
-	// e.Token = "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"
+	// e.Token = "no"
 
 	repo, err := git.PlainOpen(path)
 	if err != nil {
