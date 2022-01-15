@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"strings"
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/env"
