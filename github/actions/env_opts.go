@@ -14,7 +14,7 @@ type envOpts struct {
 	headRef      string
 	baseRef      string
 	runnerName   string
-	token string
+	token        string
 }
 
 type EnvOpt func(e *envOpts) error

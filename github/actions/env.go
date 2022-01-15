@@ -128,8 +128,8 @@ type Env struct {
 	RunnerTemp      string
 	RunnerToolCache string
 
-	Env   string
-	Path  string
+	Env  string
+	Path string
 
 	Token string
 }
@@ -165,8 +165,8 @@ func (e *Env) Map() map[string]string {
 		EnvVarRunnerTemp:      e.RunnerTemp,
 		EnvVarRunnerToolCache: e.RunnerToolCache,
 
-		EnvVarEnv:   e.Env,
-		EnvVarPath:  e.Path,
+		EnvVarEnv:  e.Env,
+		EnvVarPath: e.Path,
 
 		EnvVarToken: e.Token,
 	}

@@ -68,7 +68,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 			if err != nil {
 				return err
 			}
-		
+
 			step := &sequence.Step{}
 			err = json.Unmarshal(actions.ExpandBytes(b, func(e string) string {
 				return "TODO_CTX_VAR_HERE"
@@ -76,7 +76,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 			if err != nil {
 				return err
 			}
-		
+
 			return RunStep(ctx, r, step, append(opts, runtime.WithMounts(spec.Mounts...), runtime.WithEnv(env.ArrToMap(spec.Env)))...)
 		}
 	}
