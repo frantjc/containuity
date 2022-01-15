@@ -26,10 +26,14 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.2.0 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/sys/mountinfo v0.4.1 // indirect
 	github.com/moby/term v0.0.0-20200312100748-672ec06f55cd // indirect
@@ -39,10 +43,17 @@ require (
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/spf13/afero v1.6.0 // indirect
+	github.com/spf13/cast v1.4.1 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/viper v1.10.1 // indirect
+	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/urfave/cli v1.22.4 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/ini.v1 v1.66.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (

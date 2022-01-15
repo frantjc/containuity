@@ -4,7 +4,7 @@ import "github.com/opencontainers/runtime-spec/specs-go"
 
 var (
 	Labels = map[string]string{
-		"SEQUENCE": "true",
+		"sequence": "true",
 	}
 	Mounts = []specs.Mount{
 		// {

@@ -235,7 +235,7 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 					e.Repository = strings.TrimSuffix(
 						strings.TrimPrefix(prurl.Path, "/"),
 						".git",
-					) 
+					)
 					break
 				}
 			}

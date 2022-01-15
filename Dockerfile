@@ -27,7 +27,7 @@ ENTRYPOINT ["sqnc"]
 
 FROM sequence AS test
 COPY --from=sqnc /usr/local/test/bin /usr/local/test/bin
-ARG SQNC_TEST_ACTION
+ARG SQNC_E2E
 RUN set -e; for test in /usr/local/test/bin/*.test; do \
 		$test; \
 	done

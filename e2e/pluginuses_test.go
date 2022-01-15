@@ -13,28 +13,29 @@ import (
 )
 
 var (
-	TestAction = "frantjc/sequence/testdata@main"
+	testAction = "frantjc/sequence/testdata@main"
 )
 
-func init() {
-	passedTestAction := os.Getenv("SQNC_TEST_ACTION")
-	if passedTestAction != "" {
-		TestAction = passedTestAction
-	}
+func e2eEnabled() bool {
+	return os.Getenv("SQNC_E2E") != ""
 }
 
 func TestSqncPluginUses(t *testing.T) {
-	sqnc := exec.Command(meta.Name, "plugin", "uses", TestAction, "/tmp/test/pluginuses")
-	buf := new(bytes.Buffer)
-	sqnc.Stdout = buf
-	err := sqnc.Run()
-	assert.Nil(t, err)
+	if e2eEnabled() {
+		sqnc := exec.Command(meta.Name, "plugin", "uses", testAction, "/tmp/test/pluginuses")
+		buf := new(bytes.Buffer)
+		sqnc.Stdout = buf
+		err := sqnc.Run()
+		assert.Nil(t, err)
 
-	assert.True(t, sqnc.ProcessState.Exited())
-	assert.Zero(t, sqnc.ProcessState.ExitCode())
+		if sqnc.ProcessState != nil {
+			assert.True(t, sqnc.ProcessState.Exited())
+			assert.Zero(t, sqnc.ProcessState.ExitCode())
+		}
 
-	resp := &sequence.StepResponse{}
-	err = json.NewDecoder(buf).Decode(resp)
-	assert.Nil(t, err)
-	assert.NotNil(t, resp.Step)
+		resp := &sequence.StepResponse{}
+		err = json.NewDecoder(buf).Decode(resp)
+		assert.Nil(t, err)
+		assert.NotNil(t, resp.Step)
+	}
 }

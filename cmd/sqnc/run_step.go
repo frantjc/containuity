@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/defaults"
 	"github.com/frantjc/sequence/orchestrator"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/rs/zerolog/log"
@@ -21,7 +20,6 @@ var runStepCmd = &cobra.Command{
 func init() {
 	runStepCmd.Flags().StringVarP(&stepID, "id", "s", "", "ID of the step to run")
 	runStepCmd.Flags().StringVarP(&jobName, "job", "j", "", "name of the job to run")
-	runStepCmd.Flags().StringVarP(&runtimeName, "runtime", "", defaults.Runtime, "container runtime to use")
 }
 
 func runRunStep(cmd *cobra.Command, args []string) error {
@@ -45,9 +43,7 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 	}
 
 	if stepID != "" {
-		log.Debug().Msg("--id non-empty, must be job or workflow")
 		if jobName != "" {
-			log.Debug().Msg("--job non-empty, must be workflow")
 			workflow, err := sequence.NewWorkflowFromReader(r)
 			if err != nil {
 				log.Debug().Err(err).Msgf("parsing workflow failed %s", path)
@@ -60,7 +56,6 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		} else {
-			log.Debug().Msg("--job empty, must be job")
 			job, err = sequence.NewJobFromReader(r)
 			if err != nil {
 				log.Debug().Err(err).Msgf("parsing job failed %s", path)
@@ -74,7 +69,6 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		log.Debug().Msg("--step empty, must be step")
 		step, err = sequence.NewStepFromReader(r)
 		if err != nil {
 			log.Debug().Err(err).Msgf("parsing step failed %s", path)
