@@ -30,5 +30,5 @@ all: vet binaries
 
 .PHONY: clean
 clean:
-	rm -rf bin/
+	rm -rf bin/*
 	docker system prune --volumes -a --filter label=sequence=true
