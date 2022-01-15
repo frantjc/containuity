@@ -21,7 +21,10 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 }
 
 func NewStepFromAction(a *actions.Action, path string) (*Step, error) {
-	s := &Step{}
+	s := &Step{With: map[string]string{}}
+	for inputName, input := range *a.Inputs {
+		s.With[inputName] = input.Default
+	}
 	switch a.Runs.Using {
 	case "node12":
 		s.Image = "node:12"
@@ -93,6 +96,14 @@ func (s *Step) Merge(step *Step) *Step {
 	}
 	if step.Privileged {
 		s.Privileged = true
+	}
+	for key, value := range step.With {
+		if s.With == nil {
+			s.With = map[string]string{}
+		}
+		if s.With[key] == "" {
+			s.With[key] = value
+		}
 	}
 
 	return s
