@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"runtime"
 	"strings"
 	"time"
+
+	"github.com/frantjc/sequence/github"
+	"github.com/go-git/go-git/v5"
 )
 
-type Contexts struct {
+type ActionsContext struct {
 	ctx           context.Context
 	GitHubContext *GitHubContext
 	EnvContext    map[string]string
@@ -19,22 +23,22 @@ type Contexts struct {
 }
 
 var (
-	_ context.Context = &Contexts{}
+	_ context.Context = &ActionsContext{}
 )
 
-func (c *Contexts) Deadline() (time.Time, bool) {
+func (c *ActionsContext) Deadline() (time.Time, bool) {
 	return c.ctx.Deadline()
 }
 
-func (c *Contexts) Done() <-chan struct{} {
+func (c *ActionsContext) Done() <-chan struct{} {
 	return c.ctx.Done()
 }
 
-func (c *Contexts) Err() error {
+func (c *ActionsContext) Err() error {
 	return c.ctx.Err()
 }
 
-func (c *Contexts) Value(i interface{}) interface{} {
+func (c *ActionsContext) Value(i interface{}) interface{} {
 	if s, ok := i.(string); ok {
 		ss := strings.Split(s, ".")
 		if len(ss) > 0 {
@@ -179,7 +183,7 @@ func (c *Contexts) Value(i interface{}) interface{} {
 }
 
 // Context represents the GitHub Context
-// https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+// https://docs.github.com/en/actions/learn-github-actions/ActionsContext#github-context
 type GitHubContext struct {
 	Action          string
 	ActionPath      string
@@ -207,21 +211,17 @@ type GitHubContext struct {
 }
 
 type JobContext struct {
-	Container *Container
-	Services  map[string]Service
-	Status    string
-}
-
-type Container struct {
-	ID      string
-	Network string
-}
-
-type Service struct {
-	ID      string
-	Network string
-	// not sure if this is correct
-	Ports map[string]string
+	Container *struct {
+		ID      string
+		Network string
+	}
+	Services map[string]struct {
+		ID      string
+		Network string
+		// not sure if this is the correct representation
+		Ports map[string]string
+	}
+	Status string
 }
 
 type StepContext struct {
@@ -236,4 +236,95 @@ type RunnerContext struct {
 	Arch      Arch
 	Temp      string
 	ToolCache string
+}
+
+func defaultCtx() *ActionsContext {
+	return &ActionsContext{
+		GitHubContext: &GitHubContext{
+			ServerURL: github.DefaultURL,
+		},
+		EnvContext:   map[string]string{},
+		JobContext:   &JobContext{},
+		StepsContext: map[string]StepContext{},
+		RunnerContext: &RunnerContext{
+			OS:   OSFrom(runtime.GOOS),
+			Arch: ArchFrom(runtime.GOARCH),
+		},
+		InputsContext: map[string]string{},
+	}
+}
+
+func NewContextFromPath(path string, opts ...CtxOpt) (*ActionsContext, error) {
+	copts := defaultCtxOpts()
+	for _, opt := range opts {
+		err := opt(copts)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	repo, err := git.PlainOpen(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return newCtxFromRepository(repo, copts)
+}
+
+func newCtxFromRepository(r *git.Repository, opts *ctxOpts) (*ActionsContext, error) {
+	c := defaultCtx()
+
+	ref, err := r.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	c.GitHubContext.Sha = ref.Hash().String()
+	c.GitHubContext.RefName = ref.String()
+	c.GitHubContext.Ref = ref.String()
+
+	if ref.Name().IsBranch() {
+		opts.branch = ref.String()
+		c.GitHubContext.RefType = RefTypeBranch
+	} else {
+		c.GitHubContext.RefType = RefTypeTag
+	}
+
+	if conf, err := r.Config(); err == nil {
+		c.GitHubContext.Actor = conf.Author.Name
+		for _, remote := range conf.Remotes {
+			for _, rurl := range remote.URLs {
+				prurl, err := url.Parse(rurl)
+				if err == nil {
+					c.GitHubContext.Repository = strings.TrimSuffix(
+						strings.TrimPrefix(prurl.Path, "/"),
+						".git",
+					)
+					break
+				}
+			}
+		}
+	}
+
+	if branch, err := r.Branch(opts.branch); err == nil {
+		if opts.remote == "" {
+			opts.remote = branch.Remote
+		}
+
+		c.GitHubContext.RefName = branch.Name
+		c.GitHubContext.Ref = branch.Name
+		c.GitHubContext.RefType = RefTypeBranch
+	}
+
+	if remote, err := r.Remote(opts.remote); err == nil {
+		for _, u := range remote.Config().URLs {
+			_, err := url.Parse(u)
+			if err == nil {
+				// override default github urls
+				break
+			}
+		}
+	}
+
+	return c, nil
 }

@@ -22,8 +22,8 @@ type EnvOpt func(e *envOpts) error
 func defaultEnvOpts() *envOpts {
 	u, _ := user.Current()
 	return &envOpts{
-		remote:     "origin",
-		branch:     "main",
+		remote:     defaultRemote,
+		branch:     defaultBranch,
 		workdir:    "/sqnc",
 		runnerName: u.Username,
 	}

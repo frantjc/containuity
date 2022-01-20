@@ -176,6 +176,18 @@ func (e *Env) Arr() []string {
 	return env.MapToArr(e.Map())
 }
 
+func defaultEnv() *Env {
+	return &Env{
+		CI:         true,
+		Actions:    true,
+		ServerURL:  github.DefaultURL,
+		APIURL:     github.DefaultAPIURL,
+		GraphQLURL: github.DefaultGraphQLURL,
+		RunnerOS:   OSFrom(runtime.GOOS),
+		RunnerArch: ArchFrom(runtime.GOARCH),
+	}
+}
+
 func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 	eopts := defaultEnvOpts()
 	for _, opt := range opts {
@@ -185,30 +197,34 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 		}
 	}
 
-	e := defaultEnv()
-	e.Workflow = eopts.workflow
-	e.RunID = eopts.runID
-	e.RunNumber = eopts.runNumber
-	e.Job = eopts.job
-	e.Action = uuid.NewString()
-	e.ActionPath = filepath.Join(eopts.workdir, "action")
-	e.Workspace = filepath.Join(eopts.workdir, "workspace")
-	e.RefProtected = eopts.refProtected
-	e.HeadRef = eopts.headRef
-	e.BaseRef = eopts.baseRef
-	e.RunnerName = eopts.runnerName
-	e.RunnerTemp = filepath.Join(eopts.workdir, "runner", "temp")
-	e.RunnerToolCache = filepath.Join(eopts.workdir, "runner", "toolcache")
-	e.Env = filepath.Join(eopts.workdir, "github", "env")
-	e.Path = filepath.Join(eopts.workdir, "github", "path")
-	e.Token = eopts.token
-
 	repo, err := git.PlainOpen(path)
 	if err != nil {
 		return nil, err
 	}
 
-	ref, err := repo.Head()
+	return newEnvFromRepository(repo, eopts)
+}
+
+func newEnvFromRepository(r *git.Repository, opts *envOpts) (*Env, error) {
+	e := defaultEnv()
+	e.Workflow = opts.workflow
+	e.RunID = opts.runID
+	e.RunNumber = opts.runNumber
+	e.Job = opts.job
+	e.Action = uuid.NewString()
+	e.ActionPath = filepath.Join(opts.workdir, "action")
+	e.Workspace = filepath.Join(opts.workdir, "workspace")
+	e.RefProtected = opts.refProtected
+	e.HeadRef = opts.headRef
+	e.BaseRef = opts.baseRef
+	e.RunnerName = opts.runnerName
+	e.RunnerTemp = filepath.Join(opts.workdir, "runner", "temp")
+	e.RunnerToolCache = filepath.Join(opts.workdir, "runner", "toolcache")
+	e.Env = filepath.Join(opts.workdir, "github", "env")
+	e.Path = filepath.Join(opts.workdir, "github", "path")
+	e.Token = opts.token
+
+	ref, err := r.Head()
 	if err != nil {
 		return nil, err
 	}
@@ -218,20 +234,13 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 	e.Ref = ref.String()
 
 	if ref.Name().IsBranch() {
-		eopts.branch = ref.String()
+		opts.branch = ref.String()
 		e.RefType = RefTypeBranch
 	} else {
 		e.RefType = RefTypeTag
 	}
 
-	for _, opt := range opts {
-		err := opt(eopts)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if conf, err := repo.Config(); err == nil {
+	if conf, err := r.Config(); err == nil {
 		e.Actor = conf.Author.Name
 		for _, remote := range conf.Remotes {
 			for _, rurl := range remote.URLs {
@@ -247,9 +256,9 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 		}
 	}
 
-	if branch, err := repo.Branch(eopts.branch); err == nil {
-		if eopts.remote == "" {
-			eopts.remote = branch.Remote
+	if branch, err := r.Branch(opts.branch); err == nil {
+		if opts.remote == "" {
+			opts.remote = branch.Remote
 		}
 
 		e.RefName = branch.Name
@@ -257,27 +266,15 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 		e.RefType = RefTypeBranch
 	}
 
-	if remote, err := repo.Remote(eopts.remote); err == nil {
+	if remote, err := r.Remote(opts.remote); err == nil {
 		for _, u := range remote.Config().URLs {
-			pu, err := url.Parse(u)
+			_, err := url.Parse(u)
 			if err == nil {
-				e.ServerURL = pu
+				// override default github urls
 				break
 			}
 		}
 	}
 
 	return e, nil
-}
-
-func defaultEnv() *Env {
-	return &Env{
-		CI:         true,
-		Actions:    true,
-		ServerURL:  github.DefaultURL,
-		APIURL:     github.DefaultAPIURL,
-		GraphQLURL: github.DefaultGraphQLURL,
-		RunnerOS:   OSFrom(runtime.GOOS),
-		RunnerArch: ArchFrom(runtime.GOARCH),
-	}
 }

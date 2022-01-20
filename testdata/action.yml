@@ -7,6 +7,7 @@ outputs:
   test:
     description: test output
 runs:
-  using: docker://alpine
+  using: docker
+  image: docker://alpine
   args:
     - env

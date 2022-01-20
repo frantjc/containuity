@@ -16,7 +16,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:               meta.Name,
 	Version:           meta.Semver(),
-	PersistentPreRunE: persistentPreRun,
+	PersistentPreRunE: rootPersistentPreRun,
 }
 
 const (
@@ -63,12 +63,12 @@ func main() {
 	os.Exit(0)
 }
 
-func persistentPreRun(cmd *cobra.Command, args []string) error {
+func rootPersistentPreRun(cmd *cobra.Command, args []string) error {
 	if verbose {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	return viper.SafeWriteConfigAs(fmt.Sprintf("%s/.%s/%s", home, meta.Name, configName))
+	return nil
 }

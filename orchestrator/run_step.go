@@ -7,15 +7,21 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/env"
-	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/meta"
 	"github.com/frantjc/sequence/plan"
 	"github.com/frantjc/sequence/runtime"
 )
 
 // TODO should we be using runtime.SpecOpts here?
-func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...runtime.SpecOpt) error {
+func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...OrchOpt) error {
+	oo := &orchOpts{}
+	for _, opt := range opts {
+		err := opt(oo)
+		if err != nil {
+			return err
+		}
+	}
+
 	spec, err := plan.PlanStep(ctx, s)
 	if err != nil {
 		return err
@@ -38,7 +44,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 		}
 	}
 
-	copts := append([]runtime.SpecOpt{runtime.WithSpec(spec)}, opts...)
+	copts := append([]runtime.SpecOpt{runtime.WithSpec(spec)}, oo.sopts...)
 	container, err := r.Create(ctx, copts...)
 	if err != nil {
 		return err
@@ -63,21 +69,8 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 		}
 
 		if resp.Step != nil {
-			mergedStep := s.Merge(resp.Step)
-			b, err := json.Marshal(mergedStep)
-			if err != nil {
-				return err
-			}
-
-			step := &sequence.Step{}
-			err = json.Unmarshal(actions.ExpandBytes(b, func(e string) string {
-				return "TODO_CTX_VAR_HERE"
-			}), step)
-			if err != nil {
-				return err
-			}
-
-			return RunStep(ctx, r, step, append(opts, runtime.WithMounts(spec.Mounts...), runtime.WithEnv(env.ArrToMap(spec.Env)))...)
+			ropts := opts
+			return RunStep(ctx, r, s.MergeOverride(resp.Step).Canonical(), ropts...)
 		}
 	}
 

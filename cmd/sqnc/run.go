@@ -9,7 +9,8 @@ import (
 )
 
 var runCmd = &cobra.Command{
-	Use: "run",
+	Use:               "run",
+	PersistentPreRunE: runPersistentPreRun,
 }
 
 const (
@@ -31,4 +32,9 @@ func init() {
 		runStepCmd,
 	)
 	viper.BindPFlags(runCmd.Flags())
+}
+
+func runPersistentPreRun(cmd *cobra.Command, args []string) error {
+	viper.SafeWriteConfig()
+	return nil
 }
