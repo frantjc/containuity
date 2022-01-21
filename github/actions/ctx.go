@@ -49,7 +49,7 @@ func (c *ActionsContext) Value(i interface{}) interface{} {
 					case "action":
 						return c.GitHubContext.Action
 					case "action_path":
-						return c.GitHubContext.Action
+						return c.GitHubContext.ActionPath
 					case "actor":
 						return c.GitHubContext.Actor
 					case "base_ref":

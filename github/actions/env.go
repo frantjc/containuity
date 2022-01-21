@@ -205,6 +205,7 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 	return newEnvFromRepository(repo, eopts)
 }
 
+// get from cli, .git, or remote
 func newEnvFromRepository(r *git.Repository, opts *envOpts) (*Env, error) {
 	e := defaultEnv()
 	e.Workflow = opts.workflow

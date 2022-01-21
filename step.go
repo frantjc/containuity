@@ -92,6 +92,12 @@ func (s *Step) IsAction() bool {
 // Merge sets all of this step's undefined fields with
 // the given step's fields
 func (s *Step) Merge(step *Step) *Step {
+	if s.Entrypoint == nil || len(s.Entrypoint) == 0 {
+		s.Entrypoint = step.Entrypoint
+	}
+	if s.Cmd == nil || len(s.Cmd) == 0 {
+		s.Cmd = step.Cmd
+	}
 	if s.ID == "" {
 		s.ID = step.ID
 	}
@@ -152,7 +158,6 @@ func (s *Step) MergeOverride(step *Step) *Step {
 func (s *Step) Canonical() *Step {
 	if s.Image != "" {
 		s.Uses = ""
-		s.With = map[string]string{}
 		s.Get = ""
 		s.Put = ""
 		s.Params = map[string]interface{}{}

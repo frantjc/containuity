@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -49,16 +50,35 @@ func PlanStep(ctx context.Context, s *sequence.Step, opts ...PlanOpt) (*runtime.
 		}
 	}
 
+	ghvars, err := actions.NewVarsFromPath(popts.path)
+	if err != nil {
+		return nil, err
+	}
+
+	ghenv := ghvars.Env
+	stepBytes, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+
+	expandedStep := &sequence.Step{}
+	err = json.Unmarshal(actions.ExpandBytes(stepBytes, func(s string) string { return ghvars.ActionsContext.Value(s).(string) }), expandedStep)
+	if err != nil {
+		return nil, err
+	}
+
 	spec := defaultSpec()
-	spec.Privileged = s.Privileged
+	spec.Privileged = expandedStep.Privileged
 
-	if s.IsAction() {
-		ghenv, err := actions.NewEnvFromPath(popts.path)
-		if err != nil {
-			return nil, err
-		}
+	inputs := []string{}
+	for input, val := range expandedStep.With {
+		inputs = append(inputs, fmt.Sprintf("INPUT_%s", strings.ToUpper(strings.ReplaceAll(input, "-", "_"))), val)
+	}
+	spec.Env = append(spec.Env, env.ToArr(inputs...)...)
 
-		action, err := actions.ParseReference(s.Uses)
+	if expandedStep.IsAction() {
+
+		action, err := actions.ParseReference(expandedStep.Uses)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +133,7 @@ func PlanStep(ctx context.Context, s *sequence.Step, opts ...PlanOpt) (*runtime.
 			},
 		}...)
 		e := ghenv.Arr()
-		e = append(e, env.MapToArr(s.Env)...)
+		e = append(e, env.MapToArr(expandedStep.Env)...)
 		spec.Env = append(spec.Env, e...)
 		spec.Cwd = ghenv.Workspace
 
@@ -121,28 +141,24 @@ func PlanStep(ctx context.Context, s *sequence.Step, opts ...PlanOpt) (*runtime.
 		// since we own it and users will likely already have it stored locally
 		spec.Image = meta.Image()
 
-		if s.Uses != "" {
-			spec.Cmd = []string{"plugin", "uses", s.Uses, ghenv.ActionPath}
-			inputs := []string{}
-			for input, val := range s.With {
-				inputs = append(inputs, strings.ToUpper(strings.ReplaceAll(input, "-", "_")), val)
-			}
-			spec.Env = append(spec.Env, env.ToArr(inputs...)...)
-		} else if s.Run != "" {
-			switch s.Shell {
+		if expandedStep.Uses != "" {
+			spec.Cmd = []string{"plugin", "uses", expandedStep.Uses, ghenv.ActionPath}
+
+		} else if expandedStep.Run != "" {
+			switch expandedStep.Shell {
 			case "/bin/bash", "bash":
 				spec.Entrypoint = []string{"/bin/bash", "-c"}
 			case "/bin/sh", "sh", "":
 				spec.Entrypoint = []string{"/bin/sh", "-c"}
 			default:
-				return nil, fmt.Errorf("unsupported shell %s", s.Shell)
+				return nil, fmt.Errorf("unsupported shell %s", expandedStep.Shell)
 			}
-			spec.Cmd = []string{s.Run}
+			spec.Cmd = []string{expandedStep.Run}
 		}
 	} else {
-		spec.Image = s.Image
-		spec.Entrypoint = s.Entrypoint
-		spec.Cmd = s.Cmd
+		spec.Image = expandedStep.Image
+		spec.Entrypoint = expandedStep.Entrypoint
+		spec.Cmd = expandedStep.Cmd
 	}
 
 	return spec, nil

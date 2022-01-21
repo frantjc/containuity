@@ -7,13 +7,16 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/meta"
 	"github.com/frantjc/sequence/plan"
 	"github.com/frantjc/sequence/runtime"
+	"github.com/rs/zerolog/log"
 )
 
 // TODO should we be using runtime.SpecOpts here?
 func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...OrchOpt) error {
+	log.Info().Msgf("%s", s)
 	oo := &orchOpts{}
 	for _, opt := range opts {
 		err := opt(oo)
@@ -67,10 +70,10 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 		if err = json.NewDecoder(buf).Decode(resp); err != nil {
 			return err
 		}
-
+		log.Info().Msgf("%s", resp)
 		if resp.Step != nil {
-			ropts := opts
-			return RunStep(ctx, r, s.MergeOverride(resp.Step).Canonical(), ropts...)
+			ropts := append(opts, WithSpecOpts(runtime.WithMounts(spec.Mounts...), runtime.WithEnv(env.ArrToMap(spec.Env))))
+			return RunStep(ctx, r, s.Merge(resp.Step).Canonical(), ropts...)
 		}
 	}
 
