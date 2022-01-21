@@ -11,10 +11,20 @@ import (
 	"github.com/frantjc/sequence/meta"
 	"github.com/frantjc/sequence/plan"
 	"github.com/frantjc/sequence/runtime"
+	"github.com/rs/zerolog/log"
 )
 
 // TODO should we be using runtime.SpecOpts here?
-func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...runtime.SpecOpt) error {
+func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...OrchOpt) error {
+	log.Info().Msgf("%s", s)
+	oo := &orchOpts{}
+	for _, opt := range opts {
+		err := opt(oo)
+		if err != nil {
+			return err
+		}
+	}
+
 	spec, err := plan.PlanStep(ctx, s)
 	if err != nil {
 		return err
@@ -37,7 +47,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 		}
 	}
 
-	copts := append([]runtime.SpecOpt{runtime.WithSpec(spec)}, opts...)
+	copts := append([]runtime.SpecOpt{runtime.WithSpec(spec)}, oo.sopts...)
 	container, err := r.Create(ctx, copts...)
 	if err != nil {
 		return err
@@ -60,9 +70,10 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 		if err = json.NewDecoder(buf).Decode(resp); err != nil {
 			return err
 		}
-
+		log.Info().Msgf("%s", resp)
 		if resp.Step != nil {
-			return RunStep(ctx, r, resp.Step.Merge(s), append(opts, runtime.WithMounts(spec.Mounts...), runtime.WithEnv(env.ArrToMap(spec.Env)))...)
+			ropts := append(opts, WithSpecOpts(runtime.WithMounts(spec.Mounts...), runtime.WithEnv(env.ArrToMap(spec.Env))))
+			return RunStep(ctx, r, s.Merge(resp.Step).Canonical(), ropts...)
 		}
 	}
 

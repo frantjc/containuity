@@ -3,52 +3,13 @@ package actions
 import (
 	"context"
 	"errors"
-	"net/url"
 	"path/filepath"
 
-	"github.com/frantjc/sequence/github"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/rs/zerolog/log"
 )
-
-type cloneOpts struct {
-	path      string
-	insecure  bool
-	gitHubURL *url.URL
-}
-
-func defaultCloneOps() *cloneOpts {
-	return &cloneOpts{
-		path:      ".",
-		gitHubURL: github.DefaultURL,
-	}
-}
-
-type CloneOpt func(*cloneOpts) error
-
-func WithPath(p string) CloneOpt {
-	return func(copts *cloneOpts) error {
-		copts.path = filepath.Clean(p)
-		return nil
-	}
-}
-
-func WithGitHubURL(u string) CloneOpt {
-	return func(copts *cloneOpts) error {
-		var err error
-		copts.gitHubURL, err = url.Parse(u)
-		return err
-	}
-}
-
-func WithInsecure() CloneOpt {
-	return func(copts *cloneOpts) error {
-		copts.insecure = true
-		return nil
-	}
-}
 
 func Clone(r Reference, opts ...CloneOpt) (*Action, error) {
 	return CloneContext(context.Background(), r, opts...)
@@ -56,7 +17,7 @@ func Clone(r Reference, opts ...CloneOpt) (*Action, error) {
 
 func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Action, error) {
 	var (
-		copts = defaultCloneOps()
+		copts = defaultCloneOpts()
 	)
 	for _, opt := range opts {
 		err := opt(copts)

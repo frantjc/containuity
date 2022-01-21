@@ -23,8 +23,6 @@ func (c *dockerContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt) err
 	if err != nil {
 		return err
 	}
-	// TODO should we do this?
-	// go io.Copy(attachResp.Conn, c.opts.Stdin)
 	// TODO prettify this
 	go stdcopy.StdCopy(e.Stdout, e.Stderr, attachResp.Reader)
 

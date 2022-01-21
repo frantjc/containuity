@@ -5,9 +5,11 @@ MODULE ?= github.com/frantjc/sequence
 REPOSITORY ?= frantjc/sequence
 TAG ?= latest
 
+SQNC_E2E ?=
+
 .PHONY: test
 test:
-	$(DOCKER) build -t $(REPOSITORY):test --build-arg SQNC_E2E=yes --build-arg repository=$(REPOSITORY) --build-arg tag=test --target=test .
+	$(DOCKER) build -t $(REPOSITORY):test --build-arg SQNC_E2E=$(SQNC_E2E) --build-arg repository=$(REPOSITORY) --build-arg tag=test --target=test .
 
 .PHONY: image
 image: test
