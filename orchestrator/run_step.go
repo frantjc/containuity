@@ -256,6 +256,13 @@ func expandStep(s *sequence.Step, ctx *actions.ActionsContext) (*sequence.Step, 
 }
 
 func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, copts []runtime.SpecOpt, eopts []runtime.ExecOpt) error {
+	if s.Image != meta.Image() {
+		_, err := r.Pull(ctx, s.Image)
+		if err != nil {
+			return err
+		}
+	}
+
 	container, err := r.Create(ctx, copts...)
 	if err != nil {
 		return err
