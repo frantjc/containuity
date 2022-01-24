@@ -20,7 +20,7 @@ import (
 
 var (
 	readonly = []string{runtime.MountOptReadOnly}
-	workdir = ""
+	workdir  = ""
 )
 
 func init() {
@@ -37,8 +37,8 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 	var (
 		oo = &orchOpts{
 			workflow: &sequence.Workflow{},
-			job: &sequence.Job{},
-			path: ".",
+			job:      &sequence.Job{},
+			path:     ".",
 		}
 	)
 	for _, opt := range opts {
@@ -79,10 +79,10 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 			Env:        append(ghenv.Arr(), "SEQUENCE=true"),
 			Mounts: []specs.Mount{
 				{
-					Source: "/etc/ssl",
+					Source:      "/etc/ssl",
 					Destination: "/etc/ssl",
-					Type: runtime.MountTypeBind,
-					Options: readonly,
+					Type:        runtime.MountTypeBind,
+					Options:     readonly,
 				},
 				{
 					Source:      filepath.Join(workdir, id, "workspace"),
@@ -154,16 +154,16 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 
 	spec.Mounts = append(spec.Mounts, []specs.Mount{
 		{
-			Source: "/etc/hosts",
+			Source:      "/etc/hosts",
 			Destination: "/etc/hosts",
-			Type: runtime.MountTypeBind,
-			Options: readonly,
+			Type:        runtime.MountTypeBind,
+			Options:     readonly,
 		},
 		{
-			Source: "/etc/resolv.conf",
+			Source:      "/etc/resolv.conf",
 			Destination: "/etc/resolv.conf",
-			Type: runtime.MountTypeBind,
-			Options: readonly,
+			Type:        runtime.MountTypeBind,
+			Options:     readonly,
 		},
 		// these are _files_, NOT directories, that are used like
 		// $ echo "MY_VAR=myval" >> $GITHUB_ENV
