@@ -10,7 +10,7 @@ type orchOpts struct {
 	jobName  string
 	job      *sequence.Job
 	workflow *sequence.Workflow
-	sopts []runtime.SpecOpt
+	sopts    []runtime.SpecOpt
 }
 
 type OrchOpt func(*orchOpts) error
