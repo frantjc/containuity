@@ -3,7 +3,6 @@ package orchestrator
 import (
 	"bytes"
 	"context"
-	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -48,7 +47,8 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 		}
 	}
 
-	ghvars, err := actions.NewVarsFromPath(oo.path)
+	vopts := []actions.VarsOpt{actions.WithToken(oo.gitHubToken)}
+	ghvars, err := actions.NewVarsFromPath(oo.path, vopts...)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 		ghenv = ghvars.Env
 		ghctx = ghvars.ActionsContext
 	)
-	es, err := expandStep(s, ghctx)
+	es, err := expandStep(s.Canonical(), ghctx)
 	if err != nil {
 		return err
 	}
@@ -66,9 +66,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 		// generate a unique, reproducible, directory-name-compliant ID from the current context
 		// so that steps that are a part of the same job share the same mounts
 		id = base64.URLEncoding.EncodeToString(
-			sha1.New().Sum(
-				[]byte(oo.path + oo.workflow.Name + oo.jobName),
-			),
+			[]byte(oo.path + oo.workflow.Name + oo.jobName),
 		)
 		gitHubEnv  = filepath.Join(workdir, id, "github", "env")
 		gitHubPath = filepath.Join(workdir, id, "github", "path")
@@ -127,20 +125,27 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 			Destination: ghenv.ActionPath,
 			Type:        runtime.MountTypeBind,
 		})
-	} else if es.Run != "" {
-		switch es.Shell {
-		case "/bin/bash", "bash":
-			spec.Entrypoint = []string{"/bin/bash", "-c"}
-		case "/bin/sh", "sh", "":
-			spec.Entrypoint = []string{"/bin/sh", "-c"}
-		default:
-			return fmt.Errorf("unsupported shell '%s'", es.Shell)
+	} else {
+		if es.Image != "" {
+			spec.Image = es.Image
+		} else {
+			spec.Image = meta.Image()
 		}
-		spec.Cmd = []string{es.Run}
-	} else if es.Image != "" {
-		spec.Image = es.Image
-		spec.Entrypoint = es.Entrypoint
-		spec.Cmd = es.Cmd
+
+		if es.Run != "" {
+			switch es.Shell {
+			case "/bin/bash", "bash":
+				spec.Entrypoint = []string{"/bin/bash", "-c"}
+			case "/bin/sh", "sh", "":
+				spec.Entrypoint = []string{"/bin/sh", "-c"}
+			default:
+				return fmt.Errorf("unsupported shell '%s'", es.Shell)
+			}
+			spec.Cmd = []string{es.Run}
+		} else {
+			spec.Entrypoint = es.Entrypoint
+			spec.Cmd = es.Cmd
+		}
 	}
 
 	for _, mount := range spec.Mounts {
@@ -152,6 +157,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 		}
 	}
 
+	// these are _files_, NOT directories
 	spec.Mounts = append(spec.Mounts, []specs.Mount{
 		{
 			Source:      "/etc/hosts",
@@ -165,7 +171,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 			Type:        runtime.MountTypeBind,
 			Options:     readonly,
 		},
-		// these are _files_, NOT directories, that are used like
+		// these are used like
 		// $ echo "MY_VAR=myval" >> $GITHUB_ENV
 		// $ echo "/.mybin" >> $GITHUB_PATH
 		// respectively. TODO source the contents of these files into spec.Env

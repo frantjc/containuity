@@ -6,11 +6,12 @@ import (
 )
 
 type orchOpts struct {
-	path     string
-	jobName  string
-	job      *sequence.Job
-	workflow *sequence.Workflow
-	sopts    []runtime.SpecOpt
+	path        string
+	jobName     string
+	job         *sequence.Job
+	workflow    *sequence.Workflow
+	sopts       []runtime.SpecOpt
+	gitHubToken string
 }
 
 type OrchOpt func(*orchOpts) error
@@ -46,6 +47,13 @@ func WithJob(j *sequence.Job) OrchOpt {
 func WithWorkflow(w *sequence.Workflow) OrchOpt {
 	return func(oo *orchOpts) error {
 		oo.workflow = w
+		return nil
+	}
+}
+
+func WithGitHubToken(token string) OrchOpt {
+	return func(oo *orchOpts) error {
+		oo.gitHubToken = token
 		return nil
 	}
 }

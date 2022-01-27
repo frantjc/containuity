@@ -1,17 +1,17 @@
 jobs:
+  build:
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: build
+        image: golang:1.17
+        run: |
+          go build ./cmd/sqnc
   test:
     steps:
-      - name: echo
-        image: alpine
-        entrypoint:
-          - sh
-        cmd:
-          - -c
-          - "pwd && ls -al && echo test > test.txt"
-      - name: cat
-        image: alpine
-        entrypoint:
-          - sh
-        cmd:
-          - -c
-          - "pwd && ls -al && cat test.txt"
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: test
+        image: golang:1.17
+        run: |
+          go test ./...

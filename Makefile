@@ -17,7 +17,9 @@ image: test
 
 .PHONY: binaries
 binaries: image
-	$(DOCKER) run --rm --entrypoint sh -v `pwd`/bin:/assets $(REPOSITORY):$(TAG) -c "cp /usr/local/bin/* /assets"
+	$(DOCKER) build -t $(REPOSITORY):bin --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --target=bin .
+	$(DOCKER) run --rm -v `pwd`/bin:/assets $(REPOSITORY):bin sh -c "cp /usr/local/bin/* /assets"
+	chmod +x bin/*
 
 .PHONY: fmt
 fmt:

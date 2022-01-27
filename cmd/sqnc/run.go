@@ -9,8 +9,7 @@ import (
 )
 
 var runCmd = &cobra.Command{
-	Use:               "run",
-	PersistentPreRunE: runPersistentPreRun,
+	Use: "run",
 }
 
 const (
@@ -19,22 +18,21 @@ const (
 
 var (
 	runtimeName string
-)
-
-var (
-	jobName string
-	stepID  string
+	jobName     string
+	stepID      string
+	gitHubToken string
 )
 
 func init() {
-	runStepCmd.PersistentFlags().StringVarP(&runtimeName, "runtime", "", defaults.Runtime, "container runtime to use")
+	runCmd.PersistentFlags().StringVarP(&runtimeName, "runtime", "r", defaults.Runtime, "container runtime to use")
+	runCmd.PersistentFlags().StringVar(&gitHubToken, "github-token", "", "GitHub token")
+
+	viper.BindPFlag("runtime.name", runCmd.Flag("runtime"))
+	viper.BindPFlag("github.token", runCmd.Flag("github-token"))
+
 	runCmd.AddCommand(
 		runStepCmd,
+		runJobCmd,
+		runWorkflowCmd,
 	)
-	viper.BindPFlags(runCmd.Flags())
-}
-
-func runPersistentPreRun(cmd *cobra.Command, args []string) error {
-	viper.SafeWriteConfig()
-	return nil
 }
