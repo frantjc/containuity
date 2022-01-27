@@ -36,6 +36,6 @@ func TestSqncPluginUses(t *testing.T) {
 		resp := &sequence.StepResponse{}
 		err = json.NewDecoder(buf).Decode(resp)
 		assert.Nil(t, err)
-		assert.NotNil(t, resp.Step)
+		assert.NotNil(t, resp.Action)
 	}
 }

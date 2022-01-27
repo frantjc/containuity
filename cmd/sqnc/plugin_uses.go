@@ -45,13 +45,7 @@ func runPluginUses(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	s, err := sequence.NewStepFromAction(a, path)
-	if err != nil {
-		log.Debug().Err(err).Msg("converting action to step failed")
-		return err
-	}
-
 	return json.NewEncoder(os.Stdout).Encode(&sequence.StepResponse{
-		Step: s,
+		Action: a,
 	})
 }

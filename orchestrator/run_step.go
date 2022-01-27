@@ -206,8 +206,13 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...O
 			return err
 		}
 
-		if resp.Step != nil {
-			es, err = expandStep(es.Merge(resp.Step).Canonical(), ghctx)
+		if resp.Action != nil {
+			rs, err := sequence.NewStepFromAction(resp.Action, oo.path)
+			if err != nil {
+				return err
+			}
+
+			es, err = expandStep(es.Merge(rs).Canonical(), ghctx)
 			if err != nil {
 				return err
 			}
