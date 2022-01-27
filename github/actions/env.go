@@ -188,10 +188,10 @@ func defaultEnv() *Env {
 	}
 }
 
-func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
-	eopts := defaultEnvOpts()
+func NewEnvFromPath(path string, opts ...VarsOpt) (*Env, error) {
+	vopts := defaultVarsOpts()
 	for _, opt := range opts {
-		err := opt(eopts)
+		err := opt(vopts)
 		if err != nil {
 			return nil, err
 		}
@@ -202,11 +202,11 @@ func NewEnvFromPath(path string, opts ...EnvOpt) (*Env, error) {
 		return nil, err
 	}
 
-	return newEnvFromRepository(repo, eopts)
+	return newEnvFromRepository(repo, vopts)
 }
 
-// get from cli, .git, or remote
-func newEnvFromRepository(r *git.Repository, opts *envOpts) (*Env, error) {
+// get from cli flags, env, config file, .git or remote
+func newEnvFromRepository(r *git.Repository, opts *varsOpts) (*Env, error) {
 	e := defaultEnv()
 	e.Workflow = opts.workflow
 	e.RunID = opts.runID

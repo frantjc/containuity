@@ -1,26 +1,37 @@
 package actions
 
+import "os/user"
+
 type varsOpts struct {
-	eopts []EnvOpt
-	copts []CtxOpt
+	remote       string
+	branch       string
+	workdir      string
+	workflow     string
+	runID        int
+	runNumber    int
+	job          string
+	refProtected bool
+	headRef      string
+	baseRef      string
+	runnerName   string
+	token        string
 }
 
 type VarsOpt func(v *varsOpts) error
 
 func defaultVarsOpts() *varsOpts {
-	return &varsOpts{}
-}
-
-func WithEnvOpts(opts ...EnvOpt) VarsOpt {
-	return func(v *varsOpts) error {
-		v.eopts = opts
-		return nil
+	u, _ := user.Current()
+	return &varsOpts{
+		remote:     defaultRemote,
+		branch:     defaultBranch,
+		workdir:    "/sqnc",
+		runnerName: u.Username,
 	}
 }
 
-func WithCtxOpts(opts ...CtxOpt) VarsOpt {
-	return func(v *varsOpts) error {
-		v.copts = opts
+func WithToken(token string) VarsOpt {
+	return func(vo *varsOpts) error {
+		vo.token = token
 		return nil
 	}
 }

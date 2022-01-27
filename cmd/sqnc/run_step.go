@@ -82,5 +82,5 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return orchestrator.RunStep(ctx, rt, step)
+	return orchestrator.RunStep(ctx, rt, step, orchestrator.WithGitHubToken(gitHubToken))
 }

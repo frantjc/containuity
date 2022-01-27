@@ -1,6 +1,6 @@
-image: docker.io/library/alpine
+image: golang:1.17
 entrypoint:
-  - sh
+  - go
 cmd:
-  - -c
-  - "pwd && ls -al"
+  - test
+  - ./...

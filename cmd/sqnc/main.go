@@ -46,9 +46,9 @@ func init() {
 	)
 	viper.SetConfigName(configName)
 	viper.SetConfigType("toml")
-	viper.AddConfigPath(fmt.Sprintf("/etc/%s", meta.Name))
-	viper.AddConfigPath(fmt.Sprintf("%s/.%s", home, meta.Name))
 	viper.AddConfigPath(".")
+	viper.AddConfigPath(fmt.Sprintf("%s/.%s", home, meta.Name))
+	viper.AddConfigPath(fmt.Sprintf("/etc/%s", meta.Name))
 	viper.SetEnvPrefix(strings.ToUpper(meta.Name))
 	viper.AllowEmptyEnv(true)
 }

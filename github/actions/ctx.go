@@ -254,10 +254,10 @@ func defaultCtx() *ActionsContext {
 	}
 }
 
-func NewContextFromPath(path string, opts ...CtxOpt) (*ActionsContext, error) {
-	copts := defaultCtxOpts()
+func NewContextFromPath(path string, opts ...VarsOpt) (*ActionsContext, error) {
+	vopts := defaultVarsOpts()
 	for _, opt := range opts {
-		err := opt(copts)
+		err := opt(vopts)
 		if err != nil {
 			return nil, err
 		}
@@ -268,11 +268,12 @@ func NewContextFromPath(path string, opts ...CtxOpt) (*ActionsContext, error) {
 		return nil, err
 	}
 
-	return newCtxFromRepository(repo, copts)
+	return newCtxFromRepository(repo, vopts)
 }
 
-func newCtxFromRepository(r *git.Repository, opts *ctxOpts) (*ActionsContext, error) {
+func newCtxFromRepository(r *git.Repository, opts *varsOpts) (*ActionsContext, error) {
 	c := defaultCtx()
+	c.GitHubContext.Token = opts.token
 
 	ref, err := r.Head()
 	if err != nil {

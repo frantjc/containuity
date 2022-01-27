@@ -16,33 +16,17 @@ func NewVarsFromPath(path string, opts ...VarsOpt) (*Vars, error) {
 		}
 	}
 
-	eopts := defaultEnvOpts()
-	for _, opt := range vopts.eopts {
-		err := opt(eopts)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	repo, err := git.PlainOpen(path)
 	if err != nil {
 		return nil, err
 	}
 
-	env, err := newEnvFromRepository(repo, eopts)
+	env, err := newEnvFromRepository(repo, vopts)
 	if err != nil {
 		return nil, err
 	}
 
-	copts := defaultCtxOpts()
-	for _, opt := range vopts.copts {
-		err := opt(copts)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	ctx, err := newCtxFromRepository(repo, copts)
+	ctx, err := newCtxFromRepository(repo, vopts)
 	if err != nil {
 		return nil, err
 	}

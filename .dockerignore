@@ -7,7 +7,7 @@
 
 # misc
 bin/
-Dockerfile
+Dockerfile*
 Makefile
 .*ignore
 *.md
