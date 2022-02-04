@@ -16,20 +16,6 @@ type runOpts struct {
 
 type runOpt func(*runOpts) error
 
-func withSpecOpts(opts ...runtime.SpecOpt) runOpt {
-	return func(ro *runOpts) error {
-		ro.sopts = opts
-		return nil
-	}
-}
-
-func withPath(path string) runOpt {
-	return func(ro *runOpts) error {
-		ro.path = path
-		return nil
-	}
-}
-
 func withJobName(j string) runOpt {
 	return func(ro *runOpts) error {
 		ro.jobName = j

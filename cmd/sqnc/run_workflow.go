@@ -49,7 +49,7 @@ func runRunWorkflow(cmd *cobra.Command, args []string) error {
 
 func runWorkflow(ctx context.Context, r runtime.Runtime, w *sequence.Workflow, opts ...runOpt) error {
 	for name, job := range w.Jobs {
-		err := runJob(ctx, r, &job, append(opts, withJobName(name), withJob(&job))...)
+		err := runJob(ctx, r, &job, append(opts, withJobName(name), withJob(&job), withWorkflow(w))...)
 		if err != nil {
 			return err
 		}
