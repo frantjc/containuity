@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"strings"
 
+	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/meta"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -16,7 +15,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:               meta.Name,
 	Version:           meta.Semver(),
-	PersistentPreRunE: rootPersistentPreRun,
+	PersistentPreRunE: persistentPreRun,
 }
 
 const (
@@ -49,7 +48,7 @@ func init() {
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(fmt.Sprintf("%s/.%s", home, meta.Name))
 	viper.AddConfigPath(fmt.Sprintf("/etc/%s", meta.Name))
-	viper.SetEnvPrefix(strings.ToUpper(meta.Name))
+	viper.SetEnvPrefix(meta.Name)
 	viper.AllowEmptyEnv(true)
 }
 
@@ -63,12 +62,7 @@ func main() {
 	os.Exit(0)
 }
 
-func rootPersistentPreRun(cmd *cobra.Command, args []string) error {
-	if verbose {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	} else {
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	}
-
-	return nil
+func persistentPreRun(cmd *cobra.Command, args []string) error {
+	log.SetVerbose(verbose)
+	return viper.ReadInConfig()
 }

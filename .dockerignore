@@ -5,9 +5,14 @@
 # macOS
 .DS_Store
 
-# misc
+# dev
 bin/
 Dockerfile*
 Makefile
+
+# misc
 .*ignore
 *.md
+
+# go
+vendor/

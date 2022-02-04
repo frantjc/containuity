@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"os"
 
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types"
@@ -12,6 +11,11 @@ import (
 )
 
 func (r *dockerRuntime) Pull(ctx context.Context, ref string, opts ...runtime.PullOpt) (runtime.Image, error) {
+	p, err := runtime.NewPull(opts...)
+	if err != nil {
+		return nil, err
+	}
+
 	pref, err := name.ParseReference(ref)
 	if err != nil {
 		return nil, err
@@ -22,5 +26,5 @@ func (r *dockerRuntime) Pull(ctx context.Context, ref string, opts ...runtime.Pu
 		return nil, err
 	}
 
-	return nil, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(os.Stdout), nil)
+	return nil, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(p.Stdout), nil)
 }

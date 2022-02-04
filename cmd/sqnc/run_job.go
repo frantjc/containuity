@@ -1,11 +1,11 @@
 package main
 
 import (
+	"context"
 	"io"
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/orchestrator"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/spf13/cobra"
 )
@@ -38,6 +38,7 @@ func runRunJob(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	getConfig()
 	if jobName != "" {
 		workflow, err := sequence.NewWorkflowFromReader(r)
 		if err != nil {
@@ -60,5 +61,16 @@ func runRunJob(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return orchestrator.RunJob(ctx, rt, job, orchestrator.WithGitHubToken(gitHubToken), orchestrator.WithJobName(jobName))
+	return runJob(ctx, rt, job, withGitHubToken(gitHubToken), withJobName(jobName))
+}
+
+func runJob(ctx context.Context, r runtime.Runtime, j *sequence.Job, opts ...runOpt) error {
+	for _, step := range j.Steps {
+		err := runStep(ctx, r, &step, append(opts, withJob(j))...)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
