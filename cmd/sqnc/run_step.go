@@ -88,7 +88,6 @@ func runRunStep(cmd *cobra.Command, args []string) error {
 	return runStep(ctx, rt, step, withGitHubToken(gitHubToken))
 }
 
-
 var (
 	readonly = []string{runtime.MountOptReadOnly}
 	workdir  = ""
@@ -259,12 +258,12 @@ func runStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 	}...)
 
 	var (
-		stdout = log.NewPrefixedInfoWriter(log.ColorInfo+"| "+log.ColorNone)
-		popts = []runtime.PullOpt{runtime.WithStream(stdout)}
-		copts = append([]runtime.SpecOpt{runtime.WithSpec(spec)}, ro.sopts...)
+		stdout = log.NewPrefixedInfoWriter(log.ColorInfo + "| " + log.ColorNone)
+		popts  = []runtime.PullOpt{runtime.WithStream(stdout)}
+		copts  = append([]runtime.SpecOpt{runtime.WithSpec(spec)}, ro.sopts...)
 		outbuf = new(bytes.Buffer)
 		errbuf = stdout
-		eopts = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
+		eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 	)
 	if !s.IsStdoutResponse() {
 		eopts[0] = runtime.WithStreams(os.Stdin, stdout, errbuf)
@@ -307,9 +306,9 @@ func runStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 			}
 
 			var (
-				copts = append([]runtime.SpecOpt{runtime.WithSpec(spec)}, ro.sopts...)
+				copts  = append([]runtime.SpecOpt{runtime.WithSpec(spec)}, ro.sopts...)
 				outbuf = stdout
-				eopts = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
+				eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 			)
 			log.Infof("%s| running step %s%s", log.ColorInfo, es.GetID(), log.ColorNone)
 			err = runSpec(ctx, r, spec, popts, copts, eopts)

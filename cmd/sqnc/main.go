@@ -13,8 +13,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     meta.Name,
-	Version: meta.Semver(),
+	Use:               meta.Name,
+	Version:           meta.Semver(),
 	PersistentPreRunE: persistentPreRun,
 }
 

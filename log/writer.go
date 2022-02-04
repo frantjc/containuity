@@ -3,8 +3,8 @@ package log
 import "io"
 
 type prefixedWriter struct {
-	prefix string
-	callback func (s string, v... interface{})
+	prefix   string
+	callback func(s string, v ...interface{})
 }
 
 var _ io.Writer = &prefixedWriter{}
@@ -14,7 +14,7 @@ func (w *prefixedWriter) Write(p []byte) (int, error) {
 	for i, b := range p {
 		if b == '\n' {
 			w.callback("%s%s", w.prefix, p[j:i])
-			j = i+1
+			j = i + 1
 		}
 	}
 
@@ -27,14 +27,14 @@ func (w *prefixedWriter) Write(p []byte) (int, error) {
 
 func NewPrefixedDebugWriter(p string) io.Writer {
 	return &prefixedWriter{
-		prefix: p,
+		prefix:   p,
 		callback: Debugf,
 	}
 }
 
 func NewPrefixedInfoWriter(p string) io.Writer {
 	return &prefixedWriter{
-		prefix: p,
+		prefix:   p,
 		callback: Infof,
 	}
 }

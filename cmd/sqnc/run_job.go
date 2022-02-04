@@ -74,4 +74,3 @@ func runJob(ctx context.Context, r runtime.Runtime, j *sequence.Job, opts ...run
 
 	return nil
 }
-

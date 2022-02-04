@@ -5,15 +5,15 @@ import (
 	"os"
 )
 
-type Pull struct{
-	Stdout   io.Writer
+type Pull struct {
+	Stdout io.Writer
 }
 
 type PullOpt func(po *Pull) error
 
 func NewPull(opts ...PullOpt) (*Pull, error) {
 	p := &Pull{
-		Stdout: os.Stdout, 
+		Stdout: os.Stdout,
 	}
 	for _, opt := range opts {
 		err := opt(p)

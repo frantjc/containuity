@@ -1,7 +1,7 @@
 package log
 
 var (
-	none   = "\033[0m"
+	none = "\033[0m"
 	// red    = "\033[31m"
 	// green  = "\033[32m"
 	// yellow = "\033[33m"
@@ -13,7 +13,7 @@ var (
 )
 
 var (
-	ColorNone = none
+	ColorNone  = none
 	ColorDebug = purple
-	ColorInfo = cyan
+	ColorInfo  = cyan
 )
