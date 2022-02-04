@@ -13,17 +13,16 @@ FROM build AS bin
 COPY . .
 ARG version=0.0.0
 ARG prerelease=
-ARG build=
+ARG commit=
 ARG repository=frantjc/sequence
 ARG tag=latest
-RUN go build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Version=${version} -X github.com/frantjc/sequence/meta.Prerelease=${prerelease}} -X github.com/frantjc/sequence/meta.Build=${build} -X github.com/frantjc/sequence/meta.Repository=${repository} -X github.com/frantjc/sequence/meta.Tag=${tag} -X github.com/frantjc/sequence/meta.Digest=${digest}" -o /usr/local/bin/sqnc_linux_amd64 ./cmd/sqnc
-RUN GOOS=darwin go build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Version=${version} -X github.com/frantjc/sequence/meta.Prerelease=${prerelease}} -X github.com/frantjc/sequence/meta.Build=${build} -X github.com/frantjc/sequence/meta.Repository=${repository} -X github.com/frantjc/sequence/meta.Tag=${tag} -X github.com/frantjc/sequence/meta.Digest=${digest}" -o /usr/local/bin/sqnc_darwin_amd64 ./cmd/sqnc
+RUN go build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Version=${version} -X github.com/frantjc/sequence/meta.Prerelease=${prerelease} -X github.com/frantjc/sequence/meta.Build=${commit} -X github.com/frantjc/sequence/meta.Repository=${repository} -X github.com/frantjc/sequence/meta.Tag=${tag} -X github.com/frantjc/sequence/meta.Digest=${digest}" -o /usr/local/bin ./cmd/sqnc
 RUN set -e; for pkg in $(go list ./...); do \
-		go test -ldflags "-s -w -X github.com/frantjc/sequence/meta.Version=${version} -X github.com/frantjc/sequence/meta.Prerelease=${prerelease}} -X github.com/frantjc/sequence/meta.Build=${build} -X github.com/frantjc/sequence/meta.Repository=${repository} -X github.com/frantjc/sequence/meta.Tag=${tag} -X github.com/frantjc/sequence/meta.Digest=${digest}" -o /usr/local/test/bin/$(basename $pkg).test -c $pkg; \
+		go test -ldflags "-s -w -X github.com/frantjc/sequence/meta.Version=${version} -X github.com/frantjc/sequence/meta.Prerelease=${prerelease} -X github.com/frantjc/sequence/meta.Build=${commit} -X github.com/frantjc/sequence/meta.Repository=${repository} -X github.com/frantjc/sequence/meta.Tag=${tag} -X github.com/frantjc/sequence/meta.Digest=${digest}" -o /usr/local/test/bin/$(basename $pkg).test -c $pkg; \
 	done
 
 FROM base AS sequence
-COPY --from=bin /usr/local/bin/sqnc_linux_amd64 /usr/local/bin/sqnc
+COPY --from=bin /usr/local/bin/sqnc /usr/local/bin
 ENTRYPOINT ["sqnc"]
 
 FROM sequence AS test

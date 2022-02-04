@@ -24,8 +24,8 @@ var (
 )
 
 func init() {
-	runCmd.PersistentFlags().StringVarP(&runtimeName, "runtime", "r", defaults.Runtime, "container runtime to use")
-	runCmd.PersistentFlags().StringVar(&gitHubToken, "github-token", "", "GitHub token")
+	runCmd.PersistentFlags().StringP("runtime", "r", defaults.Runtime, "container runtime to use")
+	runCmd.PersistentFlags().String("github-token", "", "GitHub token")
 
 	viper.BindPFlag("runtime.name", runCmd.Flag("runtime"))
 	viper.BindPFlag("github.token", runCmd.Flag("github-token"))
@@ -35,4 +35,9 @@ func init() {
 		runJobCmd,
 		runWorkflowCmd,
 	)
+}
+
+func getConfig() {
+	gitHubToken = viper.GetString("github.token")
+	runtimeName = viper.GetString("runtime.name")
 }

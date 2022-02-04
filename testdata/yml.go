@@ -2,17 +2,19 @@ package testdata
 
 import _ "embed"
 
-//go:embed step.yml
-var Step []byte
+var (
+	//go:embed action.yml
+	Action []byte
 
-//go:embed uses.yml
-var Uses []byte
+	//go:embed job.yml
+	Job []byte
 
-//go:embed job.yml
-var Job []byte
+	//go:embed step.yml
+	Step []byte
 
-//go:embed workflow.yml
-var Workflow []byte
+	//go:embed uses.yml
+	Uses []byte
 
-//go:embed action.yml
-var Action []byte
+	//go:embed workflow.yml
+	Workflow []byte
+)

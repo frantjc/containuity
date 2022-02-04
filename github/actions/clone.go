@@ -8,7 +8,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/rs/zerolog/log"
 )
 
 func Clone(r Reference, opts ...CloneOpt) (*Action, error) {
@@ -36,7 +35,6 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Action, 
 		InsecureSkipTLS:   copts.insecure,
 		Tags:              git.TagFollowing,
 	}
-	log.Debug().Msgf("cloning %s %s to %s", clopts.URL, clopts.ReferenceName, copts.path)
 	repo, err := git.PlainCloneContext(ctx, copts.path, false, clopts)
 	if errors.Is(err, git.ErrRepositoryAlreadyExists) {
 		repo, err = git.PlainOpen(copts.path)
@@ -44,9 +42,7 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Action, 
 			return nil, err
 		}
 	} else if err != nil {
-		log.Debug().Msgf("cloning %s with ref assumed as tag, falling back to branch", cloneURL.String())
 		clopts.ReferenceName = plumbing.NewBranchReferenceName(r.Version())
-		log.Debug().Msgf("cloning %s %s to %s", clopts.URL, clopts.ReferenceName, copts.path)
 		repo, err = git.PlainCloneContext(ctx, copts.path, false, clopts)
 		if err != nil {
 			return nil, err
@@ -63,7 +59,6 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Action, 
 		return nil, err
 	}
 
-	log.Debug().Msgf("searching %s HEAD for action.yml or action.yaml", copts.path)
 	var f *object.File
 	f, err = commit.File(filepath.Join(r.Path(), "action.yml"))
 	if errors.Is(err, object.ErrFileNotFound) {
@@ -75,7 +70,6 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Action, 
 		return nil, err
 	}
 
-	log.Debug().Msgf("found action from %s %s", clopts.URL, clopts.ReferenceName)
 	a, err := f.Reader()
 	if err != nil {
 		return nil, err

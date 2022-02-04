@@ -73,8 +73,10 @@ type Step struct {
 func (s *Step) GetID() string {
 	if s.ID != "" {
 		return s.ID
+	} else if s.Name != "" {
+		return s.Name
 	}
-	return s.Name
+	return s.Uses
 }
 
 // IsStdoutResponse returns whether or not this step is expected to

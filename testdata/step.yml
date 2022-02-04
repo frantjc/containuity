@@ -1,6 +1,2 @@
-image: golang:1.17
-entrypoint:
-  - go
-cmd:
-  - test
-  - ./...
+image: alpine
+entrypoint: [env]
