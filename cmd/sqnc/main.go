@@ -64,5 +64,5 @@ func main() {
 
 func persistentPreRun(cmd *cobra.Command, args []string) error {
 	log.SetVerbose(verbose)
-	return viper.ReadInConfig()
+	return nil
 }
