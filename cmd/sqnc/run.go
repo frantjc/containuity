@@ -10,6 +10,7 @@ import (
 
 var runCmd = &cobra.Command{
 	Use: "run",
+	PersistentPreRunE: persistentPreRunRun,
 }
 
 const (
@@ -35,6 +36,11 @@ func init() {
 		runJobCmd,
 		runWorkflowCmd,
 	)
+}
+
+func persistentPreRunRun(cmd *cobra.Command, args []string) error {
+	viper.ReadInConfig()
+	return nil
 }
 
 func getConfig() {
