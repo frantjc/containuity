@@ -10,11 +10,11 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-func Clone(r Reference, opts ...CloneOpt) (*Action, error) {
+func Clone(r Reference, opts ...CloneOpt) (*Metadata, error) {
 	return CloneContext(context.Background(), r, opts...)
 }
 
-func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Action, error) {
+func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Metadata, error) {
 	var (
 		copts = defaultCloneOpts()
 	)
@@ -70,10 +70,10 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Action, 
 		return nil, err
 	}
 
-	a, err := f.Reader()
+	m, err := f.Reader()
 	if err != nil {
 		return nil, err
 	}
 
-	return NewActionFromReader(a)
+	return NewMetadataFromReader(m)
 }

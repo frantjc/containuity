@@ -6,29 +6,29 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewActionFromReader(r io.Reader) (*Action, error) {
-	a := &Action{}
+func NewMetadataFromReader(r io.Reader) (*Metadata, error) {
+	m := &Metadata{}
 	d := yaml.NewDecoder(r)
-	return a, d.Decode(a)
+	return m, d.Decode(m)
 }
 
-type Action struct {
-	Name        string   `json:",omitempty"`
-	Author      string   `json:",omitempty"`
-	Description string   `json:",omitempty"`
-	Inputs      *Inputs  `json:",omitempty"`
-	Outputs     *Outputs `json:",omitempty"`
-	Runs        *Runs    `json:",omitempty"`
+type Metadata struct {
+	Name        string             `json:",omitempty"`
+	Author      string             `json:",omitempty"`
+	Description string             `json:",omitempty"`
+	Inputs      map[string]*Input  `json:",omitempty"`
+	Outputs     map[string]*Output `json:",omitempty"`
+	Runs        *Runs              `json:",omitempty"`
 }
 
-type Inputs map[string]struct {
+type Input struct {
 	Description        string `json:",omitempty"`
 	Required           bool   `json:",omitempty"`
 	Default            string `json:",omitempty"`
 	DeprecationMessage string `json:",omitempty"`
 }
 
-type Outputs map[string]struct {
+type Output struct {
 	Description string `json:",omitempty"`
 }
 

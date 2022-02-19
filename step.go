@@ -20,9 +20,9 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 	return s, d.Decode(s)
 }
 
-func NewStepFromAction(a *actions.Action, path string) (*Step, error) {
+func NewStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 	s := &Step{With: map[string]string{}}
-	for inputName, input := range *a.Inputs {
+	for inputName, input := range a.Inputs {
 		s.With[inputName] = input.Default
 	}
 	switch a.Runs.Using {

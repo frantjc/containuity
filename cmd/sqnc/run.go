@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	runCmd.PersistentFlags().StringP("runtime", "r", defaults.Runtime, "container runtime to use")
+	runCmd.PersistentFlags().StringP("runtime", "r", "", "container runtime to use")
 	runCmd.PersistentFlags().String("github-token", "", "GitHub token")
 
 	viper.BindPFlag("runtime.name", runCmd.Flag("runtime"))

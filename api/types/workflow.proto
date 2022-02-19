@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package sequence.types;
+
+import "api/types/job.proto";
+
+option go_package = "github.com/frantjc/sequence/api/types";
+
+message Workflow {
+    string name = 1;
+    repeated sequence.types.Job jobs = 2;
+}

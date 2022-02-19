@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package sequence.v1.container;
+
+import "api/types/spec.proto";
+
+option go_package = "github.com/frantjc/sequence/api/v1/container";
+
+service ContainerService {
+    rpc Create(CreateRequest) returns (CreateResponse);
+}
+
+message CreateRequest {
+    string runtime = 1;
+    sequence.types.Spec spec = 2;
+}
+
+message CreateResponse {
+    string id = 1;
+}

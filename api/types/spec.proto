@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package sequence.types;
+
+import "api/types/mount.proto";
+
+option go_package = "github.com/frantjc/sequence/api/types";
+
+message Spec {
+    string image = 1;
+
+	repeated string entrypoint = 2;
+
+	repeated string cmd = 3;
+
+	string cwd = 4;
+
+	repeated string env = 5;
+
+	repeated sequence.types.Mount mounts = 6;
+
+	bool privileged = 7;
+}

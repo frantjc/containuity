@@ -18,6 +18,9 @@ DOCKER ?= docker
 
 BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg SQNC_E2E=$(E2E) --build-arg tag=$(TAG) --build-arg commit=$(COMMIT)
 
+PROTOS ?= $(shell find . -type f -name *.proto)
+PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
+
 .DEFAULT: sqnc
 
 sqnc:
@@ -47,4 +50,7 @@ clean:
 	rm -rf bin/* vendor
 	docker system prune --volumes -a --filter label=sequence=true
 
-.PHONY: sqnc image img test bin bins binaries fmt lint pretty vet vendor clean
+protos:
+	protoc $(PROTOC_ARGS) $(PROTOS)
+
+.PHONY: sqnc image img test bin bins binaries fmt lint pretty vet vendor clean protos

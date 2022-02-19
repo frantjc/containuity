@@ -30,12 +30,12 @@ func runPluginUses(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	a, err := actions.CloneContext(cmd.Context(), parsed, actions.WithPath(path))
+	m, err := actions.CloneContext(cmd.Context(), parsed, actions.WithPath(path))
 	if err != nil {
 		return err
 	}
 
 	return json.NewEncoder(os.Stdout).Encode(&sequence.StepResponse{
-		Action: a,
+		Action: m,
 	})
 }

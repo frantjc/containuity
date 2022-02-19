@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package sequence.v1.task;
+
+option go_package = "github.com/frantjc/sequence/api/v1/task";
+
+service TaskService {
+    rpc Exec(ExecRequest) returns (ExecResponse);
+}
+
+message ExecRequest {
+    string runtime = 1;
+}
+
+message ExecResponse {}

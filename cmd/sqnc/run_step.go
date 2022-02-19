@@ -280,7 +280,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *sequence.Step, opts ...r
 		}
 
 		if resp.Action != nil {
-			rs, err := sequence.NewStepFromAction(resp.Action, ghenv.ActionPath)
+			rs, err := sequence.NewStepFromMetadata(resp.Action, ghenv.ActionPath)
 			if err != nil {
 				return err
 			}

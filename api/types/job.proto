@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package sequence.types;
+
+import "api/types/step.proto";
+
+option go_package = "github.com/frantjc/sequence/api/types";
+
+message Job {
+    repeated sequence.types.Step steps = 1;
+}
