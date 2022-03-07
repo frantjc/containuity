@@ -6,50 +6,47 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/meta"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var rootCmd = &cobra.Command{
-	Use:               meta.Name,
+	Use:               "sqnc",
 	Version:           meta.Semver(),
 	PersistentPreRunE: persistentPreRun,
 }
 
-const (
-	configName = "config"
-)
-
-var (
-	home    string
-	verbose bool
-)
-
 func init() {
-	home = os.Getenv("HOME")
-	if home == "" {
-		home = "$HOME"
-	}
-}
-
-func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose")
-	rootCmd.AddCommand(
-		runCmd,
-		pluginCmd,
-	)
 	rootCmd.SetVersionTemplate(
 		fmt.Sprintf("{{ with .Name }}{{ . }}{{ end }}{{ with .Version }}{{ . }}{{ end }} %s\n", runtime.Version()),
 	)
-	viper.SetConfigName(configName)
-	viper.SetConfigType("toml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath(fmt.Sprintf("%s/.%s", home, meta.Name))
-	viper.AddConfigPath(fmt.Sprintf("/etc/%s", meta.Name))
-	viper.SetEnvPrefix(meta.Name)
-	viper.AllowEmptyEnv(true)
+
+	rootCmd.PersistentFlags().Bool("verbose", false, "verbose")
+	rootCmd.PersistentFlags().Int("port", 0, "port")
+	rootCmd.PersistentFlags().String("sock", "", "unix socket")
+
+	conf.BindVerboseFlag(rootCmd.Flag("verbose"))
+	conf.BindPortFlag(rootCmd.Flag("port"))
+	conf.BindSocketFlag(rootCmd.Flag("socket"))
+	// conf.BindGitHubTokenFlag(rootCmd.Flag("github-token"))
+	// conf.BindRuntimeImageFlag(rootCmd.Flag("runtime-image"))
+	// conf.BindRuntimeNameFlag(rootCmd.Flag("runtime-name"))
+	// conf.BindSecretsFlag(rootCmd.Flag("secret"))
+
+	rootCmd.AddCommand(
+		runCmd,
+	)
+}
+
+func persistentPreRun(cmd *cobra.Command, args []string) error {
+	c, err := conf.Get()
+	if err != nil {
+		return err
+	}
+	log.SetVerbose(c.Verbose)
+	return nil
 }
 
 func main() {
@@ -60,9 +57,4 @@ func main() {
 	}
 
 	os.Exit(0)
-}
-
-func persistentPreRun(cmd *cobra.Command, args []string) error {
-	log.SetVerbose(verbose)
-	return nil
 }

@@ -17,7 +17,7 @@ func fmtMsg(i interface{}) string {
 }
 
 func fmtField(i interface{}) string {
-	s := fmt.Sprintf("%s", i)
+	s := fmtMsg(i)
 	if strings.Contains(s, " ") {
 		s = fmt.Sprintf("\"%s\"", s)
 	}

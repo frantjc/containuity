@@ -2,26 +2,69 @@ package runtime
 
 import (
 	"context"
+	"sync"
 )
 
 type Runtime interface {
-	Pull(context.Context, string, ...PullOpt) (Image, error)
-	Create(context.Context, ...SpecOpt) (Container, error)
+	PullImage(context.Context, string) (Image, error)
+	CreateContainer(context.Context, *Spec) (Container, error)
+	GetContainer(ctx context.Context, id string) (Container, error)
 }
 
 type InitF func(context.Context) (Runtime, error)
 
 var (
-	runtimes = map[string]InitF{}
+	registeredRuntimes = struct {
+		sync.RWMutex
+		r map[string]InitF
+	}{
+		r: map[string]InitF{},
+	}
+	initializedRuntimes = struct {
+		sync.RWMutex
+		r map[string]Runtime
+	}{
+		r: map[string]Runtime{},
+	}
 )
 
 func Init(name string, f InitF) {
-	runtimes[name] = f
+	registeredRuntimes.Lock()
+	defer registeredRuntimes.Unlock()
+	registeredRuntimes.r[name] = f
 }
 
-func Get(ctx context.Context, name string) (Runtime, error) {
-	if f, ok := runtimes[name]; ok {
-		return f(ctx)
+func Get(ctx context.Context, names ...string) (Runtime, error) {
+	registeredRuntimes.Lock()
+	defer registeredRuntimes.Unlock()
+
+	initializedRuntimes.Lock()
+	defer initializedRuntimes.Unlock()
+
+	if len(names) == 0 {
+		for _, r := range initializedRuntimes.r {
+			return r, nil
+		}
+
+		for _, f := range registeredRuntimes.r {
+			return f(ctx)
+		}
+	}
+
+	for _, name := range names {
+		if r, ok := initializedRuntimes.r[name]; ok {
+			return r, nil
+		}
+
+		if f, ok := registeredRuntimes.r[name]; ok {
+			r, err := f(ctx)
+			if err != nil {
+				return nil, err
+			}
+			initializedRuntimes.r[name] = r
+
+			return r, nil
+		}
 	}
 
 	return nil, ErrRuntimeNotFound

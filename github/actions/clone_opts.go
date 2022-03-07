@@ -10,13 +10,13 @@ import (
 type cloneOpts struct {
 	path      string
 	insecure  bool
-	gitHubURL *url.URL
+	githubURL *url.URL
 }
 
 func defaultCloneOpts() *cloneOpts {
 	return &cloneOpts{
 		path:      ".",
-		gitHubURL: github.DefaultURL,
+		githubURL: github.DefaultURL,
 	}
 }
 
@@ -32,7 +32,7 @@ func WithPath(p string) CloneOpt {
 func WithGitHubURL(u string) CloneOpt {
 	return func(copts *cloneOpts) error {
 		var err error
-		copts.gitHubURL, err = url.Parse(u)
+		copts.githubURL, err = url.Parse(u)
 		return err
 	}
 }

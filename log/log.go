@@ -6,6 +6,8 @@ var (
 	logger zerolog.Logger
 )
 
+// SetVerbose sets the loglevel of sequence's logger
+// to Debug or Info
 func SetVerbose(v bool) {
 	if v {
 		logger = logger.Level(zerolog.DebugLevel)

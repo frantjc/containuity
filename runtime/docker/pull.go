@@ -2,20 +2,20 @@ package docker
 
 import (
 	"context"
+	"io"
 
-	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
-func (r *dockerRuntime) Pull(ctx context.Context, ref string, opts ...runtime.PullOpt) (runtime.Image, error) {
-	p, err := runtime.NewPull(opts...)
-	if err != nil {
-		return nil, err
-	}
+type noOpWriter struct{}
 
+func (w *noOpWriter) Write(p []byte) (int, error) {
+	return len(p), nil
+}
+
+func (r *dockerRuntime) PullImage(ctx context.Context, ref string) (runtime.Image, error) {
 	pref, err := name.ParseReference(ref)
 	if err != nil {
 		return nil, err
@@ -25,6 +25,10 @@ func (r *dockerRuntime) Pull(ctx context.Context, ref string, opts ...runtime.Pu
 	if err != nil {
 		return nil, err
 	}
+	defer o.Close()
+	io.Copy(new(noOpWriter), o)
 
-	return nil, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(p.Stdout), nil)
+	return &dockerImage{
+		ref: pref.Name(),
+	}, nil
 }

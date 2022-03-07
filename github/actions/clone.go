@@ -25,7 +25,7 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Metadata
 		}
 	}
 
-	cloneURL := copts.gitHubURL
+	cloneURL := copts.githubURL
 	cloneURL.Path = fullRepository(r)
 	clopts := &git.CloneOptions{
 		URL:               cloneURL.String(),

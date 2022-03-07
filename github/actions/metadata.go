@@ -13,31 +13,31 @@ func NewMetadataFromReader(r io.Reader) (*Metadata, error) {
 }
 
 type Metadata struct {
-	Name        string             `json:",omitempty"`
-	Author      string             `json:",omitempty"`
-	Description string             `json:",omitempty"`
-	Inputs      map[string]*Input  `json:",omitempty"`
-	Outputs     map[string]*Output `json:",omitempty"`
-	Runs        *Runs              `json:",omitempty"`
+	Name        string             `json:"name,omitempty"`
+	Author      string             `json:"author,omitempty"`
+	Description string             `json:"description,omitempty"`
+	Inputs      map[string]*Input  `json:"inputs,omitempty"`
+	Outputs     map[string]*Output `json:"outputs,omitempty"`
+	Runs        *Runs              `json:"runs,omitempty"`
 }
 
 type Input struct {
-	Description        string `json:",omitempty"`
-	Required           bool   `json:",omitempty"`
-	Default            string `json:",omitempty"`
-	DeprecationMessage string `json:",omitempty"`
+	Description        string `json:"input,omitempty"`
+	Required           bool   `json:"required,omitempty"`
+	Default            string `json:"default,omitempty"`
+	DeprecationMessage string `json:"deprecationMessage,omitempty"`
 }
 
 type Output struct {
-	Description string `json:",omitempty"`
+	Description string `json:"output,omitempty"`
 }
 
 type Runs struct {
-	Plugin     string            `json:",omitempty"`
-	Using      string            `json:",omitempty"`
-	Main       string            `json:",omitempty"`
-	Image      string            `json:",omitempty"`
-	Entrypoint string            `json:",omitempty"`
-	Args       []string          `json:",omitempty"`
-	Env        map[string]string `json:",omitempty"`
+	Plugin     string            `json:"plugin,omitempty"`
+	Using      string            `json:"using,omitempty"`
+	Main       string            `json:"main,omitempty"`
+	Image      string            `json:"image,omitempty"`
+	Entrypoint string            `json:"entrypoint,omitempty"`
+	Args       []string          `json:"args,omitempty"`
+	Env        map[string]string `json:"env,omitempty"`
 }

@@ -10,32 +10,27 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
-func (r *dockerRuntime) Create(ctx context.Context, opts ...runtime.SpecOpt) (runtime.Container, error) {
-	spec, err := runtime.NewSpec(opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	pref, err := name.ParseReference(spec.Image)
+func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (runtime.Container, error) {
+	pref, err := name.ParseReference(s.Image)
 	if err != nil {
 		return nil, err
 	}
 
 	conf := &container.Config{
 		Image:      pref.Name(),
-		Entrypoint: spec.Entrypoint,
-		Cmd:        spec.Cmd,
-		WorkingDir: spec.Cwd,
-		Env:        spec.Env,
+		Entrypoint: s.Entrypoint,
+		Cmd:        s.Cmd,
+		WorkingDir: s.Cwd,
+		Env:        s.Env,
 		Labels:     defaults.Labels,
 	}
 
 	hconf := &container.HostConfig{
 		AutoRemove: true,
-		Privileged: spec.Privileged,
+		Privileged: s.Privileged,
 	}
 
-	for _, m := range spec.Mounts {
+	for _, m := range s.Mounts {
 		dt := mount.Type(m.Type)
 		dm := mount.Mount{
 			Type:   dt,
