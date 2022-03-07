@@ -1,0 +1,196 @@
+package workflow
+
+import (
+	"fmt"
+	"io"
+	"path/filepath"
+	"strings"
+
+	"github.com/frantjc/sequence/github/actions"
+	"gopkg.in/yaml.v3"
+)
+
+const (
+	imagePrefix = "docker://"
+
+	// ActionMetadataKey is the key in a Step's StepOut.Metadata
+	// map that holds the json encoding of the action that
+	// the step cloned
+	ActionMetadataKey = "_sqnc_action"
+)
+
+// NewStepFromReader parses and returns a Step
+// from the given reader e.g. a file
+func NewStepFromReader(r io.Reader) (*Step, error) {
+	s := &Step{}
+	d := yaml.NewDecoder(r)
+	return s, d.Decode(s)
+}
+
+// NewStepFromMetadata returns a Step from a given GitHub action
+// that is cloned at the given path
+func NewStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
+	s := &Step{With: map[string]string{}}
+	for inputName, input := range a.Inputs {
+		s.With[inputName] = input.Default
+	}
+	switch a.Runs.Using {
+	case "node12":
+		s.Image = "node:12"
+		s.Entrypoint = []string{"node"}
+		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
+	case "node16":
+		s.Image = "node:16"
+		s.Entrypoint = []string{"node"}
+		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
+	case "docker":
+		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
+			s.Image = strings.TrimPrefix(a.Runs.Image, imagePrefix)
+			s.Entrypoint = []string{a.Runs.Entrypoint}
+			s.Cmd = a.Runs.Args
+			s.Env = a.Runs.Env
+		} else {
+			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix '%s'", imagePrefix)
+		}
+	default:
+		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker'")
+	}
+
+	return s, nil
+}
+
+// Step is a user's primary way of interacting with sequence;
+// a Step defines a containerized command to be ran
+// (or two if the Step is using a GitHub action from a GitHub repository:
+//  first to clone the action and get its metadata, second to execute it)
+type Step struct {
+	ID         string            `json:"id,omitempty"`
+	Name       string            `json:"name,omitempty"`
+	Image      string            `json:"image,omitempty"`
+	Entrypoint []string          `json:"entrypoint,omitempty"`
+	Cmd        []string          `json:"cmd,omitempty"`
+	Privileged bool              `json:"privileged,omitempty"`
+	Env        map[string]string `json:"env,omitempty"`
+
+	Shell string            `json:"shell,omitempty"`
+	Run   string            `json:"run,omitempty"`
+	Uses  string            `json:"uses,omitempty"`
+	With  map[string]string `json:"with,omitempty"`
+	If    bool              `json:"if,omitempty"`
+
+	Get    string                 `json:"get,omitempty"`
+	Put    string                 `json:"put,omitempty"`
+	Params map[string]interface{} `json:"params,omitempty"`
+}
+
+// GetID returns the functional ID of the step
+func (s *Step) GetID() string {
+	if s.ID != "" {
+		return s.ID
+	} else if s.Name != "" {
+		return s.Name
+	}
+	return s.Uses
+}
+
+// IsStdoutResponse returns whether or not this step is expected to
+// respond with a StepResponse on stdout or not
+func (s *Step) IsStdoutResponse() bool {
+	return s.Uses != "" || s.Get != "" || s.Put != ""
+}
+
+// IsStdoutResponse returns whether or not this step is a GitHub Action
+// or not
+func (s *Step) IsAction() bool {
+	return s.Uses != "" || s.Run != ""
+}
+
+// Merge sets all of this step's undefined fields with
+// the given step's fields
+func (s *Step) Merge(step *Step) *Step {
+	if s.Entrypoint == nil || len(s.Entrypoint) == 0 {
+		s.Entrypoint = step.Entrypoint
+	}
+	if s.Cmd == nil || len(s.Cmd) == 0 {
+		s.Cmd = step.Cmd
+	}
+	if s.ID == "" {
+		s.ID = step.ID
+	}
+	if s.Name == "" {
+		s.Name = step.Name
+	}
+	if s.Image == "" {
+		s.Image = step.Image
+	}
+	if step.Privileged {
+		s.Privileged = true
+	}
+	for key, value := range step.With {
+		if s.With == nil {
+			s.With = map[string]string{}
+		}
+		if s.With[key] == "" {
+			s.With[key] = value
+		}
+	}
+
+	return s
+}
+
+// MergeOverride overrides all of this step's fields with
+// the given step's fields if they are defined
+func (s *Step) MergeOverride(step *Step) *Step {
+	if step.ID == "" {
+		s.ID = step.ID
+	}
+	if step.Name == "" {
+		s.Name = step.Name
+	}
+	if step.Image == "" {
+		s.Image = step.Image
+	}
+	if step.Privileged {
+		s.Privileged = true
+	}
+	for key, value := range step.With {
+		if s.With == nil {
+			s.With = map[string]string{}
+		}
+		s.With[key] = value
+	}
+
+	return s
+}
+
+// Canonical returns the Step's "canonical" form, e.g. the step
+//
+// image: alpine
+// uses: actions/checkout@v2
+//
+// is an oxymoron, so this function would make it into
+//
+// image: alpine
+func (s *Step) Canonical() *Step {
+	if s.Image != "" {
+		s.Uses = ""
+		s.Get = ""
+		s.Put = ""
+		s.Params = map[string]interface{}{}
+	} else if s.Uses != "" {
+		s.Get = ""
+		s.Put = ""
+		s.Params = map[string]interface{}{}
+	}
+
+	return s
+}
+
+// StepOut is the optional parsable output of a Step
+// on its stdout
+// e.g. if a Step is a Concourse Resource or a sqncshim
+// that is returning metadata about the action that it cloned
+type StepOut struct {
+	Metadata map[string]string      `json:"metadata,omitempty"`
+	Version  map[string]interface{} `json:"version,omitempty"`
+}

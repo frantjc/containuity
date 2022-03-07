@@ -1,3 +1,5 @@
 package runtime
 
-type Image interface{}
+type Image interface {
+	Ref() string
+}

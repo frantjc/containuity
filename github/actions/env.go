@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github"
+	"github.com/frantjc/sequence/internal/env"
 	"github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
 )

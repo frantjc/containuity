@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	"github.com/frantjc/sequence/env"
+	"github.com/frantjc/sequence/internal/env"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
@@ -69,26 +69,4 @@ func WithMounts(mounts ...specs.Mount) SpecOpt {
 		s.Mounts = append(s.Mounts, mounts...)
 		return nil
 	}
-}
-
-func WithSpec(spec *Spec) SpecOpt {
-	return func(s *Spec) error {
-		s.Image = spec.Image
-		s.Entrypoint = spec.Entrypoint
-		s.Cmd = spec.Cmd
-		s.Cwd = spec.Cwd
-		s.Env = spec.Env
-		s.Mounts = spec.Mounts
-		s.Privileged = spec.Privileged
-		return nil
-	}
-}
-
-func NewSpec(opts ...SpecOpt) (*Spec, error) {
-	s := &Spec{}
-	for _, opt := range opts {
-		opt(s)
-	}
-
-	return s, nil
 }

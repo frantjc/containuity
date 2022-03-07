@@ -12,17 +12,20 @@ REPOSITORY ?= frantjc/sequence
 MODULE ?= github.com/$(REPOSITORY)
 TAG ?= latest
 
-E2E ?= yes
-
 DOCKER ?= docker
 
-BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg SQNC_E2E=$(E2E) --build-arg tag=$(TAG) --build-arg commit=$(COMMIT)
+BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --build-arg commit=$(COMMIT)
+
+PROTOS ?= $(shell find . -type f -name *.proto)
+PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
+
+INSTALL ?= sudo install
 
 .DEFAULT: sqnc
 
-sqnc:
+sequence sqnc sqncshim:
 	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Repository=$(REPOSITORY) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o ./bin $(CURDIR)/cmd/$@
-	sudo install $(CURDIR)/bin/$@ $(BIN)
+	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
 image img: 
 	$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):$(TAG) $(BUILD_ARGS) .
@@ -30,7 +33,7 @@ image img:
 test: image
 	$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):test $(BUILD_ARGS) --target=test .
 
-bin bins binaries: sqnc
+bin bins binaries: sequence sqnc
 
 fmt lint pretty:
 	$(GO) fmt ./...
@@ -47,4 +50,7 @@ clean:
 	rm -rf bin/* vendor
 	docker system prune --volumes -a --filter label=sequence=true
 
-.PHONY: sqnc image img test bin bins binaries fmt lint pretty vet vendor clean
+protos:
+	protoc $(PROTOC_ARGS) $(PROTOS)
+
+.PHONY: sequence sqnc image img test bin bins binaries fmt lint pretty vet vendor clean protos
