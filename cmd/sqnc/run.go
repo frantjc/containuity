@@ -32,8 +32,6 @@ func init() {
 
 	runCmd.AddCommand(
 		runStepCmd,
-		runJobCmd,
-		runWorkflowCmd,
 	)
 }
 
