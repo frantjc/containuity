@@ -51,9 +51,49 @@ func (c *Client) WorkflowClient() workflowapi.WorkflowClient {
 
 // RunStep calls the underlying gRPC StepClient's RunStep and
 // writes its logs to the given io.Writer
-func (c *Client) RunStep(ctx context.Context, s *workflow.Step, w io.Writer) error {
+func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer) error {
 	stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
-		Step: convert.StepToTypeStep(s),
+		Step: convert.StepToTypeStep(step),
+	})
+	if err != nil {
+		return err
+	}
+
+	for {
+		l, err := stream.Recv()
+		if err == io.EOF {
+			return stream.CloseSend()
+		} else if err != nil {
+			return err
+		}
+
+		w.Write([]byte(l.Line))
+	}
+}
+
+func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer) error {
+	stream, err := c.JobClient().RunJob(ctx, &jobapi.RunJobRequest{
+		Job: convert.JobToTypeJob(job),
+	})
+	if err != nil {
+		return err
+	}
+
+	for {
+		l, err := stream.Recv()
+		if err == io.EOF {
+			return stream.CloseSend()
+		} else if err != nil {
+			return err
+		}
+
+		w.Write([]byte(l.Line))
+	}
+}
+
+func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w io.Writer) error {
+	stream, err := c.WorkflowClient().RunWorkflow(ctx, &workflowapi.RunWorkflowRequest{
+		Workflow: convert.WorkflowToTypeWorkflow(workflow),
 	})
 	if err != nil {
 		return err

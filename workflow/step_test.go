@@ -12,7 +12,7 @@ import (
 func TestNewStepFromReader(t *testing.T) {
 	var (
 		// expected = &sequence.Step{}
-		actual, err = workflow.NewStepFromReader(bytes.NewReader(testdata.Step))
+		actual, err = workflow.NewStepFromReader(bytes.NewReader(testdata.EnvStep))
 	)
 	assert.Nil(t, err)
 	assert.False(t, actual.IsAction())
@@ -24,7 +24,7 @@ func TestNewStepFromReader(t *testing.T) {
 func TestUsesNewStepFromReader(t *testing.T) {
 	var (
 		// expected = &sequence.Step{}
-		actual, err = workflow.NewStepFromReader(bytes.NewReader(testdata.Uses))
+		actual, err = workflow.NewStepFromReader(bytes.NewReader(testdata.CheckoutStep))
 	)
 	assert.Nil(t, err)
 	assert.True(t, actual.IsAction())

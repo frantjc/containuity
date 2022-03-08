@@ -51,7 +51,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		githubEnv  = filepath.Join(workdir, id, "github", "env")
 		githubPath = filepath.Join(workdir, id, "github", "path")
 		spec       = &runtime.Spec{
-			Image:      meta.Image(),
+			Image:      ro.image,
 			Cwd:        ghenv.Workspace,
 			Privileged: es.Privileged,
 			Env:        append(ghenv.Arr(), "SEQUENCE=true"),
@@ -99,6 +99,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 			return err
 		}
 
+		spec.Image = meta.Image()
 		spec.Entrypoint = []string{"sqncshim"}
 		spec.Cmd = []string{"plugin", "uses", action.String(), ghenv.ActionPath}
 		spec.Mounts = append(spec.Mounts, specs.Mount{
@@ -223,14 +224,14 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 				outbuf = actions.NewCommandWriter(func(c *actions.Command) []byte {
 					switch c.Command {
 					case actions.CommandError:
-						return []byte(fmt.Sprintf("[%sERR%s] %s", log.ColorError, log.ColorNone, c.Value))
+						return []byte(fmt.Sprintf("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, c.Value))
 					case actions.CommandWarning:
-						return []byte(fmt.Sprintf("[%sWRN%s] %s", log.ColorWarn, log.ColorNone, c.Value))
+						return []byte(fmt.Sprintf("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, c.Value))
 					case actions.CommandNotice:
-						return []byte(fmt.Sprintf("[%sNTC%s] %s", log.ColorNotice, log.ColorNone, c.Value))
+						return []byte(fmt.Sprintf("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, c.Value))
 					case actions.CommandDebug:
 						if ro.verbose {
-							return []byte(fmt.Sprintf("[%sDBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
+							return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
 						}
 					}
 					return []byte{}
@@ -269,11 +270,9 @@ func expandStep(s *Step, ctx *actions.ActionsContext) (*Step, error) {
 }
 
 func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, eopts []runtime.ExecOpt) error {
-	if s.Image != meta.Image() {
-		_, err := r.PullImage(ctx, s.Image)
-		if err != nil {
-			return err
-		}
+	_, err := r.PullImage(ctx, s.Image)
+	if err != nil {
+		return err
 	}
 
 	container, err := r.CreateContainer(ctx, s)

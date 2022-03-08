@@ -11,6 +11,7 @@ func (s *workflowServer) RunStep(req *api.RunStepRequest, stream api.Step_RunSte
 	opts := []workflow.RunOpt{
 		workflow.WithStdout(grpcio.NewLogStreamWriter(stream)),
 		workflow.WithGitHubToken(s.conf.GitHub.Token),
+		workflow.WithDefaultImage(s.conf.Runtime.Image),
 	}
 
 	if s.conf.Verbose {

@@ -12,7 +12,7 @@ import (
 func TestNewJobFromReader(t *testing.T) {
 	var (
 		// expected = &sequence.Job{}
-		_, err = workflow.NewJobFromReader(bytes.NewReader(testdata.Job))
+		_, err = workflow.NewJobFromReader(bytes.NewReader(testdata.CheckoutTestJob))
 	)
 	assert.Nil(t, err)
 

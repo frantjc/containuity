@@ -68,7 +68,7 @@ func WithVerbose(ro *runOpts) error {
 	return nil
 }
 
-func WithImage(image string) RunOpt {
+func WithDefaultImage(image string) RunOpt {
 	return func(ro *runOpts) error {
 		ro.image = image
 		return nil
@@ -102,7 +102,7 @@ func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 		ro.image = meta.Image()
 	}
 
-	if ro.job != nil {
+	if ro.job != nil && ro.job.Name != "" {
 		ro.jobName = ro.job.Name
 	}
 

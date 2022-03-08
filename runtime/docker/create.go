@@ -5,7 +5,6 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
-	"github.com/frantjc/sequence/defaults"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/google/go-containerregistry/pkg/name"
 )
@@ -22,7 +21,7 @@ func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (r
 		Cmd:        s.Cmd,
 		WorkingDir: s.Cwd,
 		Env:        s.Env,
-		Labels:     defaults.Labels,
+		Labels:     labels,
 	}
 
 	hconf := &container.HostConfig{
@@ -42,7 +41,7 @@ func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (r
 		case mount.TypeBind:
 		case mount.TypeVolume:
 			dm.VolumeOptions = &mount.VolumeOptions{
-				Labels: defaults.Labels,
+				Labels: labels,
 			}
 		case mount.TypeTmpfs:
 			dm.Source = ""

@@ -9,6 +9,7 @@ import (
 var runCmd = &cobra.Command{
 	Use:               "run",
 	PersistentPreRunE: persistentPreRunRun,
+	RunE:              runWorkflow,
 }
 
 const (
@@ -31,6 +32,8 @@ func init() {
 
 	runCmd.AddCommand(
 		runStepCmd,
+		runJobCmd,
+		runWorkflowCmd,
 	)
 }
 
