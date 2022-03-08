@@ -35,3 +35,27 @@ func TypeStepToStep(s *types.Step) *workflow.Step {
 		// Params:     s.Params,
 	}
 }
+
+func TypeJobToJob(j *types.Job) *workflow.Job {
+	steps := make([]workflow.Step, len(j.Steps))
+
+	for i, s := range j.Steps {
+		steps[i] = *TypeStepToStep(s)
+	}
+
+	return &workflow.Job{
+		Steps: steps,
+	}
+}
+
+func TypeWorkflowToWorkflow(w *types.Workflow) *workflow.Workflow {
+	jobs := make(map[string]workflow.Job, len(w.Jobs))
+
+	for i, j := range w.Jobs {
+		jobs[i] = *TypeJobToJob(j)
+	}
+
+	return &workflow.Workflow{
+		Jobs: jobs,
+	}
+}

@@ -14,9 +14,9 @@ import (
 )
 
 var runStepCmd = &cobra.Command{
-	RunE: runStep,
 	Use:  "step",
 	Args: cobra.ExactArgs(1),
+	RunE: runStep,
 }
 
 func init() {

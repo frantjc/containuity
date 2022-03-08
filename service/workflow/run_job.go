@@ -1,13 +1,13 @@
 package workflow
 
 import (
-	api "github.com/frantjc/sequence/api/v1/step"
+	api "github.com/frantjc/sequence/api/v1/job"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
 	"github.com/frantjc/sequence/workflow"
 )
 
-func (s *workflowServer) RunStep(req *api.RunStepRequest, stream api.Step_RunStepServer) error {
+func (s *workflowServer) RunJob(req *api.RunJobRequest, stream api.Job_RunJobServer) error {
 	opts := []workflow.RunOpt{
 		workflow.WithStdout(grpcio.NewLogStreamWriter(stream)),
 		workflow.WithGitHubToken(s.conf.GitHub.Token),
@@ -18,7 +18,7 @@ func (s *workflowServer) RunStep(req *api.RunStepRequest, stream api.Step_RunSte
 		opts = append(opts, workflow.WithVerbose)
 	}
 
-	err := workflow.RunStep(stream.Context(), s.r, convert.TypeStepToStep(req.Step), opts...)
+	err := workflow.RunJob(stream.Context(), s.r, convert.TypeJobToJob(req.Job), opts...)
 	if err != nil {
 		return err
 	}

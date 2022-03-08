@@ -56,7 +56,7 @@ sequence should be able to run as a daemon--a gRPC client/server combination--fo
 
 ## cli
 
-### `sqnc`
+### `sqncd`
 
 run the sequence gRPC server
 
@@ -88,26 +88,26 @@ get a shell inside of the container of a would-be step
 sqnc debug step [FLAGS...] STEP | -s=STEP_ID JOB | -j=JOB_ID -s=STEP_ID WORKFLOW
 ```
 
-### `sqnc plugin`
+### `sqncshim plugin`
 
 clones a given action and emits the step version of that action to stdout
 
 ```sh
-sqnc plugin uses [FLAGS...] ACTION [PATH]
+sqncshim plugin uses [FLAGS...] ACTION [PATH]
 ```
 
 runs sequence's own implementation of a github actions plugin
 
 ```sh
-sqnc plugin [FLAGS...] PLUGIN
+sqncshim plugin [FLAGS...] PLUGIN
 ```
 
 ## build
 
 a single binary that's able to run as a gRPC daemon, daemonless-ly, and with interchangable container runtime backends sounds pretty big. it might make sense to build sequence into several different binaries with different combinations of functionality. first thought:
 
-* `sqnc` -- daemonless, includes plugins
+* `sqncshim` -- sequence shim, contains plugins
 
 * `sqncd` -- gRPC server itself
 
-* `sqnctl` -- cli to interact with gRPC server, does not include plugins
+* `sqnctl` -- cli to interact with gRPC server

@@ -21,9 +21,11 @@ PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-gr
 
 INSTALL ?= sudo install
 
-.DEFAULT: sqnc
+.DEFAULT: bin
 
-sequence sqnc sqncshim:
+bin bins binaries: sqnc sqncd sqncshim
+
+sqnc sqncd sqncshim:
 	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Repository=$(REPOSITORY) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o ./bin $(CURDIR)/cmd/$@
 	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
@@ -32,8 +34,6 @@ image img:
 
 test: image
 	$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):test $(BUILD_ARGS) --target=test .
-
-bin bins binaries: sequence sqnc
 
 fmt lint pretty:
 	$(GO) fmt ./...
@@ -53,4 +53,4 @@ clean:
 protos:
 	protoc $(PROTOC_ARGS) $(PROTOS)
 
-.PHONY: sequence sqnc image img test bin bins binaries fmt lint pretty vet vendor clean protos
+.PHONY: bin bins binaries sequence sqnc sqncshim image img test fmt lint pretty vet vendor clean protos

@@ -8,5 +8,5 @@ option go_package = "github.com/frantjc/sequence/api/types";
 
 message Workflow {
     string name = 1;
-    repeated sequence.types.Job jobs = 2;
+    map<string,sequence.types.Job> jobs = 2;
 }

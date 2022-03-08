@@ -1,8 +1,6 @@
 package sio
 
-import (
-	"io"
-)
+import "io"
 
 const (
 	newline = '\n'

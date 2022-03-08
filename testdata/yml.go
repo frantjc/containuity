@@ -6,15 +6,19 @@ var (
 	//go:embed action.yml
 	Action []byte
 
-	//go:embed job.yml
-	Job []byte
+	//go:embed checkout_step.yml
+	CheckoutStep []byte
 
-	//go:embed step.yml
-	Step []byte
+	//go:embed default_image_step.yml
+	DefaultImageStep []byte
 
-	//go:embed uses.yml
-	Uses []byte
+	//go:embed env_step.yml
+	EnvStep []byte
 
-	//go:embed workflow.yml
-	Workflow []byte
+	//go:embed checkout_test_build_workflow.yml
+	CheckoutTestBuildWorkflow []byte
+
+	//go:embed checkout_test_job.yml
+	CheckoutTestJob []byte
+
 )

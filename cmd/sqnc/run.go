@@ -9,6 +9,7 @@ import (
 var runCmd = &cobra.Command{
 	Use:               "run",
 	PersistentPreRunE: persistentPreRunRun,
+	RunE:              runWorkflow,
 }
 
 const (
