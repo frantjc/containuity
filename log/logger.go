@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/rs/zerolog"
@@ -52,7 +51,7 @@ func (l *logger) Infof(s string, v ...interface{}) {
 	l.l.Info().Msgf(s, v...)
 }
 
-func New(w *os.File) Logger {
+func New(o io.Writer) Logger {
 	return &logger{
 		l: zerolog.New(
 			zerolog.NewConsoleWriter(
@@ -62,9 +61,7 @@ func New(w *os.File) Logger {
 					w.FormatMessage = fmtMsg
 					w.FormatFieldName = fmtField
 					w.FormatFieldValue = fmtField
-					// TODO passing os.Stdout into here via w
-					// breaks everything for some ungodly reason
-					w.Out = os.Stdout
+					w.Out = o
 				},
 			),
 		).Level(zerolog.InfoLevel),

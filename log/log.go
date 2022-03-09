@@ -2,11 +2,12 @@ package log
 
 import (
 	"io"
-	"os"
+
+	"github.com/mattn/go-colorable"
 )
 
 var (
-	log = New(os.Stdout)
+	log = New(colorable.NewColorableStdout())
 )
 
 // for some reason, returning log here
