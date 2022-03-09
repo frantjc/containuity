@@ -10,8 +10,6 @@ var (
 	log = New(colorable.NewColorableStdout())
 )
 
-// for some reason, returning log here
-// instead of log.l breaks everything
 func Writer() io.Writer {
 	return log
 }
