@@ -2,7 +2,6 @@ package conf
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/frantjc/sequence/github"
 	"github.com/frantjc/sequence/meta"
@@ -11,10 +10,12 @@ import (
 const (
 	DefaultRuntimeName  = "docker"
 	DefaultRuntimeImage = "node:12"
+	DefaultRootDir      = "/var/lib/sqnc"
+	DefaultStateDir     = "/var/run/sqnc"
 )
 
 var (
-	DefaultSocket = fmt.Sprintf("unix://%s/.%s/%s.sock", os.Getenv("HOME"), meta.Name, meta.Name)
+	DefaultSocket = fmt.Sprintf("unix://%s/%s.sock", DefaultStateDir, meta.Name)
 )
 
 var (

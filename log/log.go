@@ -1,33 +1,36 @@
 package log
 
-import "github.com/rs/zerolog"
-
-var (
-	logger zerolog.Logger
+import (
+	"io"
+	"os"
 )
 
-// SetVerbose sets the loglevel of sequence's logger
-// to Debug or Info
+var (
+	log = New(os.Stdout)
+)
+
+// for some reason, returning log here
+// instead of log.l breaks everything
+func Writer() io.Writer {
+	return log
+}
+
 func SetVerbose(v bool) {
-	if v {
-		logger = logger.Level(zerolog.DebugLevel)
-	} else {
-		logger = logger.Level(zerolog.InfoLevel)
-	}
+	log.SetVerbose(v)
 }
 
 func Debug(s string) {
-	logger.Debug().Msg(s)
+	log.Debug(s)
 }
 
 func Debugf(s string, v ...interface{}) {
-	logger.Debug().Msgf(s, v...)
+	log.Debugf(s, v...)
 }
 
 func Info(s string) {
-	logger.Info().Msg(s)
+	log.Info(s)
 }
 
 func Infof(s string, v ...interface{}) {
-	logger.Info().Msgf(s, v...)
+	log.Infof(s, v...)
 }

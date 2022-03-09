@@ -12,6 +12,7 @@ func (s *workflowServer) RunStep(req *api.RunStepRequest, stream api.Step_RunSte
 		workflow.WithStdout(grpcio.NewLogStreamWriter(stream)),
 		workflow.WithGitHubToken(s.conf.GitHub.Token),
 		workflow.WithDefaultImage(s.conf.Runtime.Image),
+		workflow.WithWorkdir(s.conf.RootDir),
 	}
 
 	if s.conf.Verbose {

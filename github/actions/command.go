@@ -18,7 +18,7 @@ func (c *Command) String() string {
 		s = fmt.Sprintf("%s%s%s=%s", s, paramSpl, k, v)
 		paramSpl = ","
 		paramsAdded++
-		if paramsAdded >= numParams {
+		if paramsAdded == numParams {
 			paramSpl = ""
 		}
 	}

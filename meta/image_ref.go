@@ -20,6 +20,8 @@ var (
 
 	GoDigest digest.Digest
 
+	// TODO I don't really like this API, I'd like to implement it myself
+	//      more similarly to net/url.URL
 	ImageRef name.Reference
 )
 

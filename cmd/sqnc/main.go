@@ -37,6 +37,8 @@ func init() {
 
 	rootCmd.AddCommand(
 		runCmd,
+		runJobCmd,
+		runWorkflowCmd,
 	)
 }
 

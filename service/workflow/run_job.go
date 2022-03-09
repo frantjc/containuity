@@ -12,6 +12,7 @@ func (s *workflowServer) RunJob(req *api.RunJobRequest, stream api.Job_RunJobSer
 		workflow.WithStdout(grpcio.NewLogStreamWriter(stream)),
 		workflow.WithGitHubToken(s.conf.GitHub.Token),
 		workflow.WithDefaultImage(s.conf.Runtime.Image),
+		workflow.WithWorkdir(s.conf.RootDir),
 	}
 
 	if s.conf.Verbose {

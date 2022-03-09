@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/frantjc/sequence/meta"
+	"github.com/frantjc/sequence/conf"
 )
 
 type runOpts struct {
@@ -17,6 +17,7 @@ type runOpts struct {
 	stderr      io.Writer
 	verbose     bool
 	image       string
+	workdir     string
 }
 
 type RunOpt func(*runOpts) error
@@ -31,6 +32,17 @@ func WithJobName(j string) RunOpt {
 func WithJob(j *Job) RunOpt {
 	return func(ro *runOpts) error {
 		ro.job = j
+
+		if ro.jobName == "" {
+			ro.jobName = j.Name
+		}
+
+		if jobImage, ok := ro.job.Container.(string); ok {
+			ro.image = jobImage
+		} else if container, ok := ro.job.Container.(*Container); ok {
+			ro.image = container.Image
+		}
+
 		return nil
 	}
 }
@@ -75,16 +87,25 @@ func WithDefaultImage(image string) RunOpt {
 	}
 }
 
+func WithWorkdir(workdir string) RunOpt {
+	return func(ro *runOpts) error {
+		ro.workdir = workdir
+		return nil
+	}
+}
+
 func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 	var (
-		stdout = new(bytes.Buffer)
-		ro     = &runOpts{
+		buf = new(bytes.Buffer)
+		ro  = &runOpts{
 			workflow: &Workflow{},
 			job:      &Job{},
 			path:     ".",
-			stdout:   stdout,
-			stderr:   stdout,
+			stdout:   buf,
+			stderr:   buf,
 			verbose:  false,
+			workdir:  ".",
+			image:    conf.DefaultRuntimeImage,
 		}
 	)
 	for _, opt := range opts {
@@ -92,18 +113,6 @@ func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	if jobImage, ok := ro.job.Container.(string); ok {
-		ro.image = jobImage
-	}
-
-	if ro.image == "" {
-		ro.image = meta.Image()
-	}
-
-	if ro.job != nil && ro.job.Name != "" {
-		ro.jobName = ro.job.Name
 	}
 
 	return ro, nil

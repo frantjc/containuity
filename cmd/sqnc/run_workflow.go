@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/log"
-	"github.com/frantjc/sequence/sio"
 	"github.com/frantjc/sequence/workflow"
 	"github.com/spf13/cobra"
 )
@@ -51,5 +49,5 @@ func runWorkflow(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return client.RunWorkflow(ctx, w, sio.NewPrefixedWriter(fmt.Sprintf("%s|%s ", log.ColorInfo, log.ColorNone), log.Writer()))
+	return client.RunWorkflow(ctx, w, log.Writer())
 }

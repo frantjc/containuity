@@ -1,6 +1,13 @@
 package conf
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/frantjc/sequence/meta"
+)
 
 var (
 	conf *Config
@@ -8,9 +15,8 @@ var (
 
 func Get() (*Config, error) {
 	if conf == nil {
-		err := sviper.ReadInConfig()
-		if err != nil {
-			return nil, err
+		if err := sviper.ReadInConfig(); err == nil {
+			ConfigFilePath = sviper.ConfigFileUsed()
 		}
 
 		var (
@@ -19,12 +25,22 @@ func Get() (*Config, error) {
 			addr         = sviper.GetString(socketKey)
 			runtimeName  = sviper.GetString(runtimeNameKey)
 			runtimeImage = sviper.GetString(runtimeImageKey)
+			rootDir      = DefaultRootDir
+			stateDir     = DefaultStateDir
 		)
+		if !strings.HasPrefix(ConfigFilePath, sysRootPath) {
+			rootDir = filepath.Join(usrRootPath, "lib")
+			stateDir = filepath.Join(usrRootPath, "run")
+		}
 		if port != 0 {
 			net = "tcp"
 			addr = fmt.Sprintf(":%d", port)
 		} else if addr == "" {
-			addr = DefaultSocket
+			if !strings.HasPrefix(ConfigFilePath, sysRootPath) {
+				addr = fmt.Sprintf("unix://%s/%s.sock", stateDir, meta.Name)
+			} else {
+				addr = DefaultSocket
+			}
 		}
 		if runtimeName == "" {
 			runtimeName = DefaultRuntimeName
@@ -34,9 +50,11 @@ func Get() (*Config, error) {
 		}
 
 		conf = &Config{
-			Verbose: sviper.GetBool(verboseKey),
-			Network: net,
-			Address: addr,
+			Verbose:  sviper.GetBool(verboseKey),
+			Network:  net,
+			Address:  addr,
+			RootDir:  rootDir,
+			StateDir: stateDir,
 			GitHub: &GitHubConfig{
 				Token: sviper.GetString(githubTokenKey),
 				URL:   DefaultGitHubURL,
@@ -48,7 +66,13 @@ func Get() (*Config, error) {
 			Secrets: sviper.GetStringMapString(secretsKey),
 		}
 
-		ConfigFilePath = sviper.ConfigFileUsed()
+		if err := os.MkdirAll(conf.RootDir, 0755); err != nil {
+			return nil, err
+		}
+
+		if err := os.MkdirAll(conf.StateDir, 0755); err != nil {
+			return nil, err
+		}
 	}
 
 	return conf, nil

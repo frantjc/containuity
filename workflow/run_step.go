@@ -48,8 +48,9 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		id = base64.URLEncoding.EncodeToString(
 			[]byte(ro.path + ro.workflow.Name + ro.jobName),
 		)
-		githubEnv  = filepath.Join(workdir, id, "github", "env")
-		githubPath = filepath.Join(workdir, id, "github", "path")
+		workdirid  = filepath.Join(ro.workdir, id)
+		githubEnv  = filepath.Join(workdirid, "github", "env")
+		githubPath = filepath.Join(workdirid, "github", "path")
 		spec       = &runtime.Spec{
 			Image:      ro.image,
 			Cwd:        ghenv.Workspace,
@@ -63,17 +64,17 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 					Options:     readonly,
 				},
 				{
-					Source:      filepath.Join(workdir, id, "workspace"),
+					Source:      filepath.Join(workdirid, "workspace"),
 					Destination: ghenv.Workspace,
 					Type:        runtime.MountTypeBind,
 				},
 				{
-					Source:      filepath.Join(workdir, id, "runner", "temp"),
+					Source:      filepath.Join(workdirid, "runner", "temp"),
 					Destination: ghenv.RunnerTemp,
 					Type:        runtime.MountTypeBind,
 				},
 				{
-					Source:      filepath.Join(workdir, id, "runner", "toolcache"),
+					Source:      filepath.Join(ro.workdir, id, "runner", "toolcache"),
 					Destination: ghenv.RunnerToolCache,
 					Type:        runtime.MountTypeBind,
 				},
@@ -105,7 +106,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		spec.Mounts = append(spec.Mounts, specs.Mount{
 			// actions can be global since every step that uses actions/checkout@v2
 			// expects it to function the same
-			Source:      filepath.Join(workdir, "actions", action.Owner(), action.Repository(), action.Path(), action.Version()),
+			Source:      filepath.Join(ro.workdir, "actions", action.Owner(), action.Repository(), action.Path(), action.Version()),
 			Destination: ghenv.ActionPath,
 			Type:        runtime.MountTypeBind,
 		})
