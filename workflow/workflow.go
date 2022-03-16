@@ -14,7 +14,7 @@ func NewWorkflowFromReader(r io.Reader) (*Workflow, error) {
 }
 
 type Workflow struct {
-	Name string         `json:"string,omitempty"`
+	Name string         `json:"name,omitempty"`
 	Jobs map[string]Job `json:"jobs,omitempty"`
 }
 
@@ -23,4 +23,13 @@ func (w *Workflow) GetJob(name string) (*Job, error) {
 		return &job, nil
 	}
 	return nil, fmt.Errorf("workflow has no job with name %s", name)
+}
+
+func (w *Workflow) GetStep(id string) (*Step, error) {
+	for _, job := range w.Jobs {
+		if step, err := job.GetStep(id); err == nil {
+			return step, nil
+		}
+	}
+	return nil, fmt.Errorf("workflow has no step with id %s", id)
 }

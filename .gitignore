@@ -1,13 +1,13 @@
-# bin
-bin/*
-!bin/.gitkeep
-
 # IDE
 .vscode/
 .idea/
 
 # macOS
 .DS_Store
+
+# dev
+bin/*
+!bin/.gitkeep
 
 # go
 vendor/

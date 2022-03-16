@@ -17,6 +17,8 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
+var readonly = []string{runtime.MountOptReadOnly}
+
 func RunStep(ctx context.Context, r runtime.Runtime, s *Step, opts ...RunOpt) error {
 	ro, err := newRunOpts(opts...)
 	if err != nil {
@@ -178,7 +180,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 	if !s.IsStdoutResponse() {
 		eopts[0] = runtime.WithStreams(os.Stdin, ro.stdout, errbuf)
 	}
-	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running step %s\n", log.ColorInfo, log.ColorNone, s.GetID())))
+	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running step '%s'\n", log.ColorInfo, log.ColorNone, s.GetID())))
 	if err = runSpec(ctx, r, spec, eopts); err != nil {
 		return err
 	}
@@ -239,7 +241,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 				}, ro.stdout)
 				eopts = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 			)
-			ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running action %s\n", log.ColorInfo, log.ColorNone, s.Uses)))
+			ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running action '%s'\n", log.ColorInfo, log.ColorNone, s.Uses)))
 			err = runSpec(ctx, r, spec, eopts)
 			if err != nil {
 				return err
@@ -270,7 +272,7 @@ func expandStep(s *Step, ctx *actions.ActionsContext) (*Step, error) {
 	return es, nil
 }
 
-func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, eopts []runtime.ExecOpt) error {
+func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, opts []runtime.ExecOpt) error {
 	_, err := r.PullImage(ctx, s.Image)
 	if err != nil {
 		return err
@@ -281,7 +283,7 @@ func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, eopts []ru
 		return err
 	}
 
-	err = container.Exec(ctx, eopts...)
+	err = container.Exec(ctx, opts...)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package sequence.v1.image;
+
+import "api/types/image.proto";
+
+option go_package = "github.com/frantjc/sequence/api/v1/image";
+
+service Image {
+    rpc PullImage(PullImageRequest) returns (PullImageResponse);
+}
+
+message PullImageRequest {
+    string ref = 1;
+}
+
+message PullImageResponse {
+    sequence.types.Image image = 1;
+}

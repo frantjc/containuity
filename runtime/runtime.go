@@ -5,6 +5,11 @@ import (
 	"sync"
 )
 
+const (
+	EnvVarRuntime      = "SQNC_RUNTIME"
+	DefaultRuntimeName = "docker"
+)
+
 type Runtime interface {
 	PullImage(context.Context, string) (Image, error)
 	CreateContainer(context.Context, *Spec) (Container, error)

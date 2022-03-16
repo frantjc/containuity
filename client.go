@@ -4,10 +4,14 @@ import (
 	"context"
 	"io"
 
+	containerapi "github.com/frantjc/sequence/api/v1/container"
+	imageapi "github.com/frantjc/sequence/api/v1/image"
 	jobapi "github.com/frantjc/sequence/api/v1/job"
 	stepapi "github.com/frantjc/sequence/api/v1/step"
 	workflowapi "github.com/frantjc/sequence/api/v1/workflow"
 	"github.com/frantjc/sequence/internal/convert"
+	"github.com/frantjc/sequence/internal/grpcio"
+	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -15,82 +19,90 @@ import (
 
 // Client is a wrapper around each of sequence's gRPC clients
 type Client struct {
-	jobclient      jobapi.JobClient
-	stepclient     stepapi.StepClient
-	workflowclient workflowapi.WorkflowClient
+	jobClient      jobapi.JobClient
+	stepClient     stepapi.StepClient
+	workflowClient workflowapi.WorkflowClient
+
+	containerClient containerapi.ContainerClient
+	imageClient     imageapi.ImageClient
 }
 
-// New returns a new Client
-func New(ctx context.Context, addr string, opts ...ClientOpt) (*Client, error) {
+// New is an alias to NewClient
+var New = NewClient
+
+// NewClient returns a new Client
+func NewClient(ctx context.Context, addr string, opts ...ClientOpt) (*Client, error) {
 	cc, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{
-		jobclient:      jobapi.NewJobClient(cc),
-		stepclient:     stepapi.NewStepClient(cc),
-		workflowclient: workflowapi.NewWorkflowClient(cc),
-	}, nil
+	client := &Client{
+		jobClient:      jobapi.NewJobClient(cc),
+		stepClient:     stepapi.NewStepClient(cc),
+		workflowClient: workflowapi.NewWorkflowClient(cc),
+	}
+	return client, nil
 }
 
 // JobClient returns the client's underlying gRPC JobClient
 func (c *Client) JobClient() jobapi.JobClient {
-	return c.jobclient
+	return c.jobClient
 }
 
 // StepClient returns the client's underlying gRPC StepClient
 func (c *Client) StepClient() stepapi.StepClient {
-	return c.stepclient
+	return c.stepClient
 }
 
 // WorkflowClient returns the client's underlying gRPC WorkflowClient
 func (c *Client) WorkflowClient() workflowapi.WorkflowClient {
-	return c.workflowclient
+	return c.workflowClient
+}
+
+// ContainerClient returns the client's underlying gRPC WorkflowClient
+func (c *Client) ContainerClient() containerapi.ContainerClient {
+	return c.containerClient
+}
+
+// ImageClient returns the client's underlying gRPC WorkflowClient
+func (c *Client) ImageClient() imageapi.ImageClient {
+	return c.imageClient
+}
+
+// Runtime returns a runtime.Runtime implementation using the underlying clients
+func (c *Client) Runtime() runtime.Runtime {
+	return NewGRPCRuntime(c.ImageClient(), c.ContainerClient())
 }
 
 // RunStep calls the underlying gRPC StepClient's RunStep and
 // writes its logs to the given io.Writer
 func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer) error {
 	stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
-		Step: convert.StepToTypeStep(step),
+		Step: convert.StepToProtoStep(step),
 	})
 	if err != nil {
 		return err
 	}
 
-	for {
-		l, err := stream.Recv()
-		if err == io.EOF {
-			return stream.CloseSend()
-		} else if err != nil {
-			return err
-		}
-
-		w.Write([]byte(l.Line))
-	}
+	return grpcio.MultiplexLogStream(stream, w, w)
 }
 
+// RunJob calls the underlying gRPC JobClient's RunJob and
+// writes its logs to the given io.Writer
 func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer) error {
 	stream, err := c.JobClient().RunJob(ctx, &jobapi.RunJobRequest{
-		Job: convert.JobToTypeJob(job),
+		Job: convert.JobToProtoJob(job),
 	})
 	if err != nil {
 		return err
 	}
 
-	for {
-		l, err := stream.Recv()
-		if err == io.EOF {
-			return stream.CloseSend()
-		} else if err != nil {
-			return err
-		}
-
-		w.Write([]byte(l.Line))
-	}
+	return grpcio.MultiplexLogStream(stream, w, w)
 }
 
+// RunWorkflow calls the underlying gRPC WorkflowClient's RunWorkflow and
+// writes its logs to the given io.Writer
 func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w io.Writer) error {
 	stream, err := c.WorkflowClient().RunWorkflow(ctx, &workflowapi.RunWorkflowRequest{
 		Workflow: convert.WorkflowToTypeWorkflow(workflow),
@@ -99,14 +111,5 @@ func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w
 		return err
 	}
 
-	for {
-		l, err := stream.Recv()
-		if err == io.EOF {
-			return stream.CloseSend()
-		} else if err != nil {
-			return err
-		}
-
-		w.Write([]byte(l.Line))
-	}
+	return grpcio.MultiplexLogStream(stream, w, w)
 }

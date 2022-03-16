@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/meta"
-	"github.com/frantjc/sequence/service"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +59,6 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	addr := strings.TrimPrefix(c.Address, "unix://")
-
 	os.Remove(addr)
 	defer os.Remove(addr)
 
@@ -68,7 +67,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	s, err := service.New(ctx, service.WithConfig(c))
+	s, err := sequence.NewServer(ctx, sequence.WithAnyRuntime)
 	if err != nil {
 		return err
 	}

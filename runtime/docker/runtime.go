@@ -7,7 +7,10 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-const RuntimeName = "docker"
+const (
+	EnvVarSocket = "DOCKER_SOCKET"
+	RuntimeName  = runtime.DefaultRuntimeName
+)
 
 type dockerRuntime struct {
 	client *dclient.Client
@@ -18,7 +21,7 @@ var (
 )
 
 func init() {
-	runtime.Init(RuntimeName, func(c context.Context) (runtime.Runtime, error) {
+	runtime.Init(RuntimeName, func(ctx context.Context) (runtime.Runtime, error) {
 		client, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
 		if err != nil {
 			return nil, err

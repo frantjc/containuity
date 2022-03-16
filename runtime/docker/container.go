@@ -31,8 +31,8 @@ func (c *dockerContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt) err
 
 	attachResp, err := c.client.ContainerAttach(ctx, c.id, types.ContainerAttachOptions{
 		Stream: true,
-		Stdout: true,
-		Stderr: true,
+		Stdout: e.Stdout != nil,
+		Stderr: e.Stderr != nil,
 	})
 	if err != nil {
 		return err

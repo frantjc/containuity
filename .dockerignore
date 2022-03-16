@@ -7,7 +7,7 @@
 
 # dev
 bin/
-Dockerfile*
+Dockerfile
 Makefile
 
 # misc

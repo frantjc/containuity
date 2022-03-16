@@ -14,7 +14,7 @@ func RunWorkflow(ctx context.Context, r runtime.Runtime, w *Workflow, opts ...Ru
 		return err
 	}
 
-	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running workflow %s\n", log.ColorInfo, log.ColorNone, w.Name)))
+	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running workflow '%s'\n", log.ColorInfo, log.ColorNone, w.Name)))
 	for name, job := range w.Jobs {
 		jobName := name
 		if job.Name != "" {

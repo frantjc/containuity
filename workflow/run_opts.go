@@ -80,7 +80,7 @@ func WithVerbose(ro *runOpts) error {
 	return nil
 }
 
-func WithDefaultImage(image string) RunOpt {
+func WithRunnerImage(image string) RunOpt {
 	return func(ro *runOpts) error {
 		ro.image = image
 		return nil

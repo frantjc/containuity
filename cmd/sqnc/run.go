@@ -6,17 +6,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-var runCmd = &cobra.Command{
-	Use:               "run",
-	PersistentPreRunE: persistentPreRunRun,
-	RunE:              runWorkflow,
-}
-
-const (
-	fromStdin = "-"
-)
+const fromStdin = "-"
 
 var (
+	runCmd = &cobra.Command{
+		Use:               "run",
+		PersistentPreRunE: persistentPreRunRun,
+		RunE:              runWorkflow,
+	}
 	jobName string
 	stepID  string
 )
@@ -32,6 +29,8 @@ func init() {
 
 	runCmd.AddCommand(
 		runStepCmd,
+		runJobCmd,
+		runWorkflowCmd,
 	)
 }
 

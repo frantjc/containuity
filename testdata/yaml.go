@@ -20,5 +20,4 @@ var (
 
 	//go:embed checkout_test_job.yml
 	CheckoutTestJob []byte
-
 )

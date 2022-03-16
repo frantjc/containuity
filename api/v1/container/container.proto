@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package sequence.v1.container;
+
+import "api/types/container.proto";
+import "api/types/log.proto";
+import "api/types/spec.proto";
+
+option go_package = "github.com/frantjc/sequence/api/v1/container";
+
+service Container {
+    rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
+    rpc GetContainer(GetContainerRequest) returns (GetContainerResponse);
+    rpc ExecContainer(ExecContainerRequest) returns (stream sequence.types.Log);
+}
+
+message CreateContainerRequest {
+    sequence.types.Spec spec = 1;
+}
+
+message CreateContainerResponse {
+    sequence.types.Container container = 1;
+}
+
+message GetContainerRequest {
+    string id = 1;
+}
+
+message GetContainerResponse {
+    sequence.types.Container container = 1;
+}
+
+message ExecContainerRequest {
+    string id = 1;
+}

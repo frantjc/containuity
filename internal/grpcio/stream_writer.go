@@ -2,27 +2,31 @@ package grpcio
 
 import (
 	"io"
+	"sync"
 
 	"github.com/frantjc/sequence/api/types"
 )
 
-func NewLogStreamWriter(s LogStream) io.Writer {
-	return &logStreamWriter{s}
+func NewLogStreamWriter(s LogStreamServer) io.Writer {
+	return &logStreamWriter{sync.Mutex{}, s}
 }
 
-type LogStream interface {
+type LogStreamServer interface {
 	Send(*types.Log) error
 }
 
 type logStreamWriter struct {
-	s LogStream
+	sync.Mutex
+	s LogStreamServer
 }
 
 var _ io.Writer = &logStreamWriter{}
 
 func (w *logStreamWriter) Write(p []byte) (int, error) {
+	w.Lock()
+	defer w.Unlock()
 	err := w.s.Send(&types.Log{
-		Line: string(p),
+		Out: string(p),
 	})
 	if err != nil {
 		return 0, err

@@ -19,64 +19,24 @@ const (
 	ActionMetadataKey = "_sqnc_action"
 )
 
-// NewStepFromReader parses and returns a Step
-// from the given reader e.g. a file
-func NewStepFromReader(r io.Reader) (*Step, error) {
-	s := &Step{}
-	d := yaml.NewDecoder(r)
-	return s, d.Decode(s)
-}
-
-// NewStepFromMetadata returns a Step from a given GitHub action
-// that is cloned at the given path
-func NewStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
-	s := &Step{With: map[string]string{}}
-	for inputName, input := range a.Inputs {
-		s.With[inputName] = input.Default
-	}
-	switch a.Runs.Using {
-	case "node12":
-		s.Image = "node:12"
-		s.Entrypoint = []string{"node"}
-		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
-	case "node16":
-		s.Image = "node:16"
-		s.Entrypoint = []string{"node"}
-		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
-	case "docker":
-		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
-			s.Image = strings.TrimPrefix(a.Runs.Image, imagePrefix)
-			s.Entrypoint = []string{a.Runs.Entrypoint}
-			s.Cmd = a.Runs.Args
-			s.Env = a.Runs.Env
-		} else {
-			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix '%s'", imagePrefix)
-		}
-	default:
-		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker'")
-	}
-
-	return s, nil
-}
-
 // Step is a user's primary way of interacting with sequence;
 // a Step defines a containerized command to be ran
 // (or two if the Step is using a GitHub action from a GitHub repository:
 //  first to clone the action and get its metadata, second to execute it)
 type Step struct {
-	ID         string            `json:"id,omitempty"`
-	Name       string            `json:"name,omitempty"`
-	Image      string            `json:"image,omitempty"`
-	Entrypoint []string          `json:"entrypoint,omitempty"`
-	Cmd        []string          `json:"cmd,omitempty"`
-	Privileged bool              `json:"privileged,omitempty"`
-	Env        map[string]string `json:"env,omitempty"`
-
+	ID    string            `json:"id,omitempty"`
+	Name  string            `json:"name,omitempty"`
+	Env   map[string]string `json:"env,omitempty"`
 	Shell string            `json:"shell,omitempty"`
 	Run   string            `json:"run,omitempty"`
 	Uses  string            `json:"uses,omitempty"`
 	With  map[string]string `json:"with,omitempty"`
 	If    bool              `json:"if,omitempty"`
+
+	Image      string   `json:"image,omitempty"`
+	Entrypoint []string `json:"entrypoint,omitempty"`
+	Cmd        []string `json:"cmd,omitempty"`
+	Privileged bool     `json:"privileged,omitempty"`
 
 	Get    string                 `json:"get,omitempty"`
 	Put    string                 `json:"put,omitempty"`
@@ -184,6 +144,47 @@ func (s *Step) Canonical() *Step {
 	}
 
 	return s
+}
+
+// NewStepFromReader parses and returns a Step
+// from the given reader e.g. a file
+func NewStepFromReader(r io.Reader) (*Step, error) {
+	s := &Step{}
+	d := yaml.NewDecoder(r)
+	return s, d.Decode(s)
+}
+
+// NewStepFromMetadata returns a Step from a given GitHub action
+// that is cloned at the given path
+func NewStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
+	s := &Step{}
+	s.With = map[string]string{}
+	for inputName, input := range a.Inputs {
+		s.With[inputName] = input.Default
+	}
+	switch a.Runs.Using {
+	case "node12":
+		s.Image = "node:12"
+		s.Entrypoint = []string{"node"}
+		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
+	case "node16":
+		s.Image = "node:16"
+		s.Entrypoint = []string{"node"}
+		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
+	case "docker":
+		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
+			s.Image = strings.TrimPrefix(a.Runs.Image, imagePrefix)
+			s.Entrypoint = []string{a.Runs.Entrypoint}
+			s.Cmd = a.Runs.Args
+			s.Env = a.Runs.Env
+		} else {
+			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix '%s'", imagePrefix)
+		}
+	default:
+		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker'")
+	}
+
+	return s, nil
 }
 
 // StepOut is the optional parsable output of a Step

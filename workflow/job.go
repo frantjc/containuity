@@ -20,7 +20,7 @@ type Job struct {
 	Needs       interface{}       `json:"needs,omitempty"`
 	If          bool              `json:"if,omitempty"`
 	RunsOn      string            `json:"runs-on,omitempty"`
-	Environment *Environment      `json:"environment,omitempty"`
+	Environment *JobEnvironment   `json:"environment,omitempty"`
 	Concurrency interface{}       `json:"concurrency,omitempty"`
 	Outputs     map[string]string `json:"outputs,omitempty"`
 	Env         map[string]string `json:"env,omitempty"`
@@ -28,7 +28,7 @@ type Job struct {
 	Steps       []Step            `json:"steps,omitempty"`
 }
 
-type Environment struct {
+type JobEnvironment struct {
 	Name string   `json:"name,omitempty"`
 	URL  *url.URL `json:"url,omitempty"`
 }
