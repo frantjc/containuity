@@ -1,15 +1,14 @@
 package sequence
 
 import (
-	"bytes"
 	"context"
-	"io"
 
 	containerapi "github.com/frantjc/sequence/api/v1/container"
 	imageapi "github.com/frantjc/sequence/api/v1/image"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
 	"github.com/frantjc/sequence/runtime"
+	"github.com/frantjc/sequence/sio"
 )
 
 func NewGRPCRuntime(i imageapi.ImageClient, c containerapi.ContainerClient) runtime.Runtime {
@@ -36,8 +35,8 @@ func (c *runtimeContainer) ID() string {
 
 func (c *runtimeContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt) error {
 	var (
-		stdout io.Writer = new(bytes.Buffer)
-		stderr io.Writer = new(bytes.Buffer)
+		stdout = sio.NewNoOpWriter()
+		stderr = stdout
 	)
 	if exec, err := runtime.NewExec(opts...); err != nil {
 		return err
@@ -57,7 +56,7 @@ func (c *runtimeContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt) er
 		return err
 	}
 
-	return grpcio.MultiplexLogStream(stream, stdout, stderr)
+	return grpcio.DemultiplexLogStream(stream, stdout, stderr)
 }
 
 type runtimeImage struct {

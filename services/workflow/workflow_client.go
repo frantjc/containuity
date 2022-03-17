@@ -23,7 +23,7 @@ func (c *workflowClient) RunWorkflow(ctx context.Context, in *api.RunWorkflowReq
 		conf, _ = conf.Get()
 		stream  = grpcio.NewLogStream(ctx)
 		opts    = []workflow.RunOpt{
-			workflow.WithStdout(grpcio.NewLogStreamWriter(stream)),
+			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRunnerImage(conf.Runtime.Image),
 			workflow.WithWorkdir(conf.RootDir),

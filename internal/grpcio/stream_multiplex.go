@@ -12,7 +12,7 @@ type LogStreamClient interface {
 	grpc.ClientStream
 }
 
-func MultiplexLogStream(stream LogStreamClient, stdout, stderr io.Writer) error {
+func DemultiplexLogStream(stream LogStreamClient, stdout, stderr io.Writer) error {
 	for {
 		l, err := stream.Recv()
 		if err == io.EOF {

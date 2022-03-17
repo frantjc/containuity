@@ -85,7 +85,7 @@ func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer) 
 		return err
 	}
 
-	return grpcio.MultiplexLogStream(stream, w, w)
+	return grpcio.DemultiplexLogStream(stream, w, w)
 }
 
 // RunJob calls the underlying gRPC JobClient's RunJob and
@@ -98,7 +98,7 @@ func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer) err
 		return err
 	}
 
-	return grpcio.MultiplexLogStream(stream, w, w)
+	return grpcio.DemultiplexLogStream(stream, w, w)
 }
 
 // RunWorkflow calls the underlying gRPC WorkflowClient's RunWorkflow and
@@ -111,5 +111,5 @@ func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w
 		return err
 	}
 
-	return grpcio.MultiplexLogStream(stream, w, w)
+	return grpcio.DemultiplexLogStream(stream, w, w)
 }

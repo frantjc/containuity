@@ -35,11 +35,8 @@ func (s *workflowServer) RunWorkflow(in *api.RunWorkflowRequest, stream api.Work
 		return err
 	}
 
-	var (
-		stdout = grpcio.NewLogStreamWriter(stream)
-		stderr = stdout
-	)
-	return grpcio.MultiplexLogStream(clientStream, stdout, stderr)
+	stdout, stderr := grpcio.NewLogStreamMultiplexWriter(stream)
+	return grpcio.DemultiplexLogStream(clientStream, stdout, stderr)
 }
 
 func (s *workflowServer) Client() (interface{}, error) {

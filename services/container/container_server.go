@@ -45,11 +45,8 @@ func (s *containerServer) ExecContainer(in *api.ExecContainerRequest, stream api
 		return err
 	}
 
-	var (
-		stdout = grpcio.NewLogStreamWriter(stream)
-		stderr = stdout
-	)
-	return grpcio.MultiplexLogStream(clientStream, stdout, stderr)
+	stdout, stderr := grpcio.NewLogStreamMultiplexWriter(stream)
+	return grpcio.DemultiplexLogStream(clientStream, stdout, stderr)
 }
 
 func (s *containerServer) Client() (interface{}, error) {

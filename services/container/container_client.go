@@ -41,10 +41,9 @@ func (s *containerClient) GetContainer(ctx context.Context, req *api.GetContaine
 
 func (s *containerClient) ExecContainer(ctx context.Context, in *api.ExecContainerRequest, _ ...grpc.CallOption) (api.Container_ExecContainerClient, error) {
 	var (
-		stream = grpcio.NewLogStream(ctx)
-		stdout = grpcio.NewLogStreamWriter(stream)
-		stderr = stdout
-		opts   = []runtime.ExecOpt{
+		stream         = grpcio.NewLogStream(ctx)
+		stdout, stderr = grpcio.NewLogStreamMultiplexWriter(stream)
+		opts           = []runtime.ExecOpt{
 			runtime.WithStreams(
 				os.Stdin,
 				stdout,
