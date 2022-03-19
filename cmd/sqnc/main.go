@@ -39,35 +39,13 @@ func init() {
 }
 
 func newConfig() (*conf.Config, error) {
-	configOpts := []conf.ConfigOpt{
-		conf.WithConfig(&conf.Config{
-			Verbose:  verbose,
-			Socket:   socket,
-			Port:     port,
-			RootDir:  rootDir,
-			StateDir: stateDir,
-		}),
-	}
-
-	if configFilePath != "" {
-		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, configFilePath))
-	}
-
-	configOpts = append(configOpts, conf.WithConfigFromEnv)
-
-	if _, err := os.Stat(conf.DefaultUserConfigFilePath); err == nil {
-		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, conf.DefaultUserConfigFilePath))
-	}
-
-	configOpts = append(configOpts, conf.WithDefaultUserConfig)
-
-	if _, err := os.Stat(conf.DefaultSystemConfigFilePath); err == nil {
-		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, conf.DefaultSystemConfigFilePath))
-	}
-
-	configOpts = append(configOpts, conf.WithDefaultSystemConfig)
-
-	return conf.New(configOpts...)
+	return conf.NewFull(&conf.Config{
+		Verbose:  verbose,
+		Socket:   socket,
+		Port:     port,
+		RootDir:  rootDir,
+		StateDir: stateDir,
+	}, configFilePath, workDir)
 }
 
 func init() {

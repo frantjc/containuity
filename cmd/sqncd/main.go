@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -44,35 +45,13 @@ func init() {
 }
 
 func newConfig() (*conf.Config, error) {
-	configOpts := []conf.ConfigOpt{
-		conf.WithConfig(&conf.Config{
-			Verbose:  verbose,
-			Socket:   socket,
-			Port:     port,
-			RootDir:  rootDir,
-			StateDir: stateDir,
-		}),
-	}
-
-	if configFilePath != "" {
-		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, configFilePath))
-	}
-
-	configOpts = append(configOpts, conf.WithConfigFromEnv)
-
-	if _, err := os.Stat(conf.DefaultUserConfigFilePath); err == nil {
-		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, conf.DefaultUserConfigFilePath))
-	}
-
-	configOpts = append(configOpts, conf.WithDefaultUserConfig)
-
-	if _, err := os.Stat(conf.DefaultSystemConfigFilePath); err == nil {
-		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, conf.DefaultSystemConfigFilePath))
-	}
-
-	configOpts = append(configOpts, conf.WithDefaultSystemConfig)
-
-	return conf.New(configOpts...)
+	return conf.NewFull(&conf.Config{
+		Verbose:  verbose,
+		Socket:   socket,
+		Port:     port,
+		RootDir:  rootDir,
+		StateDir: stateDir,
+	}, configFilePath, workDir)
 }
 
 func init() {
@@ -100,6 +79,11 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	addr := strings.TrimPrefix(c.Address(), "unix://")
+	os.MkdirAll(c.RootDir, 0777)
+	os.MkdirAll(c.StateDir, 0777)
+	if c.Port == 0 {
+		os.MkdirAll(filepath.Dir(addr), 0777)
+	}
 	os.Remove(addr)
 	defer os.Remove(addr)
 
