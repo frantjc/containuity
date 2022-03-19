@@ -15,7 +15,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:               "sqnc",
-	Version:           meta.Semver(),
+	Version:           fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()),
 	PersistentPreRunE: persistentPreRun,
 }
 
@@ -32,7 +32,7 @@ func init() {
 
 func init() {
 	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("{{ with .Name }}{{ . }}{{ end }}{{ with .Version }}{{ . }}{{ end }} %s\n", runtime.Version()),
+		fmt.Sprintf("{{ with .Version }}{{ . }}{{ end }}\n"),
 	)
 
 	rootCmd.AddCommand(

@@ -19,12 +19,16 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:               fmt.Sprintf("%sd", meta.Name),
-	Version:           meta.Semver(),
+	Version:           fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()),
 	PersistentPreRunE: persistentPreRun,
 	RunE:              run,
 }
 
 func init() {
+	rootCmd.SetVersionTemplate(
+		fmt.Sprintf("{{ with .Version }}{{ . }}{{ end }}\n"),
+	)
+
 	rootCmd.PersistentFlags().StringVar(&flags.FlagConfigFilePath, "config", "", "config file")
 	rootCmd.PersistentFlags().BoolVar(&flags.FlagVerbose, "verbose", false, "verbose")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagSocket, "sock", "", "unix socket")
@@ -33,12 +37,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.FlagStateDir, "state-dir", "", "state dir")
 	wd, _ := os.Getwd()
 	rootCmd.PersistentFlags().StringVar(&flags.FlagWorkDir, "context", wd, "context")
-}
-
-func init() {
-	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("{{ with .Name }}{{ . }}{{ end }}{{ with .Version }}{{ . }}{{ end }} %s\n", runtime.Version()),
-	)
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) error {

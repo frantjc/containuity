@@ -1,6 +1,12 @@
 package main
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"runtime"
+
+	"github.com/frantjc/sequence/meta"
+	"github.com/spf13/cobra"
+)
 
 var versionCmd = &cobra.Command{
 	Use:  "version",
@@ -8,5 +14,5 @@ var versionCmd = &cobra.Command{
 }
 
 func runVersion(cmd *cobra.Command, args []string) error {
-	return write(cmd.OutOrStdout(), rootCmd.Version)
+	return write(cmd.OutOrStdout(), fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()))
 }
