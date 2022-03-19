@@ -25,7 +25,7 @@ RUN set -e; for pkg in $(go list ./...); do \
 
 FROM base AS sequence
 COPY --from=bin /usr/local/bin /usr/local/bin
-ENTRYPOINT ["sequence"]
+ENTRYPOINT ["sqncd"]
 
 FROM sequence AS test
 COPY --from=bin /usr/local/test/bin /usr/local/test/bin

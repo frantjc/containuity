@@ -8,7 +8,7 @@ import (
 )
 
 type runOpts struct {
-	path        string
+	ctx         string
 	jobName     string
 	job         *Job
 	workflow    *Workflow
@@ -33,7 +33,7 @@ func WithJob(j *Job) RunOpt {
 	return func(ro *runOpts) error {
 		ro.job = j
 
-		if ro.jobName == "" {
+		if j.Name != "" {
 			ro.jobName = j.Name
 		}
 
@@ -94,18 +94,24 @@ func WithWorkdir(workdir string) RunOpt {
 	}
 }
 
+func WithRepository(repository string) RunOpt {
+	return func(ro *runOpts) error {
+		ro.ctx = repository
+		return nil
+	}
+}
+
 func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 	var (
 		buf = new(bytes.Buffer)
 		ro  = &runOpts{
 			workflow: &Workflow{},
 			job:      &Job{},
-			path:     ".",
+			ctx:      ".",
 			stdout:   buf,
 			stderr:   buf,
-			verbose:  false,
 			workdir:  ".",
-			image:    conf.DefaultRuntimeImage,
+			image:    conf.DefaultRunnerImage,
 		}
 	)
 	for _, opt := range opts {

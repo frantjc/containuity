@@ -1,22 +1,22 @@
 BIN ?= /usr/local/bin
 
 GO ?= go
-GOOS ?= $(shell $(GO) env GOOS)
-
 GIT ?= git
-GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
+DOCKER ?= docker
+PROTOC ?= protoc
+
+BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null)
+SHORT_SHA ?= $(shell git rev-parse --short $(COMMIT))
 
 REGISTRY ?= docker.io
 REPOSITORY ?= frantjc/sequence
 MODULE ?= github.com/$(REPOSITORY)
 TAG ?= latest
+IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
-DOCKER ?= docker
+BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --build-arg commit=$(SHORT_SHA)
 
-BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --build-arg commit=$(COMMIT)
-
-PROTOC ?= protoc
 PROTOS ?= $(shell find . -type f -name *.proto)
 PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
 
@@ -24,14 +24,14 @@ INSTALL ?= sudo install
 
 .DEFAULT: bin
 
-bin bins binaries: sqnc sqncd sqncshim
+bin bins binaries: sqnc sqncd sqnctl sqncshim
 
-sqnc sqncd sqncshim:
-	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Repository=$(REPOSITORY) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o ./bin $(CURDIR)/cmd/$@
+sqnc sqncd sqnctl sqncshim:
+	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(SHORT_SHA) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
 image img: 
-	$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):$(TAG) $(BUILD_ARGS) .
+	$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
 
 test: image
 	$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):test $(BUILD_ARGS) --target=test .
@@ -42,16 +42,18 @@ fmt lint pretty:
 vet: fmt
 	$(GO) vet ./...
 
-vendor:
+tidy: vet
 	$(GO) mod tidy
+
+vendor: tidy
 	$(GO) mod vendor
 	$(GO) mod verify
 
-clean:
+clean: tidy
 	rm -rf bin/* vendor
 	$(DOCKER) system prune --volumes -a --filter label=sequence=true
 
 protos:
 	$(PROTOC) $(PROTOC_ARGS) $(PROTOS)
 
-.PHONY: bin bins binaries sequence sqnc sqncshim image img test fmt lint pretty vet vendor clean protos
+.PHONY: bin bins binaries sqnc sqncd sqnctl sqncshim image img test fmt lint pretty vet tidy vendor clean protos

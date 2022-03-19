@@ -1,13 +1,9 @@
 package meta
 
-import (
-	"fmt"
-
-	"golang.org/x/mod/semver"
-)
+import "fmt"
 
 var (
-	Version = "0.0.0"
+	Version = "0.1.0"
 
 	Prerelease = ""
 
@@ -20,7 +16,7 @@ func Semver() string {
 		version = fmt.Sprintf("%s-%s", version, Prerelease)
 	}
 	if Build != "" {
-		version = fmt.Sprintf("%s-%s", version, Build)
+		version = fmt.Sprintf("%s+%s", version, Build)
 	}
-	return semver.Canonical(version)
+	return version
 }

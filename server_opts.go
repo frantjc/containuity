@@ -8,8 +8,7 @@ import (
 )
 
 type serverOpts struct {
-	runtime     runtime.Runtime
-	githubToken string
+	runtime runtime.Runtime
 }
 
 type ServerOpt func(so *serverOpts) error
@@ -29,10 +28,3 @@ func WithRuntimeName(names ...string) ServerOpt {
 }
 
 var WithAnyRuntime ServerOpt = WithRuntimeName()
-
-func WithGitHubToken(token string) ServerOpt {
-	return func(so *serverOpts) error {
-		so.githubToken = token
-		return nil
-	}
-}

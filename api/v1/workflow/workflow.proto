@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package sequence.v1.workflow;
 
-import "api/types/job.proto";
 import "api/types/log.proto";
 import "api/types/workflow.proto";
 
@@ -14,5 +13,7 @@ service Workflow {
 
 message RunWorkflowRequest {
     sequence.types.Workflow workflow = 1;
-    sequence.types.Job job = 2;
+    string context = 4;
+    string runnerImage = 5;
+    bool verbose = 6;
 }

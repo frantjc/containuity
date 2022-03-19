@@ -77,9 +77,22 @@ func (c *Client) Runtime() runtime.Runtime {
 
 // RunStep calls the underlying gRPC StepClient's RunStep and
 // writes its logs to the given io.Writer
-func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer) error {
+func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer, opts ...RunOpt) error {
+	ro := defaultRunOpts()
+	for _, opt := range opts {
+		err := opt(ro)
+		if err != nil {
+			return err
+		}
+	}
+
 	stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
-		Step: convert.StepToProtoStep(step),
+		Step:        convert.StepToProtoStep(step),
+		Job:         convert.JobToProtoJob(ro.job),
+		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
+		Context:     ro.repository,
+		RunnerImage: ro.runnerImage,
+		Verbose:     ro.verbose,
 	})
 	if err != nil {
 		return err
@@ -90,9 +103,21 @@ func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer) 
 
 // RunJob calls the underlying gRPC JobClient's RunJob and
 // writes its logs to the given io.Writer
-func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer) error {
+func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer, opts ...RunOpt) error {
+	ro := defaultRunOpts()
+	for _, opt := range opts {
+		err := opt(ro)
+		if err != nil {
+			return err
+		}
+	}
+
 	stream, err := c.JobClient().RunJob(ctx, &jobapi.RunJobRequest{
-		Job: convert.JobToProtoJob(job),
+		Job:         convert.JobToProtoJob(job),
+		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
+		Context:     ro.repository,
+		RunnerImage: ro.runnerImage,
+		Verbose:     ro.verbose,
 	})
 	if err != nil {
 		return err
@@ -103,9 +128,20 @@ func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer) err
 
 // RunWorkflow calls the underlying gRPC WorkflowClient's RunWorkflow and
 // writes its logs to the given io.Writer
-func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w io.Writer) error {
+func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w io.Writer, opts ...RunOpt) error {
+	ro := defaultRunOpts()
+	for _, opt := range opts {
+		err := opt(ro)
+		if err != nil {
+			return err
+		}
+	}
+
 	stream, err := c.WorkflowClient().RunWorkflow(ctx, &workflowapi.RunWorkflowRequest{
-		Workflow: convert.WorkflowToTypeWorkflow(workflow),
+		Workflow:    convert.WorkflowToProtoWorkflow(workflow),
+		Context:     ro.repository,
+		RunnerImage: ro.runnerImage,
+		Verbose:     ro.verbose,
 	})
 	if err != nil {
 		return err

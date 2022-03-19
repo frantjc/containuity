@@ -7,10 +7,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-const (
-	EnvVarSocket = "DOCKER_SOCKET"
-	RuntimeName  = runtime.DefaultRuntimeName
-)
+const RuntimeName = runtime.DefaultRuntimeName
 
 type dockerRuntime struct {
 	client *dclient.Client

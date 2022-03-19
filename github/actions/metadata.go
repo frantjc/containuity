@@ -13,31 +13,31 @@ func NewMetadataFromReader(r io.Reader) (*Metadata, error) {
 }
 
 type Metadata struct {
-	Name        string             `json:"name,omitempty"`
-	Author      string             `json:"author,omitempty"`
-	Description string             `json:"description,omitempty"`
-	Inputs      map[string]*Input  `json:"inputs,omitempty"`
-	Outputs     map[string]*Output `json:"outputs,omitempty"`
-	Runs        *Runs              `json:"runs,omitempty"`
+	Name        string             `json:"name,omitempty" yaml:"name,omitempty"`
+	Author      string             `json:"author,omitempty" yaml:"author,omitempty"`
+	Description string             `json:"description,omitempty" yaml:"description,omitempty"`
+	Inputs      map[string]*Input  `json:"inputs,omitempty" yaml:"inputs,omitempty"`
+	Outputs     map[string]*Output `json:"outputs,omitempty" yaml:"outputs,omitempty"`
+	Runs        *Runs              `json:"runs,omitempty" yaml:"runs,omitempty"`
 }
 
 type Input struct {
-	Description        string `json:"input,omitempty"`
-	Required           bool   `json:"required,omitempty"`
-	Default            string `json:"default,omitempty"`
-	DeprecationMessage string `json:"deprecationMessage,omitempty"`
+	Description        string `json:"input,omitempty" yaml:"input,omitempty"`
+	Required           bool   `json:"required,omitempty" yaml:"required,omitempty"`
+	Default            string `json:"default,omitempty" yaml:"default,omitempty"`
+	DeprecationMessage string `json:"deprecationMessage,omitempty" yaml:"deprecationMessage,omitempty"`
 }
 
 type Output struct {
-	Description string `json:"output,omitempty"`
+	Description string `json:"output,omitempty" yaml:"output,omitempty"`
 }
 
 type Runs struct {
-	Plugin     string            `json:"plugin,omitempty"`
-	Using      string            `json:"using,omitempty"`
-	Main       string            `json:"main,omitempty"`
-	Image      string            `json:"image,omitempty"`
-	Entrypoint string            `json:"entrypoint,omitempty"`
-	Args       []string          `json:"args,omitempty"`
-	Env        map[string]string `json:"env,omitempty"`
+	Plugin     string            `json:"plugin,omitempty" yaml:"plugin,omitempty"`
+	Using      string            `json:"using,omitempty" yaml:"using,omitempty"`
+	Main       string            `json:"main,omitempty" yaml:"main,omitempty"`
+	Image      string            `json:"image,omitempty" yaml:"image,omitempty"`
+	Entrypoint string            `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Args       []string          `json:"args,omitempty" yaml:"args,omitempty"`
+	Env        map[string]string `json:"env,omitempty" yaml:"env,omitempty"`
 }

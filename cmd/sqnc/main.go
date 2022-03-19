@@ -3,52 +3,82 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
+	"path/filepath"
 	"runtime"
+	"strings"
 
+	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/conf"
+	"github.com/frantjc/sequence/conf/flags"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/meta"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:               "sqnc",
-	Version:           meta.Semver(),
+	Use:               meta.Name,
+	Version:           fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()),
 	PersistentPreRunE: persistentPreRun,
+	RunE:              run,
 }
 
 func init() {
-	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("{{ with .Name }}{{ . }}{{ end }}{{ with .Version }}{{ . }}{{ end }} %s\n", runtime.Version()),
-	)
-
-	rootCmd.PersistentFlags().Bool("verbose", false, "verbose")
-	rootCmd.PersistentFlags().Int("port", 0, "port")
-	rootCmd.PersistentFlags().String("sock", "", "unix socket")
-
-	conf.BindVerboseFlag(rootCmd.Flag("verbose"))
-	conf.BindPortFlag(rootCmd.Flag("port"))
-	conf.BindSocketFlag(rootCmd.Flag("socket"))
-	// conf.BindGitHubTokenFlag(rootCmd.Flag("github-token"))
-	// conf.BindRuntimeImageFlag(rootCmd.Flag("runtime-image"))
-	// conf.BindRuntimeNameFlag(rootCmd.Flag("runtime-name"))
-	// conf.BindSecretsFlag(rootCmd.Flag("secret"))
-
+	rootCmd.SetVersionTemplate("{{ .Version }}\n")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagConfigFilePath, "config", "", "config file")
+	rootCmd.PersistentFlags().BoolVar(&flags.FlagVerbose, "verbose", false, "verbose")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagSocket, "sock", "", "unix socket")
+	rootCmd.PersistentFlags().IntVar(&flags.FlagPort, "port", 0, "port")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagRootDir, "root-dir", "", "root dir")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagStateDir, "state-dir", "", "state dir")
+	wd, _ := os.Getwd()
+	rootCmd.PersistentFlags().StringVar(&flags.FlagWorkDir, "context", wd, "context")
 	rootCmd.AddCommand(
 		runCmd,
-		runJobCmd,
-		runWorkflowCmd,
+		configCmd,
+		versionCmd,
 	)
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) error {
-	c, err := conf.Get()
+	c, err := conf.NewFromFlags()
 	if err != nil {
 		return err
 	}
 	log.SetVerbose(c.Verbose)
 	return nil
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	var (
+		ctx    = cmd.Context()
+		c, err = conf.NewFromFlags()
+	)
+	if err != nil {
+		return err
+	}
+
+	addr := strings.TrimPrefix(c.Address(), "unix://")
+	os.MkdirAll(c.RootDir, 0777)
+	os.MkdirAll(c.StateDir, 0777)
+	if c.Port == 0 {
+		os.MkdirAll(filepath.Dir(addr), 0777)
+	}
+	os.Remove(addr)
+	defer os.Remove(addr)
+
+	l, err := net.Listen(c.Network(), addr)
+	if err != nil {
+		return err
+	}
+
+	s, err := sequence.NewServer(ctx, sequence.WithRuntimeName(c.Runtime.Name))
+	if err != nil {
+		return err
+	}
+
+	return s.Serve(l)
 }
 
 func main() {
