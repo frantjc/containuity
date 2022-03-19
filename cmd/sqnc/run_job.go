@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/workflow"
 	"github.com/spf13/cobra"
@@ -55,7 +56,7 @@ func runJob(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	c, err := newConfig()
+	c, err := conf.NewFull()
 	if err != nil {
 		return err
 	}

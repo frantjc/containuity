@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/frantjc/sequence/conf"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +18,7 @@ var configGetCmd = &cobra.Command{
 }
 
 func runConfigGet(cmd *cobra.Command, args []string) error {
-	c, err := newConfig()
+	c, err := conf.NewFull()
 	if err != nil {
 		return err
 	}

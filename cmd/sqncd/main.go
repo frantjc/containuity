@@ -23,35 +23,15 @@ var rootCmd = &cobra.Command{
 	RunE:              run,
 }
 
-var (
-	configFilePath string
-	verbose        bool
-	socket         string
-	port           int
-	rootDir        string
-	stateDir       string
-	workDir        string
-)
-
 func init() {
-	rootCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "config file")
-	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "verbose")
-	rootCmd.PersistentFlags().StringVar(&socket, "sock", "", "unix socket")
-	rootCmd.PersistentFlags().IntVar(&port, "port", 0, "port")
-	rootCmd.PersistentFlags().StringVar(&rootDir, "root-dir", "", "root dir")
-	rootCmd.PersistentFlags().StringVar(&stateDir, "state-dir", "", "state dir")
+	rootCmd.PersistentFlags().StringVar(&conf.ConfigFilePath, "config", "", "config file")
+	rootCmd.PersistentFlags().BoolVar(&conf.Verbose, "verbose", false, "verbose")
+	rootCmd.PersistentFlags().StringVar(&conf.Socket, "sock", "", "unix socket")
+	rootCmd.PersistentFlags().IntVar(&conf.Port, "port", 0, "port")
+	rootCmd.PersistentFlags().StringVar(&conf.RootDir, "root-dir", "", "root dir")
+	rootCmd.PersistentFlags().StringVar(&conf.StateDir, "state-dir", "", "state dir")
 	wd, _ := os.Getwd()
-	rootCmd.PersistentFlags().StringVar(&workDir, "context", wd, "context")
-}
-
-func newConfig() (*conf.Config, error) {
-	return conf.NewFull(&conf.Config{
-		Verbose:  verbose,
-		Socket:   socket,
-		Port:     port,
-		RootDir:  rootDir,
-		StateDir: stateDir,
-	}, configFilePath, workDir)
+	rootCmd.PersistentFlags().StringVar(&conf.WorkDir, "context", wd, "context")
 }
 
 func init() {
@@ -61,7 +41,7 @@ func init() {
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) error {
-	c, err := newConfig()
+	c, err := conf.NewFull()
 	if err != nil {
 		return err
 	}
@@ -72,7 +52,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 func run(cmd *cobra.Command, args []string) error {
 	var (
 		ctx    = cmd.Context()
-		c, err = newConfig()
+		c, err = conf.NewFull()
 	)
 	if err != nil {
 		return err

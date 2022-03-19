@@ -2,25 +2,31 @@ package conf
 
 import "os"
 
-func NewFull(base *Config, configFilePath, repository string) (*Config, error) {
+func NewFull() (*Config, error) {
 	configOpts := []ConfigOpt{
-		WithConfig(base),
+		WithConfig(&Config{
+			Verbose: Verbose,
+			Port: Port,
+			Socket: Socket,
+			RootDir: RootDir,
+			StateDir: StateDir,
+		}),
 	}
 
-	if configFilePath != "" {
-		configOpts = append(configOpts, WithConfigFilePath(repository, configFilePath))
+	if ConfigFilePath != "" {
+		configOpts = append(configOpts, WithConfigFilePath(WorkDir, ConfigFilePath))
 	}
 
 	configOpts = append(configOpts, WithConfigFromEnv)
 
 	if _, err := os.Stat(DefaultUserConfigFilePath); err == nil {
-		configOpts = append(configOpts, WithConfigFilePath(repository, DefaultUserConfigFilePath))
+		configOpts = append(configOpts, WithConfigFilePath(WorkDir, DefaultUserConfigFilePath))
 	}
 
 	configOpts = append(configOpts, WithDefaultUserConfig)
 
 	if _, err := os.Stat(DefaultSystemConfigFilePath); err == nil {
-		configOpts = append(configOpts, WithConfigFilePath(repository, DefaultSystemConfigFilePath))
+		configOpts = append(configOpts, WithConfigFilePath(WorkDir, DefaultSystemConfigFilePath))
 	}
 
 	configOpts = append(configOpts, WithDefaultSystemConfig)
