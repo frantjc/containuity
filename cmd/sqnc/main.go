@@ -31,9 +31,7 @@ func init() {
 }
 
 func init() {
-	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("{{ with .Version }}{{ . }}{{ end }}\n"),
-	)
+	rootCmd.SetVersionTemplate("{{ with .Version }}{{ . }}{{ end }}\n")
 
 	rootCmd.AddCommand(
 		runCmd,

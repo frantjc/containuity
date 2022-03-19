@@ -25,9 +25,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("{{ with .Version }}{{ . }}{{ end }}\n"),
-	)
+	rootCmd.SetVersionTemplate("{{ with .Version }}{{ . }}{{ end }}\n")
 
 	rootCmd.PersistentFlags().StringVar(&flags.FlagConfigFilePath, "config", "", "config file")
 	rootCmd.PersistentFlags().BoolVar(&flags.FlagVerbose, "verbose", false, "verbose")
