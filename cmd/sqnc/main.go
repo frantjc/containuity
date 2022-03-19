@@ -17,33 +17,73 @@ var rootCmd = &cobra.Command{
 	Version:           meta.Semver(),
 	PersistentPreRunE: persistentPreRun,
 }
+var (
+	configFilePath string
+	verbose        bool
+	socket         string
+	port           int
+	rootDir        string
+	stateDir       string
+	workDir        string
+)
+
+func init() {
+	rootCmd.PersistentFlags().StringVar(&configFilePath, "config", "", "config file")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "verbose")
+	rootCmd.PersistentFlags().StringVar(&socket, "sock", "", "unix socket")
+	rootCmd.PersistentFlags().IntVar(&port, "port", 0, "port")
+	rootCmd.PersistentFlags().StringVar(&rootDir, "root-dir", "", "root dir")
+	rootCmd.PersistentFlags().StringVar(&stateDir, "state-dir", "", "state dir")
+	wd, _ := os.Getwd()
+	rootCmd.PersistentFlags().StringVar(&workDir, "context", wd, "context")
+}
+
+func newConfig() (*conf.Config, error) {
+	configOpts := []conf.ConfigOpt{
+		conf.WithConfig(&conf.Config{
+			Verbose:  verbose,
+			Socket:   socket,
+			Port:     port,
+			RootDir:  rootDir,
+			StateDir: stateDir,
+		}),
+	}
+
+	if configFilePath != "" {
+		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, configFilePath))
+	}
+
+	configOpts = append(configOpts, conf.WithConfigFromEnv)
+
+	if _, err := os.Stat(conf.DefaultUserConfigFilePath); err == nil {
+		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, conf.DefaultUserConfigFilePath))
+	}
+
+	configOpts = append(configOpts, conf.WithDefaultUserConfig)
+
+	if _, err := os.Stat(conf.DefaultSystemConfigFilePath); err == nil {
+		configOpts = append(configOpts, conf.WithConfigFilePath(workDir, conf.DefaultSystemConfigFilePath))
+	}
+
+	configOpts = append(configOpts, conf.WithDefaultSystemConfig)
+
+	return conf.New(configOpts...)
+}
 
 func init() {
 	rootCmd.SetVersionTemplate(
 		fmt.Sprintf("{{ with .Name }}{{ . }}{{ end }}{{ with .Version }}{{ . }}{{ end }} %s\n", runtime.Version()),
 	)
 
-	rootCmd.PersistentFlags().Bool("verbose", false, "verbose")
-	rootCmd.PersistentFlags().Int("port", 0, "port")
-	rootCmd.PersistentFlags().String("sock", "", "unix socket")
-
-	conf.BindVerboseFlag(rootCmd.Flag("verbose"))
-	conf.BindPortFlag(rootCmd.Flag("port"))
-	conf.BindSocketFlag(rootCmd.Flag("socket"))
-	// conf.BindGitHubTokenFlag(rootCmd.Flag("github-token"))
-	// conf.BindRuntimeImageFlag(rootCmd.Flag("runtime-image"))
-	// conf.BindRuntimeNameFlag(rootCmd.Flag("runtime-name"))
-	// conf.BindSecretsFlag(rootCmd.Flag("secret"))
-
 	rootCmd.AddCommand(
 		runCmd,
-		runJobCmd,
-		runWorkflowCmd,
+		configCmd,
+		versionCmd,
 	)
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) error {
-	c, err := conf.Get()
+	c, err := newConfig()
 	if err != nil {
 		return err
 	}

@@ -105,7 +105,7 @@ func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 			stderr:   buf,
 			verbose:  false,
 			workdir:  ".",
-			image:    conf.DefaultRuntimeImage,
+			image:    conf.DefaultRunnerImage,
 		}
 	)
 	for _, opt := range opts {

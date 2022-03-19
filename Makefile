@@ -27,7 +27,7 @@ INSTALL ?= sudo install
 bin bins binaries: sqnc sqncd sqncshim
 
 sqnc sqncd sqncshim:
-	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Repository=$(REPOSITORY) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o ./bin $(CURDIR)/cmd/$@
+	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Repository=$(REPOSITORY) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
 image img: 
@@ -42,16 +42,18 @@ fmt lint pretty:
 vet: fmt
 	$(GO) vet ./...
 
-vendor:
+tidy: vet
 	$(GO) mod tidy
+
+vendor: tidy
 	$(GO) mod vendor
 	$(GO) mod verify
 
-clean:
+clean: tidy
 	rm -rf bin/* vendor
 	$(DOCKER) system prune --volumes -a --filter label=sequence=true
 
 protos:
 	$(PROTOC) $(PROTOC_ARGS) $(PROTOS)
 
-.PHONY: bin bins binaries sequence sqnc sqncshim image img test fmt lint pretty vet vendor clean protos
+.PHONY: bin bins binaries sequence sqnc sqncshim image img test fmt lint pretty vet tidy vendor clean protos

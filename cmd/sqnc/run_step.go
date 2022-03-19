@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/workflow"
 	"github.com/spf13/cobra"
@@ -70,12 +69,12 @@ func runStep(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	c, err := conf.Get()
+	c, err := newConfig()
 	if err != nil {
 		return err
 	}
 
-	client, err := sequence.New(ctx, c.Address)
+	client, err := sequence.New(ctx, c.Address())
 	if err != nil {
 		return err
 	}

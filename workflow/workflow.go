@@ -3,9 +3,19 @@ package workflow
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
+
+func NewWorkflowFromFile(name string) (*Workflow, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewWorkflowFromReader(f)
+}
 
 func NewWorkflowFromReader(r io.Reader) (*Workflow, error) {
 	w := &Workflow{}
@@ -14,8 +24,8 @@ func NewWorkflowFromReader(r io.Reader) (*Workflow, error) {
 }
 
 type Workflow struct {
-	Name string         `json:"name,omitempty"`
-	Jobs map[string]Job `json:"jobs,omitempty"`
+	Name string         `json:"name,omitempty" yaml:"name,omitempty"`
+	Jobs map[string]Job `json:"jobs,omitempty" yaml:"jobs,omitempty"`
 }
 
 func (w *Workflow) GetJob(name string) (*Job, error) {

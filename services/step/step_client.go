@@ -20,12 +20,12 @@ var _ api.StepClient = &stepClient{}
 
 func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...grpc.CallOption) (api.Step_RunStepClient, error) {
 	var (
-		conf, _ = conf.Get()
+		conf, _ = conf.New()
 		stream  = grpcio.NewLogStream(ctx)
 		opts    = []workflow.RunOpt{
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
 			workflow.WithGitHubToken(conf.GitHub.Token),
-			workflow.WithRunnerImage(conf.Runtime.Image),
+			workflow.WithRunnerImage(conf.Runtime.RunnerImage),
 			workflow.WithWorkdir(conf.RootDir),
 		}
 	)

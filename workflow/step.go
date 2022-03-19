@@ -3,6 +3,7 @@ package workflow
 import (
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -24,23 +25,23 @@ const (
 // (or two if the Step is using a GitHub action from a GitHub repository:
 //  first to clone the action and get its metadata, second to execute it)
 type Step struct {
-	ID    string            `json:"id,omitempty"`
-	Name  string            `json:"name,omitempty"`
-	Env   map[string]string `json:"env,omitempty"`
-	Shell string            `json:"shell,omitempty"`
-	Run   string            `json:"run,omitempty"`
-	Uses  string            `json:"uses,omitempty"`
-	With  map[string]string `json:"with,omitempty"`
-	If    bool              `json:"if,omitempty"`
+	ID    string            `json:"id,omitempty" yaml:"id,omitempty"`
+	Name  string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Env   map[string]string `json:"env,omitempty" yaml:"env,omitempty"`
+	Shell string            `json:"shell,omitempty" yaml:"shell,omitempty"`
+	Run   string            `json:"run,omitempty" yaml:"run,omitempty"`
+	Uses  string            `json:"uses,omitempty" yaml:"uses,omitempty"`
+	With  map[string]string `json:"with,omitempty" yaml:"with,omitempty"`
+	If    interface{}       `json:"if,omitempty" yaml:"if,omitempty"`
 
-	Image      string   `json:"image,omitempty"`
-	Entrypoint []string `json:"entrypoint,omitempty"`
-	Cmd        []string `json:"cmd,omitempty"`
-	Privileged bool     `json:"privileged,omitempty"`
+	Image      string   `json:"image,omitempty" yaml:"image,omitempty"`
+	Entrypoint []string `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Cmd        []string `json:"cmd,omitempty" yaml:"cmd,omitempty"`
+	Privileged bool     `json:"privileged,omitempty" yaml:"privileged,omitempty"`
 
-	Get    string                 `json:"get,omitempty"`
-	Put    string                 `json:"put,omitempty"`
-	Params map[string]interface{} `json:"params,omitempty"`
+	Get    string                 `json:"get,omitempty" yaml:"get,omitempty"`
+	Put    string                 `json:"put,omitempty" yaml:"put,omitempty"`
+	Params map[string]interface{} `json:"params,omitempty" yaml:"params,omitempty"`
 }
 
 // GetID returns the functional ID of the step
@@ -144,6 +145,15 @@ func (s *Step) Canonical() *Step {
 	}
 
 	return s
+}
+
+func NewStepFromFile(name string) (*Step, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewStepFromReader(f)
 }
 
 // NewStepFromReader parses and returns a Step
