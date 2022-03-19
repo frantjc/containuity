@@ -9,10 +9,10 @@ import (
 func NewFromFlags() (*Config, error) {
 	configOpts := []ConfigOpt{
 		WithConfig(&Config{
-			Verbose: flags.FlagVerbose,
-			Port: flags.FlagPort,
-			Socket: flags.FlagSocket,
-			RootDir: flags.FlagRootDir,
+			Verbose:  flags.FlagVerbose,
+			Port:     flags.FlagPort,
+			Socket:   flags.FlagSocket,
+			RootDir:  flags.FlagRootDir,
 			StateDir: flags.FlagStateDir,
 		}),
 	}
