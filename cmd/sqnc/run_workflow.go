@@ -39,7 +39,7 @@ func runWorkflow(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	c, err := conf.NewFull()
+	c, err := conf.NewFromFlags()
 	if err != nil {
 		return err
 	}

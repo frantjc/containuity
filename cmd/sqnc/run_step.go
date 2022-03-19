@@ -70,7 +70,7 @@ func runStep(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	c, err := conf.NewFull()
+	c, err := conf.NewFromFlags()
 	if err != nil {
 		return err
 	}

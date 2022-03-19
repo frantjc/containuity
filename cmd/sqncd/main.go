@@ -11,6 +11,7 @@ import (
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/conf"
+	"github.com/frantjc/sequence/conf/flags"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/meta"
 	"github.com/spf13/cobra"
@@ -24,14 +25,14 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&conf.ConfigFilePath, "config", "", "config file")
-	rootCmd.PersistentFlags().BoolVar(&conf.Verbose, "verbose", false, "verbose")
-	rootCmd.PersistentFlags().StringVar(&conf.Socket, "sock", "", "unix socket")
-	rootCmd.PersistentFlags().IntVar(&conf.Port, "port", 0, "port")
-	rootCmd.PersistentFlags().StringVar(&conf.RootDir, "root-dir", "", "root dir")
-	rootCmd.PersistentFlags().StringVar(&conf.StateDir, "state-dir", "", "state dir")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagConfigFilePath, "config", "", "config file")
+	rootCmd.PersistentFlags().BoolVar(&flags.FlagVerbose, "verbose", false, "verbose")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagSocket, "sock", "", "unix socket")
+	rootCmd.PersistentFlags().IntVar(&flags.FlagPort, "port", 0, "port")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagRootDir, "root-dir", "", "root dir")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagStateDir, "state-dir", "", "state dir")
 	wd, _ := os.Getwd()
-	rootCmd.PersistentFlags().StringVar(&conf.WorkDir, "context", wd, "context")
+	rootCmd.PersistentFlags().StringVar(&flags.FlagWorkDir, "context", wd, "context")
 }
 
 func init() {
@@ -41,7 +42,7 @@ func init() {
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) error {
-	c, err := conf.NewFull()
+	c, err := conf.NewFromFlags()
 	if err != nil {
 		return err
 	}
@@ -52,7 +53,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 func run(cmd *cobra.Command, args []string) error {
 	var (
 		ctx    = cmd.Context()
-		c, err = conf.NewFull()
+		c, err = conf.NewFromFlags()
 	)
 	if err != nil {
 		return err
