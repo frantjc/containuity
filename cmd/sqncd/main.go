@@ -34,6 +34,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.FlagStateDir, "state-dir", "", "state dir")
 	wd, _ := os.Getwd()
 	rootCmd.PersistentFlags().StringVar(&flags.FlagWorkDir, "context", wd, "context")
+	rootCmd.AddCommand(versionCmd)
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) error {

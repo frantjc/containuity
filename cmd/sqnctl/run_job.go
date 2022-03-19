@@ -6,6 +6,7 @@ import (
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/conf"
+	"github.com/frantjc/sequence/conf/flags"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/workflow"
 	"github.com/spf13/cobra"
@@ -24,7 +25,8 @@ func init() {
 func runJob(cmd *cobra.Command, args []string) error {
 	var (
 		ctx  = cmd.Context()
-		j    *workflow.Job
+		j    = &workflow.Job{}
+		w    = &workflow.Workflow{}
 		path = args[0]
 		r    io.Reader
 		err  error
@@ -40,12 +42,12 @@ func runJob(cmd *cobra.Command, args []string) error {
 	}
 
 	if jobName != "" {
-		workflow, err := workflow.NewWorkflowFromReader(r)
+		w, err := workflow.NewWorkflowFromReader(r)
 		if err != nil {
 			return err
 		}
 
-		j, err = workflow.GetJob(jobName)
+		j, err = w.GetJob(jobName)
 		if err != nil {
 			return err
 		}
@@ -66,5 +68,14 @@ func runJob(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return client.RunJob(ctx, j, log.Writer())
+	opts := []sequence.RunOpt{
+		sequence.WithWorkflow(w),
+		sequence.WithRunnerImage(c.Runtime.RunnerImage),
+		sequence.WithRepository(flags.FlagWorkDir),
+	}
+	if c.Verbose {
+		opts = append(opts, sequence.WithVerbose)
+	}
+
+	return client.RunJob(ctx, j, log.Writer(), opts...)
 }

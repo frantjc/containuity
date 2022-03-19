@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"os"
 
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/workflow"
@@ -40,7 +39,7 @@ func runPluginUses(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return json.NewEncoder(os.Stdout).Encode(&workflow.StepOut{
+	return json.NewEncoder(cmd.OutOrStdout()).Encode(&workflow.StepOut{
 		Metadata: map[string]string{
 			workflow.ActionMetadataKey: string(s),
 		},

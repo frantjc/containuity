@@ -19,6 +19,7 @@ func init() {
 	rootCmd.SetVersionTemplate("{{ .Version }}\n")
 	rootCmd.AddCommand(
 		pluginCmd,
+		versionCmd,
 	)
 }
 
