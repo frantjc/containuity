@@ -232,5 +232,5 @@ func addr(port int, socket string) string {
 		return fmt.Sprintf(":%d", port)
 	}
 
-	return fmt.Sprintf("unix://%s", socket)
+	return socket
 }

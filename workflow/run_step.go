@@ -30,7 +30,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *Step, opts ...RunOpt) er
 
 func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error {
 	vopts := []actions.VarsOpt{actions.WithToken(ro.githubToken)}
-	ghvars, err := actions.NewVarsFromPath(ro.path, vopts...)
+	ghvars, err := actions.NewVarsFromPath(ro.ctx, vopts...)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		// generate a unique, reproducible, directory-name-compliant ID from the current context
 		// so that steps that are a part of the same job share the same mounts
 		id = base64.URLEncoding.EncodeToString(
-			[]byte(ro.path + ro.workflow.Name + ro.jobName),
+			[]byte(fmt.Sprint(ro.ctx, ro.workflow.Name, ro.jobName)),
 		)
 		workdirid  = filepath.Join(ro.workdir, id)
 		githubEnv  = filepath.Join(workdirid, "github", "env")
@@ -181,7 +181,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		eopts[0] = runtime.WithStreams(os.Stdin, ro.stdout, errbuf)
 	}
 	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running step '%s'\n", log.ColorInfo, log.ColorNone, s.GetID())))
-	if err = runSpec(ctx, r, spec, eopts); err != nil {
+	if err = runSpec(ctx, r, spec, ro, eopts); err != nil {
 		return err
 	}
 
@@ -242,7 +242,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 				eopts = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 			)
 			ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running action '%s'\n", log.ColorInfo, log.ColorNone, s.Uses)))
-			err = runSpec(ctx, r, spec, eopts)
+			err = runSpec(ctx, r, spec, ro, eopts)
 			if err != nil {
 				return err
 			}
@@ -272,10 +272,14 @@ func expandStep(s *Step, ctx *actions.ActionsContext) (*Step, error) {
 	return es, nil
 }
 
-func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, opts []runtime.ExecOpt) error {
-	_, err := r.PullImage(ctx, s.Image)
+func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, ro *runOpts, opts []runtime.ExecOpt) error {
+	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] pulling image '%s'\n", log.ColorInfo, log.ColorNone, s.Image)))
+	image, err := r.PullImage(ctx, s.Image)
 	if err != nil {
 		return err
+	}
+	if ro.verbose {
+		ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC:DBG%s] finished pulling image '%s'\n", log.ColorDebug, log.ColorNone, image.Ref())))
 	}
 
 	container, err := r.CreateContainer(ctx, s)

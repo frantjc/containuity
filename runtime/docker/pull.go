@@ -2,9 +2,11 @@ package docker
 
 import (
 	"context"
-	"io"
 
+	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/google/go-containerregistry/pkg/name"
 )
@@ -26,9 +28,8 @@ func (r *dockerRuntime) PullImage(ctx context.Context, ref string) (runtime.Imag
 		return nil, err
 	}
 	defer o.Close()
-	io.Copy(new(noOpWriter), o)
 
 	return &dockerImage{
 		ref: pref.Name(),
-	}, nil
+	}, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(log.Writer()), nil)
 }

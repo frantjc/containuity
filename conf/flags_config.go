@@ -6,7 +6,7 @@ import (
 	"github.com/frantjc/sequence/conf/flags"
 )
 
-func NewFromFlags() (*Config, error) {
+func NewFromFlagsWithRepository(repository string, opts ...ConfigOpt) (*Config, error) {
 	configOpts := []ConfigOpt{
 		WithConfig(&Config{
 			Verbose:  flags.FlagVerbose,
@@ -18,22 +18,27 @@ func NewFromFlags() (*Config, error) {
 	}
 
 	if flags.FlagConfigFilePath != "" {
-		configOpts = append(configOpts, WithConfigFilePath(flags.FlagWorkDir, flags.FlagConfigFilePath))
+		configOpts = append(configOpts, WithConfigFilePath(repository, flags.FlagConfigFilePath))
 	}
 
 	configOpts = append(configOpts, WithConfigFromEnv)
 
 	if _, err := os.Stat(DefaultUserConfigFilePath); err == nil {
-		configOpts = append(configOpts, WithConfigFilePath(flags.FlagWorkDir, DefaultUserConfigFilePath))
+		configOpts = append(configOpts, WithConfigFilePath(repository, DefaultUserConfigFilePath))
 	}
 
 	configOpts = append(configOpts, WithDefaultUserConfig)
 
 	if _, err := os.Stat(DefaultSystemConfigFilePath); err == nil {
-		configOpts = append(configOpts, WithConfigFilePath(flags.FlagWorkDir, DefaultSystemConfigFilePath))
+		configOpts = append(configOpts, WithConfigFilePath(repository, DefaultSystemConfigFilePath))
 	}
 
 	configOpts = append(configOpts, WithDefaultSystemConfig)
+	configOpts = append(configOpts, opts...)
 
 	return New(configOpts...)
+}
+
+func NewFromFlags(opts ...ConfigOpt) (*Config, error) {
+	return NewFromFlagsWithRepository(flags.FlagWorkDir, opts...)
 }

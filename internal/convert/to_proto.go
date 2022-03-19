@@ -47,7 +47,7 @@ func JobToProtoJob(j *workflow.Job) *types.Job {
 	}
 }
 
-func WorkflowToTypeWorkflow(w *workflow.Workflow) *types.Workflow {
+func WorkflowToProtoWorkflow(w *workflow.Workflow) *types.Workflow {
 	jobs := make(map[string]*types.Job, len(w.Jobs))
 
 	for i, j := range w.Jobs {

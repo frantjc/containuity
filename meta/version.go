@@ -16,7 +16,7 @@ func Semver() string {
 		version = fmt.Sprintf("%s-%s", version, Prerelease)
 	}
 	if Build != "" {
-		version = fmt.Sprintf("%s-%s", version, Build)
+		version = fmt.Sprintf("%s+%s", version, Build)
 	}
 	return version
 }

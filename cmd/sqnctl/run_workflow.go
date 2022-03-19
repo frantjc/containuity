@@ -6,7 +6,6 @@ import (
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/conf"
-	"github.com/frantjc/sequence/conf/flags"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/workflow"
 	"github.com/spf13/cobra"
@@ -50,13 +49,5 @@ func runWorkflow(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts := []sequence.RunOpt{
-		sequence.WithRunnerImage(c.Runtime.RunnerImage),
-		sequence.WithRepository(flags.FlagWorkDir),
-	}
-	if c.Verbose {
-		opts = append(opts, sequence.WithVerbose)
-	}
-
-	return client.RunWorkflow(ctx, w, log.Writer(), opts...)
+	return client.RunWorkflow(ctx, w, log.Writer())
 }

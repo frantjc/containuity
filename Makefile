@@ -5,8 +5,9 @@ GIT ?= git
 DOCKER ?= docker
 PROTOC ?= protoc
 
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
-COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null | cut -c1-7)
+BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
+COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null)
+SHORT_SHA ?= $(shell git rev-parse --short $(COMMIT))
 
 REGISTRY ?= docker.io
 REPOSITORY ?= frantjc/sequence
@@ -14,7 +15,7 @@ MODULE ?= github.com/$(REPOSITORY)
 TAG ?= latest
 IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
-BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --build-arg commit=$(COMMIT)
+BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --build-arg commit=$(SHORT_SHA)
 
 PROTOS ?= $(shell find . -type f -name *.proto)
 PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
@@ -23,10 +24,10 @@ INSTALL ?= sudo install
 
 .DEFAULT: bin
 
-bin bins binaries: sqnc sqncd sqncshim
+bin bins binaries: sqnc sqncd sqnctl sqncshim
 
-sqnc sqncd sqncshim:
-	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+sqnc sqncd sqnctl sqncshim:
+	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(SHORT_SHA) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
 image img: 
@@ -55,4 +56,4 @@ clean: tidy
 protos:
 	$(PROTOC) $(PROTOC_ARGS) $(PROTOS)
 
-.PHONY: bin bins binaries sequence sqnc sqncshim image img test fmt lint pretty vet tidy vendor clean protos
+.PHONY: bin bins binaries sqnc sqncd sqnctl sqncshim image img test fmt lint pretty vet tidy vendor clean protos

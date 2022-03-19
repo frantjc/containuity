@@ -7,8 +7,8 @@ import (
 	imageapi "github.com/frantjc/sequence/api/v1/image"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
+	"github.com/frantjc/sequence/internal/sio"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/frantjc/sequence/sio"
 )
 
 func NewGRPCRuntime(i imageapi.ImageClient, c containerapi.ContainerClient) runtime.Runtime {
