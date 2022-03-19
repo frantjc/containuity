@@ -1,22 +1,21 @@
 BIN ?= /usr/local/bin
 
 GO ?= go
-GOOS ?= $(shell $(GO) env GOOS)
-
 GIT ?= git
-GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
-COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null)
+DOCKER ?= docker
+PROTOC ?= protoc
+
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
+COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null | cut -c1-7)
 
 REGISTRY ?= docker.io
 REPOSITORY ?= frantjc/sequence
 MODULE ?= github.com/$(REPOSITORY)
 TAG ?= latest
-
-DOCKER ?= docker
+IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
 BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --build-arg commit=$(COMMIT)
 
-PROTOC ?= protoc
 PROTOS ?= $(shell find . -type f -name *.proto)
 PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
 
@@ -27,11 +26,11 @@ INSTALL ?= sudo install
 bin bins binaries: sqnc sqncd sqncshim
 
 sqnc sqncd sqncshim:
-	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Repository=$(REPOSITORY) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(COMMIT) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
 image img: 
-	$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):$(TAG) $(BUILD_ARGS) .
+	$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
 
 test: image
 	$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):test $(BUILD_ARGS) --target=test .
