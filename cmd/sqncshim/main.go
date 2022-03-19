@@ -16,8 +16,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.SetVersionTemplate("{{ with .Version }}{{ . }}{{ end }}\n")
-
+	rootCmd.SetVersionTemplate("{{ .Version }}\n")
 	rootCmd.AddCommand(
 		pluginCmd,
 	)

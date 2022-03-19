@@ -25,8 +25,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.SetVersionTemplate("{{ with .Version }}{{ . }}{{ end }}\n")
-
+	rootCmd.SetVersionTemplate("{{ .Version }}\n")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagConfigFilePath, "config", "", "config file")
 	rootCmd.PersistentFlags().BoolVar(&flags.FlagVerbose, "verbose", false, "verbose")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagSocket, "sock", "", "unix socket")

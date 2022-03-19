@@ -20,6 +20,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.SetVersionTemplate("{{ .Version }}\n")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagConfigFilePath, "config", "", "config file")
 	rootCmd.PersistentFlags().BoolVar(&flags.FlagVerbose, "verbose", false, "verbose")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagSocket, "sock", "", "unix socket")
@@ -28,11 +29,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.FlagStateDir, "state-dir", "", "state dir")
 	wd, _ := os.Getwd()
 	rootCmd.PersistentFlags().StringVar(&flags.FlagWorkDir, "context", wd, "context")
-}
-
-func init() {
-	rootCmd.SetVersionTemplate("{{ with .Version }}{{ . }}{{ end }}\n")
-
 	rootCmd.AddCommand(
 		runCmd,
 		configCmd,
