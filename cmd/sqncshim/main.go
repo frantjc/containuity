@@ -11,7 +11,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "sqncshim",
+	Use:     fmt.Sprintf("%sshim", meta.Name),
 	Version: fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()),
 }
 
