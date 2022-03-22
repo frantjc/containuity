@@ -76,7 +76,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 					Type:        runtime.MountTypeBind,
 				},
 				{
-					Source:      filepath.Join(ro.workdir, id, "runner", "toolcache"),
+					Source:      filepath.Join(workdirid, "runner", "toolcache"),
 					Destination: ghenv.RunnerToolCache,
 					Type:        runtime.MountTypeBind,
 				},

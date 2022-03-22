@@ -51,6 +51,13 @@ func WithJob(j *Job) RunOpt {
 func WithWorkflow(w *Workflow) RunOpt {
 	return func(ro *runOpts) error {
 		ro.workflow = w
+		if ro.job != nil && ro.jobName == "" {
+			for name, job := range ro.workflow.Jobs {
+				if ro.job == &job {
+					ro.jobName = name
+				}
+			}
+		}
 		return nil
 	}
 }
