@@ -12,7 +12,7 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-type ActionsContext struct {
+type Context struct {
 	ctx           context.Context
 	GitHubContext *GitHubContext
 	EnvContext    map[string]string
@@ -23,22 +23,22 @@ type ActionsContext struct {
 }
 
 var (
-	_ context.Context = &ActionsContext{}
+	_ context.Context = &Context{}
 )
 
-func (c *ActionsContext) Deadline() (time.Time, bool) {
+func (c *Context) Deadline() (time.Time, bool) {
 	return c.ctx.Deadline()
 }
 
-func (c *ActionsContext) Done() <-chan struct{} {
+func (c *Context) Done() <-chan struct{} {
 	return c.ctx.Done()
 }
 
-func (c *ActionsContext) Err() error {
+func (c *Context) Err() error {
 	return c.ctx.Err()
 }
 
-func (c *ActionsContext) Value(i interface{}) interface{} {
+func (c *Context) Value(i interface{}) interface{} {
 	if s, ok := i.(string); ok {
 		ss := strings.Split(s, ".")
 		if len(ss) > 0 {
@@ -182,8 +182,8 @@ func (c *ActionsContext) Value(i interface{}) interface{} {
 	return c.ctx.Value(i)
 }
 
-// Context represents the GitHub Context
-// https://docs.github.com/en/actions/learn-github-actions/ActionsContext#github-context
+// GitHubContext represents the GitHub Context
+// https://docs.github.com/en/actions/learn-github-actions/Context#github-context
 type GitHubContext struct {
 	Action          string
 	ActionPath      string
@@ -238,8 +238,8 @@ type RunnerContext struct {
 	ToolCache string
 }
 
-func defaultCtx() *ActionsContext {
-	return &ActionsContext{
+func defaultCtx() *Context {
+	return &Context{
 		GitHubContext: &GitHubContext{
 			ServerURL: github.DefaultURL,
 		},
@@ -254,7 +254,7 @@ func defaultCtx() *ActionsContext {
 	}
 }
 
-func NewContextFromPath(ctx context.Context, path string, opts ...VarsOpt) (*ActionsContext, error) {
+func NewContextFromPath(ctx context.Context, path string, opts ...VarsOpt) (*Context, error) {
 	vopts := defaultVarsOpts()
 	for _, opt := range opts {
 		err := opt(vopts)
@@ -271,7 +271,7 @@ func NewContextFromPath(ctx context.Context, path string, opts ...VarsOpt) (*Act
 	return newCtxFromRepository(ctx, repo, vopts)
 }
 
-func newCtxFromRepository(ctx context.Context, r *git.Repository, opts *varsOpts) (*ActionsContext, error) {
+func newCtxFromRepository(ctx context.Context, r *git.Repository, opts *varsOpts) (*Context, error) {
 	c := defaultCtx()
 	c.ctx = ctx
 	c.GitHubContext.Token = opts.token

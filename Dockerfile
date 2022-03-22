@@ -1,5 +1,5 @@
-ARG base=ubuntu:focal
-ARG build=golang:1.17
+ARG base=alpine:3.15
+ARG build=golang:1.17-alpine3.15
 
 FROM ${base} AS base
 

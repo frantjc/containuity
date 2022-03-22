@@ -7,8 +7,8 @@ import (
 )
 
 type Vars struct {
-	Env            *Env
-	ActionsContext *ActionsContext
+	Env     *Env
+	Context *Context
 }
 
 func NewVarsFromPath(ctx context.Context, path string, opts ...VarsOpt) (*Vars, error) {
@@ -36,7 +36,7 @@ func NewVarsFromPath(ctx context.Context, path string, opts ...VarsOpt) (*Vars, 
 	}
 
 	return &Vars{
-		Env:            env,
-		ActionsContext: actx,
+		Env:     env,
+		Context: actx,
 	}, nil
 }

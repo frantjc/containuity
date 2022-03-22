@@ -37,7 +37,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 
 	var (
 		ghenv = ghvars.Env
-		ghctx = ghvars.ActionsContext
+		ghctx = ghvars.Context
 	)
 	es, err := expandStep(s.Canonical(), ghctx)
 	if err != nil {
@@ -241,7 +241,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 							return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
 						}
 					}
-					return []byte{}
+					return make([]byte, 0)
 				}, ro.stdout)
 				eopts = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 			)
@@ -256,7 +256,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 	return nil
 }
 
-func expandStep(s *Step, ctx *actions.ActionsContext) (*Step, error) {
+func expandStep(s *Step, ctx *actions.Context) (*Step, error) {
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err

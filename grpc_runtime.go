@@ -12,10 +12,7 @@ import (
 )
 
 func NewGRPCRuntime(i imageapi.ImageClient, c containerapi.ContainerClient) runtime.Runtime {
-	return &runtimeClient{
-		containerClient: c,
-		imageClient:     i,
-	}
+	return &runtimeClient{i, c}
 }
 
 var (
@@ -68,8 +65,8 @@ func (i *runtimeImage) Ref() string {
 }
 
 type runtimeClient struct {
-	containerClient containerapi.ContainerClient
 	imageClient     imageapi.ImageClient
+	containerClient containerapi.ContainerClient
 }
 
 func (r *runtimeClient) ContainerClient() containerapi.ContainerClient {
