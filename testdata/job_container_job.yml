@@ -1,0 +1,3 @@
+container: alpine/helm
+steps:
+  - run: helm version

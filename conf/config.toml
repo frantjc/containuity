@@ -9,6 +9,7 @@ state_dir = "/var/run/sqnc"
 [runtime]
     name = "docker"
     runner_image = "docker.io/library/node:12"
+    action_image = "docker.io/library/node:16"
 
 [github]
     base_url = "https://github.com/"

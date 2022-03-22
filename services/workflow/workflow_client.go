@@ -42,6 +42,12 @@ func (c *workflowClient) RunWorkflow(ctx context.Context, in *api.RunWorkflowReq
 		opts = append(opts, workflow.WithRunnerImage(conf.Runtime.RunnerImage))
 	}
 
+	if in.ActionImage != "" {
+		opts = append(opts, workflow.WithActionImage(in.ActionImage))
+	} else if conf.Runtime.ActionImage != "" {
+		opts = append(opts, workflow.WithActionImage(conf.Runtime.ActionImage))
+	}
+
 	if conf.Verbose || in.Verbose {
 		opts = append(opts, workflow.WithVerbose)
 	}

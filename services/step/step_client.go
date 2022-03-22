@@ -42,6 +42,10 @@ func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...g
 		opts = append(opts, workflow.WithRunnerImage(conf.Runtime.RunnerImage))
 	}
 
+	if in.ActionImage != "" {
+		opts = append(opts, workflow.WithActionImage(in.ActionImage))
+	}
+
 	if conf.Verbose || in.Verbose {
 		opts = append(opts, workflow.WithVerbose)
 	}

@@ -13,6 +13,8 @@ import (
 
 const (
 	imagePrefix = "docker://"
+	node12      = "docker.io/library/node:12"
+	node16      = "docker.io/library/node:16"
 
 	// ActionMetadataKey is the key in a Step's StepOut.Metadata
 	// map that holds the json encoding of the action that
@@ -174,11 +176,11 @@ func NewStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 	}
 	switch a.Runs.Using {
 	case "node12":
-		s.Image = "node:12"
+		s.Image = node12
 		s.Entrypoint = []string{"node"}
 		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
 	case "node16":
-		s.Image = "node:16"
+		s.Image = node16
 		s.Entrypoint = []string{"node"}
 		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
 	case "docker":

@@ -3,7 +3,7 @@ package meta
 import (
 	"fmt"
 
-	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/docker/distribution/reference"
 	"github.com/opencontainers/go-digest"
 )
 
@@ -20,9 +20,7 @@ var (
 
 	GoDigest digest.Digest
 
-	// TODO I don't really like this API, I'd like to implement it myself
-	//      more similarly to net/url.URL
-	ImageRef name.Reference
+	ImageRef reference.Reference
 )
 
 func init() {
@@ -54,12 +52,12 @@ func init() {
 		imageRef = fmt.Sprintf("%s@%s", imageRef, GoDigest.String())
 	}
 
-	ImageRef, err = name.ParseReference(imageRef)
+	ImageRef, err = reference.Parse(imageRef)
 	if err != nil {
 		panic(fmt.Sprintf("%s/meta.ImageRef is invalid: %s", Module, err.Error()))
 	}
 }
 
 func Image() string {
-	return ImageRef.Name()
+	return ImageRef.String()
 }

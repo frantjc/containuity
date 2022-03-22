@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"path/filepath"
@@ -188,7 +189,7 @@ func defaultEnv() *Env {
 	}
 }
 
-func NewEnvFromPath(path string, opts ...VarsOpt) (*Env, error) {
+func NewEnvFromPath(ctx context.Context, path string, opts ...VarsOpt) (*Env, error) {
 	vopts := defaultVarsOpts()
 	for _, opt := range opts {
 		err := opt(vopts)
@@ -202,11 +203,11 @@ func NewEnvFromPath(path string, opts ...VarsOpt) (*Env, error) {
 		return nil, err
 	}
 
-	return newEnvFromRepository(repo, vopts)
+	return newEnvFromRepository(ctx, repo, vopts)
 }
 
 // get from cli flags, env, config file, .git or remote
-func newEnvFromRepository(r *git.Repository, opts *varsOpts) (*Env, error) {
+func newEnvFromRepository(ctx context.Context, r *git.Repository, opts *varsOpts) (*Env, error) {
 	e := defaultEnv()
 	e.Workflow = opts.workflow
 	e.RunID = opts.runID

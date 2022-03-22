@@ -148,6 +148,10 @@ func (c *Config) Merge(config *Config) *Config {
 		if c.Runtime.RunnerImage == "" {
 			c.Runtime.RunnerImage = config.Runtime.RunnerImage
 		}
+
+		if c.Runtime.ActionImage == "" {
+			c.Runtime.ActionImage = config.Runtime.ActionImage
+		}
 	}
 
 	if c.Secrets == nil || len(c.Secrets) == 0 {
@@ -205,12 +209,14 @@ func (c *GitHubConfig) Raw() *RawGitHubConfig {
 type RuntimeConfig struct {
 	Name        string
 	RunnerImage string
+	ActionImage string
 }
 
 func (c *RuntimeConfig) Raw() *RawRuntimeConfig {
 	return &RawRuntimeConfig{
 		Name:        c.Name,
 		RunnerImage: c.RunnerImage,
+		ActionImage: c.ActionImage,
 	}
 }
 

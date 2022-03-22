@@ -30,7 +30,7 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *Step, opts ...RunOpt) er
 
 func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error {
 	vopts := []actions.VarsOpt{actions.WithToken(ro.githubToken)}
-	ghvars, err := actions.NewVarsFromPath(ro.ctx, vopts...)
+	ghvars, err := actions.NewVarsFromPath(ctx, ro.ctx, vopts...)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		githubEnv  = filepath.Join(workdirid, "github", "env")
 		githubPath = filepath.Join(workdirid, "github", "path")
 		spec       = &runtime.Spec{
-			Image:      ro.image,
+			Image:      ro.runnerImage,
 			Cwd:        ghenv.Workspace,
 			Privileged: es.Privileged,
 			Env:        append(ghenv.Arr(), "SEQUENCE=true"),
@@ -209,15 +209,19 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 			}
 
 			spec.Image = es.Image
+			if ro.actionImage != "" && (action.Runs.Using == "node12" || action.Runs.Using == "node16") {
+				spec.Image = ro.actionImage
+			}
+
 			spec.Entrypoint = es.Entrypoint
 			spec.Cmd = es.Cmd
 
-			for envvar, val := range es.With {
+			for envVar, val := range es.With {
 				spec.Env = append(
 					spec.Env,
 					fmt.Sprintf(
 						"INPUT_%s=%s",
-						strings.ToUpper(strings.ReplaceAll(envvar, "-", "_")),
+						strings.ToUpper(strings.ReplaceAll(envVar, "-", "_")),
 						val,
 					),
 				)
@@ -261,7 +265,11 @@ func expandStep(s *Step, ctx *actions.ActionsContext) (*Step, error) {
 	es := &Step{}
 	err = json.Unmarshal(
 		actions.ExpandBytes(b, func(s string) string {
-			return ctx.Value(s).(string)
+			if v, ok := ctx.Value(s).(string); ok {
+				return v
+			}
+
+			return ""
 		}),
 		es,
 	)

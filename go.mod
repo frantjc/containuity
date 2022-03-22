@@ -3,7 +3,7 @@ module github.com/frantjc/sequence
 go 1.18
 
 require (
-	github.com/google/go-containerregistry v0.8.0
+	github.com/docker/distribution v2.8.1+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/pelletier/go-toml/v2 v2.0.0-beta.6
@@ -16,7 +16,6 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

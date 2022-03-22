@@ -16,7 +16,8 @@ type runOpts struct {
 	stdout      io.Writer
 	stderr      io.Writer
 	verbose     bool
-	image       string
+	actionImage string
+	runnerImage string
 	workdir     string
 }
 
@@ -38,9 +39,9 @@ func WithJob(j *Job) RunOpt {
 		}
 
 		if jobImage, ok := ro.job.Container.(string); ok {
-			ro.image = jobImage
+			ro.runnerImage = jobImage
 		} else if container, ok := ro.job.Container.(*Container); ok {
-			ro.image = container.Image
+			ro.runnerImage = container.Image
 		}
 
 		return nil
@@ -80,9 +81,16 @@ func WithVerbose(ro *runOpts) error {
 	return nil
 }
 
+func WithActionImage(image string) RunOpt {
+	return func(ro *runOpts) error {
+		ro.actionImage = image
+		return nil
+	}
+}
+
 func WithRunnerImage(image string) RunOpt {
 	return func(ro *runOpts) error {
-		ro.image = image
+		ro.runnerImage = image
 		return nil
 	}
 }
@@ -105,13 +113,13 @@ func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 	var (
 		buf = new(bytes.Buffer)
 		ro  = &runOpts{
-			workflow: &Workflow{},
-			job:      &Job{},
-			ctx:      ".",
-			stdout:   buf,
-			stderr:   buf,
-			workdir:  ".",
-			image:    conf.DefaultRunnerImage,
+			workflow:    &Workflow{},
+			job:         &Job{},
+			ctx:         ".",
+			stdout:      buf,
+			stderr:      buf,
+			workdir:     ".",
+			runnerImage: conf.DefaultRunnerImage,
 		}
 	)
 	for _, opt := range opts {

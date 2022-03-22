@@ -34,10 +34,10 @@ func WithJob(j *workflow.Job) RunOpt {
 			ro.jobName = j.Name
 		}
 
-		if jobImage, ok := j.Container.(string); ok {
+		if jobContainer, ok := j.Container.(*workflow.Container); ok {
+			ro.runnerImage = jobContainer.Image
+		} else if jobImage, ok := j.Container.(string); ok {
 			ro.runnerImage = jobImage
-		} else if container, ok := j.Container.(*workflow.Container); ok {
-			ro.runnerImage = container.Image
 		}
 
 		return nil

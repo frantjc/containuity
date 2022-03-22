@@ -42,8 +42,20 @@ func JobToProtoJob(j *workflow.Job) *types.Job {
 		steps[i] = StepToProtoStep(&s)
 	}
 
+	container := &types.Job_Container{}
+	if jobContainer, ok := j.Container.(*workflow.Container); ok {
+		container.Image = jobContainer.Image
+	} else if jobImage, ok := j.Container.(string); ok {
+		container.Image = jobImage
+	}
+
 	return &types.Job{
-		Steps: steps,
+		Name:      j.Name,
+		RunsOn:    j.RunsOn,
+		Steps:     steps,
+		Outputs:   j.Outputs,
+		Env:       j.Env,
+		Container: container,
 	}
 }
 

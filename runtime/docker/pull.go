@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/docker/cli/cli/streams"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/google/go-containerregistry/pkg/name"
 )
 
 type noOpWriter struct{}
@@ -18,18 +18,18 @@ func (w *noOpWriter) Write(p []byte) (int, error) {
 }
 
 func (r *dockerRuntime) PullImage(ctx context.Context, ref string) (runtime.Image, error) {
-	pref, err := name.ParseReference(ref)
+	pref, err := reference.Parse(ref)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := r.client.ImagePull(ctx, pref.Name(), types.ImagePullOptions{})
+	o, err := r.client.ImagePull(ctx, pref.String(), types.ImagePullOptions{})
 	if err != nil {
 		return nil, err
 	}
 	defer o.Close()
 
 	return &dockerImage{
-		ref: pref.Name(),
+		ref: pref.String(),
 	}, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(log.Writer()), nil)
 }

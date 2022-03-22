@@ -42,6 +42,10 @@ func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc
 		opts = append(opts, workflow.WithRunnerImage(conf.Runtime.RunnerImage))
 	}
 
+	if in.ActionImage != "" {
+		opts = append(opts, workflow.WithActionImage(in.ActionImage))
+	}
+
 	if conf.Verbose || in.Verbose {
 		opts = append(opts, workflow.WithVerbose)
 	}

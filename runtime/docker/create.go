@@ -2,31 +2,56 @@ package docker
 
 import (
 	"context"
+	"fmt"
+	"os/exec"
+	goruntime "runtime"
+	"strings"
 
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/google/go-containerregistry/pkg/name"
 )
 
 func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (runtime.Container, error) {
-	pref, err := name.ParseReference(s.Image)
+	pref, err := reference.Parse(s.Image)
 	if err != nil {
 		return nil, err
 	}
 
-	conf := &container.Config{
-		Image:      pref.Name(),
-		Entrypoint: s.Entrypoint,
-		Cmd:        s.Cmd,
-		WorkingDir: s.Cwd,
-		Env:        s.Env,
-		Labels:     labels,
+	var (
+		addr = r.client.DaemonHost()
+		conf = &container.Config{
+			Image:      pref.String(),
+			Entrypoint: s.Entrypoint,
+			Cmd:        s.Cmd,
+			WorkingDir: s.Cwd,
+			Env:        append(s.Env, fmt.Sprintf("DOCKER_HOST=%s", addr)),
+			Labels:     labels,
+		}
+		hconf = &container.HostConfig{
+			AutoRemove: true,
+			Privileged: s.Privileged,
+		}
+	)
+
+	if strings.HasPrefix(addr, "unix://") {
+		sock := strings.TrimPrefix(addr, "unix://")
+		hconf.Mounts = append(hconf.Mounts, mount.Mount{
+			Source: sock,
+			Target: "/var/run/docker.sock",
+			Type:   runtime.MountTypeBind,
+		})
 	}
 
-	hconf := &container.HostConfig{
-		AutoRemove: true,
-		Privileged: s.Privileged,
+	if goruntime.GOOS == "linux" {
+		if docker, err := exec.LookPath("docker"); err == nil {
+			hconf.Mounts = append(hconf.Mounts, mount.Mount{
+				Source: docker,
+				Target: "/usr/local/bin/docker",
+				Type:   runtime.MountTypeBind,
+			})
+		}
 	}
 
 	for _, m := range s.Mounts {

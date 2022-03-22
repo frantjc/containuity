@@ -52,6 +52,7 @@ func WithConfigFromEnv() (c *Config, err error) {
 		Runtime: &RuntimeConfig{
 			Name:        os.Getenv(EnvVarRuntime),
 			RunnerImage: os.Getenv(EnvVarRunnerImage),
+			ActionImage: os.Getenv(EnvVarActionImage),
 		},
 		Secrets: map[string]string{},
 	}

@@ -16,6 +16,7 @@ message RunJobRequest {
     sequence.types.Job job = 1;
     sequence.types.Workflow workflow = 2;
     string context = 4;
-    string runnerImage = 5;
-    bool verbose = 6;
+    string runner_image = 5;
+    string action_image = 6;
+    bool verbose = 7;
 }

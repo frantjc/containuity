@@ -37,7 +37,14 @@ func ProtoJobToJob(j *types.Job) *workflow.Job {
 	}
 
 	return &workflow.Job{
-		Steps: steps,
+		Name:    j.Name,
+		RunsOn:  j.RunsOn,
+		Steps:   steps,
+		Outputs: j.Outputs,
+		Env:     j.Env,
+		Container: &workflow.Container{
+			Image: j.Container.Image,
+		},
 	}
 }
 

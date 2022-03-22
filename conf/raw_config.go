@@ -106,11 +106,13 @@ func (r *RawGitHubConfig) Parse() (*GitHubConfig, error) {
 type RawRuntimeConfig struct {
 	Name        string `toml:"name,omitempty"`
 	RunnerImage string `toml:"runner_image,omitempty"`
+	ActionImage string `toml:"action_image,omitempty"`
 }
 
 func (r *RawRuntimeConfig) Parse() (*RuntimeConfig, error) {
 	return &RuntimeConfig{
 		Name:        r.Name,
 		RunnerImage: r.RunnerImage,
+		ActionImage: r.ActionImage,
 	}, nil
 }
