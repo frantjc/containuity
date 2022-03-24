@@ -1,0 +1,6 @@
+steps:
+  - image: alpine
+    run: |
+      echo FOO=bar >> $GITHUB_ENV
+  - image: alpine
+    entrypoint: [env]

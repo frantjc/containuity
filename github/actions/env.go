@@ -174,7 +174,7 @@ func (e *Env) Map() map[string]string {
 }
 
 func (e *Env) Arr() []string {
-	return env.MapToArr(e.Map())
+	return env.ArrFromMap(e.Map())
 }
 
 func defaultEnv() *Env {

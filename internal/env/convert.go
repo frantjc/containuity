@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ArrToMap(a []string) map[string]string {
+func MapFromArr(a []string) map[string]string {
 	m := map[string]string{}
 	for _, s := range a {
 		kv := strings.Split(s, "=")
@@ -17,10 +17,10 @@ func ArrToMap(a []string) map[string]string {
 }
 
 func ToMap(ss ...string) map[string]string {
-	return ArrToMap(ss)
+	return MapFromArr(ss)
 }
 
-func MapToArr(m map[string]string) []string {
+func ArrFromMap(m map[string]string) []string {
 	a := []string{}
 	for k, v := range m {
 		if k != "" && v != "" {
@@ -40,5 +40,5 @@ func ToArr(ss ...string) []string {
 			}
 		}
 	}
-	return MapToArr(ToMap(a...))
+	return ArrFromMap(ToMap(a...))
 }

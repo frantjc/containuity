@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestArrToMap(t *testing.T) {
+func TestMapFromArr(t *testing.T) {
 	var (
 		a        = []string{"KEY1=val", "KEY2=", "=val", "notakeyvalpair"}
 		expected = map[string]string{
 			"KEY1": "val",
 		}
-		actual = env.ArrToMap(a)
+		actual = env.MapFromArr(a)
 	)
 
 	assert.Equal(t, expected, actual)
@@ -30,7 +30,7 @@ func TestToMap(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestMapToArr(t *testing.T) {
+func TestArrFromMap(t *testing.T) {
 	var (
 		m = map[string]string{
 			"KEY1": "val",
@@ -38,7 +38,7 @@ func TestMapToArr(t *testing.T) {
 			"KEY2": "",
 		}
 		expected = []string{"KEY1=val"}
-		actual   = env.MapToArr(m)
+		actual   = env.ArrFromMap(m)
 	)
 
 	assert.Equal(t, expected, actual)

@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/joho/godotenv v1.4.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/pelletier/go-toml/v2 v2.0.0-beta.6
 	github.com/rs/zerolog v1.26.1

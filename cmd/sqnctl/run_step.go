@@ -36,7 +36,6 @@ func runStep(cmd *cobra.Command, args []string) error {
 	if path == fromStdin {
 		r = os.Stdin
 	} else {
-		var err error
 		r, err = os.Open(path)
 		if err != nil {
 			return err

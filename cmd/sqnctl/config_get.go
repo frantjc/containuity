@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/frantjc/sequence/conf"
 	"github.com/pelletier/go-toml/v2"
@@ -25,7 +26,7 @@ func runConfigGet(cmd *cobra.Command, args []string) error {
 
 	var (
 		key    = ""
-		stdout = cmd.OutOrStdout()
+		stdout = os.Stdout
 	)
 	if len(args) > 0 {
 		key = args[0]

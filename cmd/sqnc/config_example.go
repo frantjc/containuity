@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/frantjc/sequence/conf"
 	"github.com/spf13/cobra"
 )
@@ -11,6 +13,6 @@ var configExampleCmd = &cobra.Command{
 }
 
 func runConfigExample(cmd *cobra.Command, args []string) error {
-	_, err := cmd.OutOrStdout().Write(conf.ExampleRawConfigFileBytes)
+	_, err := os.Stdout.Write(conf.ExampleRawConfigFileBytes)
 	return err
 }

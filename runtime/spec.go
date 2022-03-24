@@ -47,7 +47,7 @@ func WithCwd(cwd string) SpecOpt {
 
 func WithEnv(m map[string]string) SpecOpt {
 	return func(s *Spec) error {
-		s.Env = append(s.Env, env.MapToArr(m)...)
+		s.Env = append(s.Env, env.ArrFromMap(m)...)
 		return nil
 	}
 }

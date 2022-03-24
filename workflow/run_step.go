@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/internal/env"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/meta"
 	"github.com/frantjc/sequence/runtime"
@@ -84,14 +85,22 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		}
 	)
 
-	_, err = createFile(githubEnv)
+	githubEnvFile, err := createFile(githubEnv)
 	if err != nil {
 		return err
 	}
 
-	_, err = createFile(githubPath)
+	if githubEnvArr, err := env.ArrFromReader(githubEnvFile); err == nil {
+		spec.Env = append(spec.Env, githubEnvArr...)
+	}
+
+	githubPathFile, err := createFile(githubPath)
 	if err != nil {
 		return err
+	}
+
+	if githubPathStr, err := env.PathFromReader(githubPathFile); err == nil && githubPathStr != "" {
+		spec.Env = append(spec.Env, env.ToArr("PATH", githubPathStr)...)
 	}
 
 	// TODO handle `uses: docker://some/action:latest`
@@ -159,7 +168,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) error
 		// these are used like
 		// $ echo "MY_VAR=myval" >> $GITHUB_ENV
 		// $ echo "/.mybin" >> $GITHUB_PATH
-		// respectively. TODO source the contents of these files into spec.Env
+		// respectively
 		{
 			Source:      githubEnv,
 			Destination: ghenv.Env,
@@ -307,6 +316,10 @@ func createFile(name string) (*os.File, error) {
 	err := os.MkdirAll(filepath.Dir(name), 0777)
 	if err != nil {
 		return nil, err
+	}
+
+	if fs, err := os.Stat(name); err == nil && !fs.IsDir() {
+		return os.Open(name)
 	}
 
 	return os.Create(name)

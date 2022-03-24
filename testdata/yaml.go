@@ -18,6 +18,12 @@ var (
 	//go:embed default_image_step.yml
 	DefaultImageStep []byte
 
+	//go:embed docker_step.yml
+	DockerStep []byte
+
+	//go:embed env_job.yml
+	EnvJob []byte
+
 	//go:embed env_step.yml
 	EnvStep []byte
 

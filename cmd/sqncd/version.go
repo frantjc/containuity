@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
 	"runtime"
 
 	"github.com/frantjc/sequence/meta"
@@ -17,7 +18,7 @@ var versionCmd = &cobra.Command{
 }
 
 func runVersion(cmd *cobra.Command, args []string) error {
-	return write(cmd.OutOrStdout(), fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()))
+	return write(os.Stdout, fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()))
 }
 
 func write(w io.Writer, i interface{}) error {
