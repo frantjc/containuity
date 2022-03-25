@@ -260,23 +260,26 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 				)
 			}
 
-			var (
-				outbuf = actions.NewCommandWriter(func(c *actions.Command) []byte {
-					switch c.Command {
-					case actions.CommandError:
-						return []byte(fmt.Sprintf("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, c.Value))
-					case actions.CommandWarning:
-						return []byte(fmt.Sprintf("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, c.Value))
-					case actions.CommandNotice:
-						return []byte(fmt.Sprintf("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, c.Value))
-					case actions.CommandDebug:
-						if ro.verbose {
-							return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
-						}
+			commandWriterCallback := func(c *actions.Command) []byte {
+				switch c.Command {
+				case actions.CommandError:
+					return []byte(fmt.Sprintf("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, c.Value))
+				case actions.CommandWarning:
+					return []byte(fmt.Sprintf("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, c.Value))
+				case actions.CommandNotice:
+					return []byte(fmt.Sprintf("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, c.Value))
+				case actions.CommandDebug:
+					if ro.verbose {
+						return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
 					}
-					return make([]byte, 0)
-				}, ro.stdout)
-				eopts = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
+				}
+				return make([]byte, 0)
+			}
+
+			var (
+				outbuf = actions.NewCommandWriter(commandWriterCallback, ro.stdout)
+				errbuf = actions.NewCommandWriter(commandWriterCallback, ro.stderr)
+				eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 			)
 			ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running action '%s'\n", log.ColorInfo, log.ColorNone, s.Uses)))
 			err = runSpec(ctx, r, spec, ro, eopts)
