@@ -6,7 +6,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type ImageOpt func(s *imageServer) error
+type ImageOpt func(*imageServer) error
 
 func WithRuntime(r runtime.Runtime) ImageOpt {
 	return func(s *imageServer) error {

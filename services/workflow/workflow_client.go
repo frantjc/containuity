@@ -20,20 +20,21 @@ var _ api.WorkflowClient = &workflowClient{}
 
 func (c *workflowClient) RunWorkflow(ctx context.Context, in *api.RunWorkflowRequest, _ ...grpc.CallOption) (api.Workflow_RunWorkflowClient, error) {
 	var (
-		conf, err = conf.NewFromFlagsWithRepository(in.Context)
+		conf, err = conf.NewFromFlagsWithRepository(in.Repository)
 		stream    = grpcio.NewLogStream(ctx)
 		opts      = []workflow.RunOpt{
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithWorkdir(conf.RootDir),
+			workflow.WithSecrets(conf.Secrets),
 		}
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if in.Context != "" {
-		opts = append(opts, workflow.WithRepository(in.Context))
+	if in.Repository != "" {
+		opts = append(opts, workflow.WithRepository(in.Repository))
 	}
 
 	if in.RunnerImage != "" {

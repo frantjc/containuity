@@ -6,7 +6,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type StepOpt func(s *stepServer) error
+type StepOpt func(*stepServer) error
 
 func WithRuntime(r runtime.Runtime) StepOpt {
 	return func(s *stepServer) error {

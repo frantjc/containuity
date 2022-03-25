@@ -8,7 +8,7 @@ import (
 )
 
 type runOpts struct {
-	ctx         string
+	repository  string
 	jobName     string
 	job         *Job
 	workflow    *Workflow
@@ -19,6 +19,7 @@ type runOpts struct {
 	actionImage string
 	runnerImage string
 	workdir     string
+	secrets     map[string]string
 }
 
 type RunOpt func(*runOpts) error
@@ -40,8 +41,6 @@ func WithJob(j *Job) RunOpt {
 
 		if jobImage, ok := ro.job.Container.(string); ok {
 			ro.runnerImage = jobImage
-		} else if container, ok := ro.job.Container.(*Container); ok {
-			ro.runnerImage = container.Image
 		}
 
 		return nil
@@ -111,7 +110,20 @@ func WithWorkdir(workdir string) RunOpt {
 
 func WithRepository(repository string) RunOpt {
 	return func(ro *runOpts) error {
-		ro.ctx = repository
+		ro.repository = repository
+		return nil
+	}
+}
+
+func WithSecrets(secrets map[string]string) RunOpt {
+	return func(ro *runOpts) error {
+		if ro.secrets == nil {
+			ro.secrets = secrets
+		} else {
+			for k, v := range secrets {
+				ro.secrets[k] = v
+			}
+		}
 		return nil
 	}
 }
@@ -122,7 +134,7 @@ func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 		ro  = &runOpts{
 			workflow:    &Workflow{},
 			job:         &Job{},
-			ctx:         ".",
+			repository:  ".",
 			stdout:      buf,
 			stderr:      buf,
 			workdir:     ".",

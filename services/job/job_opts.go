@@ -6,7 +6,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type JobOpt func(s *jobServer) error
+type JobOpt func(*jobServer) error
 
 func WithRuntime(r runtime.Runtime) JobOpt {
 	return func(s *jobServer) error {

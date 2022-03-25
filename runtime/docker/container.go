@@ -37,7 +37,6 @@ func (c *dockerContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt) err
 	if err != nil {
 		return err
 	}
-	// TODO prettify this
 	go stdcopy.StdCopy(e.Stdout, e.Stderr, attachResp.Reader)
 
 	err = c.client.ContainerStart(ctx, c.id, types.ContainerStartOptions{})

@@ -11,7 +11,7 @@ type serverOpts struct {
 	runtime runtime.Runtime
 }
 
-type ServerOpt func(so *serverOpts) error
+type ServerOpt func(*serverOpts) error
 
 func WithRuntime(r runtime.Runtime) ServerOpt {
 	return func(so *serverOpts) error {

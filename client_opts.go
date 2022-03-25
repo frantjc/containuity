@@ -1,3 +1,3 @@
 package sequence
 
-type ClientOpt func(c *Client) error
+type ClientOpt func(*Client) error

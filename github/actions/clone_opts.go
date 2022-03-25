@@ -23,23 +23,21 @@ func defaultCloneOpts() *cloneOpts {
 type CloneOpt func(*cloneOpts) error
 
 func WithPath(p string) CloneOpt {
-	return func(copts *cloneOpts) error {
-		copts.path = filepath.Clean(p)
+	return func(co *cloneOpts) error {
+		co.path = filepath.Clean(p)
 		return nil
 	}
 }
 
 func WithGitHubURL(u string) CloneOpt {
-	return func(copts *cloneOpts) error {
+	return func(co *cloneOpts) error {
 		var err error
-		copts.githubURL, err = url.Parse(u)
+		co.githubURL, err = url.Parse(u)
 		return err
 	}
 }
 
-func WithInsecure() CloneOpt {
-	return func(copts *cloneOpts) error {
-		copts.insecure = true
-		return nil
-	}
+func WithInsecure(co *cloneOpts) error {
+	co.insecure = true
+	return nil
 }

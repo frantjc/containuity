@@ -27,6 +27,9 @@ var (
 	//go:embed env_step.yml
 	EnvStep []byte
 
+	//go:embed expand_step.yml
+	ExpandStep []byte
+
 	//go:embed job_container_image_job.yml
 	JobContainerImageJob []byte
 

@@ -43,9 +43,7 @@ func JobToProtoJob(j *workflow.Job) *types.Job {
 	}
 
 	container := &types.Job_Container{}
-	if jobContainer, ok := j.Container.(*workflow.Container); ok {
-		container.Image = jobContainer.Image
-	} else if jobImage, ok := j.Container.(string); ok {
+	if jobImage, ok := j.Container.(string); ok {
 		container.Image = jobImage
 	}
 

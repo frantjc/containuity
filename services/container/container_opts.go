@@ -6,7 +6,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type ContainerOpt func(s *containerServer) error
+type ContainerOpt func(*containerServer) error
 
 func WithRuntime(r runtime.Runtime) ContainerOpt {
 	return func(s *containerServer) error {

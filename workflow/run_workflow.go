@@ -31,8 +31,7 @@ func RunWorkflow(ctx context.Context, r runtime.Runtime, w *Workflow, opts ...Ru
 			}
 		}
 
-		err := runJob(ctx, r, &job, ro)
-		if err != nil {
+		if ctx, err = runJob(ctx, r, &job, ro); err != nil {
 			return err
 		}
 	}

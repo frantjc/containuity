@@ -12,7 +12,7 @@ type Exec struct {
 	Terminal bool
 }
 
-type ExecOpt func(e *Exec) error
+type ExecOpt func(*Exec) error
 
 func WithStdio(e *Exec) error {
 	e.Stdin = os.Stdin

@@ -17,7 +17,7 @@ message RunStepRequest {
     sequence.types.Step step = 1;
     sequence.types.Job job = 2;
     sequence.types.Workflow workflow = 3;
-    string context = 4;
+    string repository = 4;
     string runner_image = 5;
     string action_image = 6;
     bool verbose = 7;

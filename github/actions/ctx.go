@@ -4,182 +4,85 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"runtime"
+	"os/user"
 	"strings"
-	"time"
 
 	"github.com/frantjc/sequence/github"
+	"github.com/frantjc/sequence/internal/env"
 	"github.com/go-git/go-git/v5"
 )
 
-type Context struct {
-	ctx           context.Context
-	GitHubContext *GitHubContext
-	EnvContext    map[string]string
-	JobContext    *JobContext
-	StepsContext  map[string]StepContext
-	RunnerContext *RunnerContext
-	InputsContext map[string]string
+type globalContextKey struct{}
+
+func WithContext(ctx context.Context, gctx *GlobalContext) context.Context {
+	return context.WithValue(ctx, globalContextKey{}, gctx)
 }
 
-var (
-	_ context.Context = &Context{}
-)
-
-func (c *Context) Deadline() (time.Time, bool) {
-	return c.ctx.Deadline()
+func ContextFromEnv(ctx context.Context) context.Context {
+	gctx := &GlobalContext{}
+	return WithContext(ctx, gctx)
 }
 
-func (c *Context) Done() <-chan struct{} {
-	return c.ctx.Done()
+func Context(ctx context.Context) (*GlobalContext, error) {
+	gctx, ok := ctx.Value(globalContextKey{}).(*GlobalContext)
+	if !ok {
+		return nil, fmt.Errorf("GlobalContext not found")
+	}
+	return gctx, nil
 }
 
-func (c *Context) Err() error {
-	return c.ctx.Err()
+type GlobalContext struct {
+	GitHubContext  *GitHubContext
+	EnvContext     map[string]string
+	JobContext     *JobContext
+	StepsContext   map[string]*StepsContext
+	RunnerContext  *RunnerContext
+	InputsContext  map[string]string
+	SecretsContext map[string]string
 }
 
-func (c *Context) Value(i interface{}) interface{} {
-	if s, ok := i.(string); ok {
-		ss := strings.Split(s, ".")
-		if len(ss) > 0 {
-			switch ss[0] {
-			case "github":
-				if len(ss) > 1 {
-					switch ss[1] {
-					case "action":
-						return c.GitHubContext.Action
-					case "action_path":
-						return c.GitHubContext.ActionPath
-					case "actor":
-						return c.GitHubContext.Actor
-					case "base_ref":
-						return c.GitHubContext.BaseRef
-					case "event":
-						return c.GitHubContext.Event
-					case "event_name":
-						return c.GitHubContext.EventName
-					case "event_path":
-						return c.GitHubContext.EventPath
-					case "head_ref":
-						return c.GitHubContext.HeadRef
-					case "job":
-						return c.GitHubContext.Job
-					case "ref":
-						return c.GitHubContext.Ref
-					case "ref_name":
-						return c.GitHubContext.RefName
-					case "ref_protected":
-						return fmt.Sprint(c.GitHubContext.RefProtected)
-					case "ref_type":
-						return c.GitHubContext.RefType.String()
-					case "repository":
-						return c.GitHubContext.Repository
-					case "repository_owner":
-						return c.GitHubContext.RepositoryOwner
-					case "run_id":
-						return c.GitHubContext.RunID
-					case "run_number":
-						return c.GitHubContext.RunNumber
-					case "run_attempt":
-						return c.GitHubContext.RunAttempt
-					case "server_url":
-						return c.GitHubContext.ServerURL.String()
-					case "sha":
-						return c.GitHubContext.Sha
-					case "token":
-						return c.GitHubContext.Token
-					case "workflow":
-						return c.GitHubContext.Workflow
-					case "workspace":
-						return c.GitHubContext.Workspace
-					}
+func (c *GlobalContext) Get(key string) string {
+	keys := strings.Split(key, ".")
+	if len(keys) > 0 {
+		switch keys[0] {
+		case "github":
+			if len(keys) > 1 {
+				return c.GitHubContext.Get(strings.Join(keys[1:], "."))
+			}
+		case "env":
+			if len(keys) > 1 {
+				if v, ok := c.EnvContext[keys[1]]; ok {
+					return v
 				}
-			case "env":
-				if len(ss) > 1 {
-					if v, ok := c.EnvContext[ss[1]]; ok {
-						return v
-					}
+			}
+		case "job":
+			if len(keys) > 1 {
+				return c.JobContext.Get(strings.Join(keys[1:], "."))
+			}
+		case "steps":
+			if len(keys) > 2 {
+				return c.StepsContext[keys[1]].Get(strings.Join(keys[2:], "."))
+			}
+		case "runner":
+			if len(keys) > 1 {
+				return c.RunnerContext.Get(strings.Join(keys[1:], "."))
+			}
+		case "inputs":
+			if len(keys) > 1 {
+				if v, ok := c.InputsContext[keys[1]]; ok {
+					return v
 				}
-			case "job":
-				if len(ss) > 1 {
-					switch ss[1] {
-					case "container":
-						if len(ss) > 2 {
-							switch ss[2] {
-							case "id":
-								return c.JobContext.Container.ID
-							case "network":
-								return c.JobContext.Container.Network
-							}
-						}
-					case "services":
-						if len(ss) > 2 {
-							if v, ok := c.JobContext.Services[ss[2]]; ok {
-								if len(ss) > 3 {
-									switch ss[3] {
-									case "id":
-										return v.ID
-									case "network":
-										return v.Network
-									case "ports":
-										if len(ss) > 4 {
-											if vv, ok := v.Ports[ss[4]]; ok {
-												return vv
-											}
-										}
-									}
-								}
-							}
-						}
-					case "status":
-						return c.JobContext.Status
-					}
-				}
-			case "steps":
-				if len(ss) > 1 {
-					if v, ok := c.StepsContext[ss[1]]; ok {
-						if len(ss) > 2 {
-							switch ss[2] {
-							case "outputs":
-								if len(ss) > 3 {
-									if vv, ok := v.Outputs[ss[3]]; ok {
-										return vv
-									}
-								}
-							case "outcome":
-								return v.Outcome
-							case "conclusion":
-								return v.Conclusion
-							}
-						}
-					}
-				}
-			case "runner":
-				if len(ss) > 1 {
-					switch ss[1] {
-					case "name":
-						return c.RunnerContext.Name
-					case "os":
-						return c.RunnerContext.OS.String()
-					case "arch":
-						return c.RunnerContext.Arch.String()
-					case "temp":
-						return c.RunnerContext.Temp
-					case "tool_cache":
-						return c.RunnerContext.ToolCache
-					}
-				}
-			case "inputs":
-				if len(ss) > 1 {
-					if v, ok := c.InputsContext[ss[1]]; ok {
-						return v
-					}
+			}
+		case "secrets":
+			if len(keys) > 1 {
+				if v, ok := c.SecretsContext[keys[1]]; ok {
+					return v
 				}
 			}
 		}
 	}
 
-	return c.ctx.Value(i)
+	return ""
 }
 
 // GitHubContext represents the GitHub Context
@@ -210,6 +113,62 @@ type GitHubContext struct {
 	Workspace       string
 }
 
+func (c *GitHubContext) Get(key string) string {
+	keys := strings.Split(key, ".")
+	if len(keys) > 0 {
+		switch keys[0] {
+		case "action":
+			return c.Action
+		case "action_path":
+			return c.ActionPath
+		case "actor":
+			return c.Actor
+		case "base_ref":
+			return c.BaseRef
+		case "event":
+			return c.Event
+		case "event_name":
+			return c.EventName
+		case "event_path":
+			return c.EventPath
+		case "head_ref":
+			return c.HeadRef
+		case "job":
+			return c.Job
+		case "ref":
+			return c.Ref
+		case "ref_name":
+			return c.RefName
+		case "ref_protected":
+			return fmt.Sprint(c.RefProtected)
+		case "ref_type":
+			return c.RefType.String()
+		case "repository":
+			return c.Repository
+		case "repository_owner":
+			return c.RepositoryOwner
+		case "run_id":
+			return c.RunID
+		case "run_number":
+			return c.RunNumber
+		case "run_attempt":
+			return c.RunAttempt
+		case "server_url":
+			return c.ServerURL.String()
+		case "sha":
+			return c.Sha
+		case "token":
+			return c.Token
+		case "workflow":
+			return c.Workflow
+		case "workspace":
+			return c.Workspace
+		}
+	}
+
+	return ""
+}
+
 type JobContext struct {
 	Container *struct {
 		ID      string
@@ -224,10 +183,70 @@ type JobContext struct {
 	Status string
 }
 
-type StepContext struct {
+func (c *JobContext) Get(key string) string {
+	keys := strings.Split(key, ".")
+	if len(keys) > 0 {
+		switch keys[0] {
+		case "container":
+			if len(keys) > 1 {
+				switch keys[1] {
+				case "id":
+					return c.Container.ID
+				case "network":
+					return c.Container.Network
+				}
+			}
+		case "services":
+			if len(keys) > 1 {
+				if v, ok := c.Services[keys[1]]; ok {
+					if len(keys) > 2 {
+						switch keys[2] {
+						case "id":
+							return v.ID
+						case "network":
+							return v.Network
+						case "ports":
+							if len(keys) > 4 {
+								if vv, ok := v.Ports[keys[4]]; ok {
+									return vv
+								}
+							}
+						}
+					}
+				}
+			}
+		case "status":
+			return c.Status
+		}
+	}
+
+	return ""
+}
+
+type StepsContext struct {
 	Outputs    map[string]string
 	Conclusion string
 	Outcome    string
+}
+
+func (c *StepsContext) Get(key string) string {
+	keys := strings.Split(key, ".")
+	if len(keys) > 0 {
+		switch keys[0] {
+		case "outputs":
+			if len(keys) > 1 {
+				if vv, ok := c.Outputs[keys[1]]; ok {
+					return vv
+				}
+			}
+		case "outcome":
+			return c.Outcome
+		case "conclusion":
+			return c.Conclusion
+		}
+	}
+
+	return ""
 }
 
 type RunnerContext struct {
@@ -238,43 +257,59 @@ type RunnerContext struct {
 	ToolCache string
 }
 
-func defaultCtx() *Context {
-	return &Context{
+func (c *RunnerContext) Get(key string) string {
+	keys := strings.Split(key, ".")
+	if len(keys) > 0 {
+		switch keys[0] {
+		case "name":
+			return c.Name
+		case "os":
+			return c.OS.String()
+		case "arch":
+			return c.Arch.String()
+		case "temp":
+			return c.Temp
+		case "tool_cache":
+			return c.ToolCache
+		}
+	}
+
+	return ""
+}
+
+func defaultCtx() *GlobalContext {
+	u, _ := user.Current()
+	return &GlobalContext{
 		GitHubContext: &GitHubContext{
 			ServerURL: github.DefaultURL,
 		},
 		EnvContext:   map[string]string{},
 		JobContext:   &JobContext{},
-		StepsContext: map[string]StepContext{},
+		StepsContext: map[string]*StepsContext{},
 		RunnerContext: &RunnerContext{
-			OS:   OSFrom(runtime.GOOS),
-			Arch: ArchFrom(runtime.GOARCH),
+			Name: u.Name,
 		},
 		InputsContext: map[string]string{},
 	}
 }
 
-func NewContextFromPath(ctx context.Context, path string, opts ...VarsOpt) (*Context, error) {
-	vopts := defaultVarsOpts()
+func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*GlobalContext, error) {
+	var (
+		c             = defaultCtx()
+		currentBranch = defaultBranch
+		currentRemote = defaultRemote
+	)
 	for _, opt := range opts {
-		err := opt(vopts)
+		err := opt(c)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	repo, err := git.PlainOpen(path)
+	r, err := git.PlainOpen(path)
 	if err != nil {
 		return nil, err
 	}
-
-	return newCtxFromRepository(ctx, repo, vopts)
-}
-
-func newCtxFromRepository(ctx context.Context, r *git.Repository, opts *varsOpts) (*Context, error) {
-	c := defaultCtx()
-	c.ctx = ctx
-	c.GitHubContext.Token = opts.token
 
 	ref, err := r.Head()
 	if err != nil {
@@ -286,7 +321,7 @@ func newCtxFromRepository(ctx context.Context, r *git.Repository, opts *varsOpts
 	c.GitHubContext.Ref = ref.String()
 
 	if ref.Name().IsBranch() {
-		opts.branch = ref.String()
+		currentBranch = ref.Name().Short()
 		c.GitHubContext.RefType = RefTypeBranch
 	} else {
 		c.GitHubContext.RefType = RefTypeTag
@@ -308,25 +343,62 @@ func newCtxFromRepository(ctx context.Context, r *git.Repository, opts *varsOpts
 		}
 	}
 
-	if branch, err := r.Branch(opts.branch); err == nil {
-		if opts.remote == "" {
-			opts.remote = branch.Remote
-		}
+	if branch, err := r.Branch(currentBranch); err == nil {
+		currentRemote = branch.Remote
 
 		c.GitHubContext.RefName = branch.Name
 		c.GitHubContext.Ref = branch.Name
 		c.GitHubContext.RefType = RefTypeBranch
 	}
 
-	if remote, err := r.Remote(opts.remote); err == nil {
+	if remote, err := r.Remote(currentRemote); err == nil {
 		for _, u := range remote.Config().URLs {
 			_, err := url.Parse(u)
 			if err == nil {
-				// override default github urls
+				// TODO override default github urls
 				break
 			}
 		}
 	}
 
 	return c, nil
+}
+
+func (c *GlobalContext) Map() map[string]string {
+	return map[string]string{
+		EnvVarCI:           fmt.Sprint(true),
+		EnvVarWorkflow:     c.GitHubContext.Workflow,
+		EnvVarRunID:        c.GitHubContext.RunID,
+		EnvVarRunNumber:    c.GitHubContext.RunNumber,
+		EnvVarJob:          c.GitHubContext.Job,
+		EnvVarAction:       c.GitHubContext.Action,
+		EnvVarActionPath:   c.GitHubContext.ActionPath,
+		EnvVarActions:      fmt.Sprint(true),
+		EnvVarActor:        c.GitHubContext.Actor,
+		EnvVarRepository:   c.GitHubContext.Repository,
+		EnvVarEventName:    c.GitHubContext.EventName,
+		EnvVarEventPath:    c.GitHubContext.EventPath,
+		EnvVarWorkspace:    c.GitHubContext.Workspace,
+		EnvVarSha:          c.GitHubContext.Sha,
+		EnvVarRef:          c.GitHubContext.Ref,
+		EnvVarRefName:      c.GitHubContext.RefName,
+		EnvVarRefProtected: fmt.Sprint(c.GitHubContext.RefProtected),
+		EnvVarRefType:      c.GitHubContext.RefType.String(),
+		EnvVarHeadRef:      c.GitHubContext.HeadRef,
+		EnvVarBaseRef:      c.GitHubContext.BaseRef,
+		EnvVarServerURL:    c.GitHubContext.ServerURL.String(),
+		// TODO
+		// EnvVarAPIURL:          e.APIURL.String(),
+		// EnvVarGraphQLURL:      e.GraphQLURL.String(),
+		EnvVarRunnerName:      c.RunnerContext.Name,
+		EnvVarRunnerOS:        c.RunnerContext.OS.String(),
+		EnvVarRunnerArch:      c.RunnerContext.Arch.String(),
+		EnvVarRunnerTemp:      c.RunnerContext.Temp,
+		EnvVarRunnerToolCache: c.RunnerContext.ToolCache,
+		EnvVarToken:           c.GitHubContext.Token,
+	}
+}
+
+func (c *GlobalContext) Arr() []string {
+	return env.ArrFromMap(c.Map())
 }

@@ -90,7 +90,7 @@ func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer, 
 		Step:        convert.StepToProtoStep(step),
 		Job:         convert.JobToProtoJob(ro.job),
 		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
-		Context:     ro.repository,
+		Repository:  ro.repository,
 		RunnerImage: ro.runnerImage,
 		Verbose:     ro.verbose,
 	})
@@ -115,7 +115,7 @@ func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer, opt
 	stream, err := c.JobClient().RunJob(ctx, &jobapi.RunJobRequest{
 		Job:         convert.JobToProtoJob(job),
 		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
-		Context:     ro.repository,
+		Repository:  ro.repository,
 		RunnerImage: ro.runnerImage,
 		Verbose:     ro.verbose,
 	})
@@ -139,7 +139,7 @@ func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w
 
 	stream, err := c.WorkflowClient().RunWorkflow(ctx, &workflowapi.RunWorkflowRequest{
 		Workflow:    convert.WorkflowToProtoWorkflow(workflow),
-		Context:     ro.repository,
+		Repository:  ro.repository,
 		RunnerImage: ro.runnerImage,
 		Verbose:     ro.verbose,
 	})

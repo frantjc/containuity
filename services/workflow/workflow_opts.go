@@ -6,7 +6,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type WorkflowOpt func(s *workflowServer) error
+type WorkflowOpt func(*workflowServer) error
 
 func WithRuntime(r runtime.Runtime) WorkflowOpt {
 	return func(s *workflowServer) error {

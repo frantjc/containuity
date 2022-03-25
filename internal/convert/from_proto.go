@@ -42,7 +42,7 @@ func ProtoJobToJob(j *types.Job) *workflow.Job {
 		Steps:   steps,
 		Outputs: j.Outputs,
 		Env:     j.Env,
-		Container: &workflow.Container{
+		Container: &struct{ Image string }{
 			Image: j.Container.Image,
 		},
 	}

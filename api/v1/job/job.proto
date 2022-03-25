@@ -15,7 +15,7 @@ service Job {
 message RunJobRequest {
     sequence.types.Job job = 1;
     sequence.types.Workflow workflow = 2;
-    string context = 4;
+    string repository = 4;
     string runner_image = 5;
     string action_image = 6;
     bool verbose = 7;

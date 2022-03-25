@@ -20,20 +20,21 @@ var _ api.JobClient = &jobClient{}
 
 func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc.CallOption) (api.Job_RunJobClient, error) {
 	var (
-		conf, err = conf.NewFromFlagsWithRepository(in.Context)
+		conf, err = conf.NewFromFlagsWithRepository(in.Repository)
 		stream    = grpcio.NewLogStream(ctx)
 		opts      = []workflow.RunOpt{
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithWorkdir(conf.RootDir),
+			workflow.WithSecrets(conf.Secrets),
 		}
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if in.Context != "" {
-		opts = append(opts, workflow.WithRepository(in.Context))
+	if in.Repository != "" {
+		opts = append(opts, workflow.WithRepository(in.Repository))
 	}
 
 	if in.RunnerImage != "" {
@@ -52,7 +53,7 @@ func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc
 
 	go func() {
 		defer stream.CloseSend()
-		if err := workflow.RunJob(ctx, c.runtime, convert.ProtoJobToJob(in.Job), opts...); err != nil {
+		if ctx, err = workflow.RunJob(ctx, c.runtime, convert.ProtoJobToJob(in.Job), opts...); err != nil {
 			stream.SendErr(err)
 		}
 	}()
