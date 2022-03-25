@@ -53,6 +53,10 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		return ctx, nil, err
 	}
 
+	if err = actions.WithInputs(es.With)(ghctx); err != nil {
+		return ctx, nil, err
+	}
+
 	var (
 		// generate a unique, reproducible, directory-name-compliant ID from the current context
 		// so that steps that are a part of the same job share the same mounts
@@ -66,7 +70,13 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 			Image:      ro.runnerImage,
 			Cwd:        ghctx.GitHubContext.Workspace,
 			Privileged: es.Privileged,
-			Env:        append(ghctx.Arr(), "SEQUENCE=true", "SQNC=true"),
+			Env: append(
+				ghctx.Arr(),
+				"SEQUENCE=true",
+				"SQNC=true",
+				"DEBIAN_FRONTEND=noninteractive",
+				"ACCEPT_EULA=Y",
+			),
 			Mounts: []specs.Mount{
 				{
 					Source:      "/etc/ssl",
@@ -129,6 +139,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 			Destination: ghctx.GitHubContext.ActionPath,
 			Type:        runtime.MountTypeBind,
 		})
+		spec.Env = append(spec.Env, fmt.Sprintf("%s=%s/%s", actions.EnvVarActionRepository, action.Owner(), action.Repository()))
 	} else {
 		if es.Image != "" {
 			spec.Image = es.Image

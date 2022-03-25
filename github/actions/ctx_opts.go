@@ -56,3 +56,16 @@ func WithJobName(job string) CtxOpt {
 		return nil
 	}
 }
+
+func WithInputs(inputs map[string]string) CtxOpt {
+	return func(gc *GlobalContext) error {
+		if gc.InputsContext == nil {
+			gc.InputsContext = inputs
+		} else {
+			for k, v := range inputs {
+				gc.InputsContext[k] = v
+			}
+		}
+		return nil
+	}
+}

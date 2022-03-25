@@ -5,6 +5,7 @@ const (
 	EnvVarWorkflow        = "GITHUB_WORKFLOW"
 	EnvVarRunID           = "GITHUB_RUN_ID"
 	EnvVarRunNumber       = "GITHUB_RUN_NUMBER"
+	EnvVarRunAttempt      = "GITHUB_RUN_ATTEMPT"
 	EnvVarJob             = "GITHUB_JOB"
 	EnvVarAction          = "GITHUB_ACTION"
 	EnvVarActionPath      = "GITHUB_ACTION_PATH"
@@ -30,7 +31,13 @@ const (
 	EnvVarRunnerTemp      = "RUNNER_TEMP"
 	EnvVarRunnerToolCache = "RUNNER_TOOL_CACHE"
 
-	EnvVarEnv   = "GITHUB_ENV"
-	EnvVarPath  = "GITHUB_PATH"
+	EnvVarEnv  = "GITHUB_ENV"
+	EnvVarPath = "GITHUB_PATH"
+
 	EnvVarToken = "GITHUB_TOKEN"
+
+	EnvVarRepositoryOwner  = "GITHUB_REPOSITORY_OWNER"
+	EnvVarRetentionDays    = "GITHUB_RETENTION_DAYS"
+	EnvVarStepSummary      = "GITHUB_STEP_SUMMARY"
+	EnvVarActionRepository = "GITHUB_ACTION_REPOSITORY"
 )

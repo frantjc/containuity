@@ -10,6 +10,7 @@ import (
 	"github.com/frantjc/sequence/github"
 	"github.com/frantjc/sequence/internal/env"
 	"github.com/go-git/go-git/v5"
+	"github.com/google/uuid"
 )
 
 type globalContextKey struct{}
@@ -104,8 +105,8 @@ type GitHubContext struct {
 	Repository      string
 	RepositoryOwner string
 	RunID           string
-	RunNumber       string
-	RunAttempt      string
+	RunNumber       int
+	RunAttempt      int
 	ServerURL       *url.URL
 	Sha             string
 	Token           string
@@ -150,9 +151,9 @@ func (c *GitHubContext) Get(key string) string {
 		case "run_id":
 			return c.RunID
 		case "run_number":
-			return c.RunNumber
+			return fmt.Sprint(c.RunNumber)
 		case "run_attempt":
-			return c.RunAttempt
+			return fmt.Sprint(c.RunAttempt)
 		case "server_url":
 			return c.ServerURL.String()
 		case "sha":
@@ -281,13 +282,19 @@ func defaultCtx() *GlobalContext {
 	u, _ := user.Current()
 	return &GlobalContext{
 		GitHubContext: &GitHubContext{
-			ServerURL: github.DefaultURL,
+			ServerURL:  github.DefaultURL,
+			RunNumber:  1,
+			RunAttempt: 1,
+			RunID:      uuid.NewString(),
+			Action:     "__run",
 		},
 		EnvContext:   map[string]string{},
 		JobContext:   &JobContext{},
 		StepsContext: map[string]*StepsContext{},
 		RunnerContext: &RunnerContext{
 			Name: u.Name,
+			OS:   OSLinux,
+			Arch: ArchX86,
 		},
 		InputsContext: map[string]string{},
 	}
@@ -337,6 +344,7 @@ func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*Glob
 						strings.TrimPrefix(prurl.Path, "/"),
 						".git",
 					)
+					c.GitHubContext.RepositoryOwner = strings.Split(c.GitHubContext.Repository, "/")[0]
 					break
 				}
 			}
@@ -347,7 +355,7 @@ func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*Glob
 		currentRemote = branch.Remote
 
 		c.GitHubContext.RefName = branch.Name
-		c.GitHubContext.Ref = branch.Name
+		c.GitHubContext.Ref = fmt.Sprintf("refs/heads/%s", branch.Name)
 		c.GitHubContext.RefType = RefTypeBranch
 	}
 
@@ -361,41 +369,46 @@ func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*Glob
 		}
 	}
 
+	c.EnvContext = c.Map()
+
 	return c, nil
 }
 
 func (c *GlobalContext) Map() map[string]string {
+	apiURL, _ := github.APIURLFromBaseURL(c.GitHubContext.ServerURL)
+	graphqlURL, _ := github.GraphQLURLFromBaseURL(c.GitHubContext.ServerURL)
 	return map[string]string{
-		EnvVarCI:           fmt.Sprint(true),
-		EnvVarWorkflow:     c.GitHubContext.Workflow,
-		EnvVarRunID:        c.GitHubContext.RunID,
-		EnvVarRunNumber:    c.GitHubContext.RunNumber,
-		EnvVarJob:          c.GitHubContext.Job,
-		EnvVarAction:       c.GitHubContext.Action,
-		EnvVarActionPath:   c.GitHubContext.ActionPath,
-		EnvVarActions:      fmt.Sprint(true),
-		EnvVarActor:        c.GitHubContext.Actor,
-		EnvVarRepository:   c.GitHubContext.Repository,
-		EnvVarEventName:    c.GitHubContext.EventName,
-		EnvVarEventPath:    c.GitHubContext.EventPath,
-		EnvVarWorkspace:    c.GitHubContext.Workspace,
-		EnvVarSha:          c.GitHubContext.Sha,
-		EnvVarRef:          c.GitHubContext.Ref,
-		EnvVarRefName:      c.GitHubContext.RefName,
-		EnvVarRefProtected: fmt.Sprint(c.GitHubContext.RefProtected),
-		EnvVarRefType:      c.GitHubContext.RefType.String(),
-		EnvVarHeadRef:      c.GitHubContext.HeadRef,
-		EnvVarBaseRef:      c.GitHubContext.BaseRef,
-		EnvVarServerURL:    c.GitHubContext.ServerURL.String(),
-		// TODO
-		// EnvVarAPIURL:          e.APIURL.String(),
-		// EnvVarGraphQLURL:      e.GraphQLURL.String(),
+		EnvVarCI:              fmt.Sprint(true),
+		EnvVarWorkflow:        c.GitHubContext.Workflow,
+		EnvVarRunID:           c.GitHubContext.RunID,
+		EnvVarRunNumber:       fmt.Sprint(c.GitHubContext.RunNumber),
+		EnvVarRunAttempt:      fmt.Sprint(c.GitHubContext.RunAttempt),
+		EnvVarJob:             c.GitHubContext.Job,
+		EnvVarAction:          c.GitHubContext.Action,
+		EnvVarActionPath:      c.GitHubContext.ActionPath,
+		EnvVarActions:         fmt.Sprint(true),
+		EnvVarActor:           c.GitHubContext.Actor,
+		EnvVarRepository:      c.GitHubContext.Repository,
+		EnvVarEventName:       c.GitHubContext.EventName,
+		EnvVarEventPath:       c.GitHubContext.EventPath,
+		EnvVarWorkspace:       c.GitHubContext.Workspace,
+		EnvVarSha:             c.GitHubContext.Sha,
+		EnvVarRef:             c.GitHubContext.Ref,
+		EnvVarRefName:         c.GitHubContext.RefName,
+		EnvVarRefProtected:    fmt.Sprint(c.GitHubContext.RefProtected),
+		EnvVarRefType:         c.GitHubContext.RefType.String(),
+		EnvVarHeadRef:         c.GitHubContext.HeadRef,
+		EnvVarBaseRef:         c.GitHubContext.BaseRef,
+		EnvVarServerURL:       c.GitHubContext.ServerURL.String(),
+		EnvVarAPIURL:          apiURL.String(),
+		EnvVarGraphQLURL:      graphqlURL.String(),
 		EnvVarRunnerName:      c.RunnerContext.Name,
 		EnvVarRunnerOS:        c.RunnerContext.OS.String(),
 		EnvVarRunnerArch:      c.RunnerContext.Arch.String(),
 		EnvVarRunnerTemp:      c.RunnerContext.Temp,
 		EnvVarRunnerToolCache: c.RunnerContext.ToolCache,
 		EnvVarToken:           c.GitHubContext.Token,
+		EnvVarRepositoryOwner: c.GitHubContext.RepositoryOwner,
 	}
 }
 
