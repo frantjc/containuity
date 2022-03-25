@@ -20,6 +20,7 @@ func WithContext(ctx context.Context, gctx *GlobalContext) context.Context {
 }
 
 func ContextFromEnv(ctx context.Context) context.Context {
+	// TODO
 	gctx := &GlobalContext{}
 	return WithContext(ctx, gctx)
 }
@@ -62,7 +63,9 @@ func (c *GlobalContext) Get(key string) string {
 			}
 		case "steps":
 			if len(keys) > 2 {
-				return c.StepsContext[keys[1]].Get(strings.Join(keys[2:], "."))
+				if v, ok := c.StepsContext[keys[1]]; ok {
+					return v.Get(strings.Join(keys[2:], "."))
+				}
 			}
 		case "runner":
 			if len(keys) > 1 {
@@ -208,8 +211,8 @@ func (c *JobContext) Get(key string) string {
 							return v.Network
 						case "ports":
 							if len(keys) > 4 {
-								if vv, ok := v.Ports[keys[4]]; ok {
-									return vv
+								if v, ok := v.Ports[keys[4]]; ok {
+									return v
 								}
 							}
 						}
@@ -236,8 +239,8 @@ func (c *StepsContext) Get(key string) string {
 		switch keys[0] {
 		case "outputs":
 			if len(keys) > 1 {
-				if vv, ok := c.Outputs[keys[1]]; ok {
-					return vv
+				if v, ok := c.Outputs[keys[1]]; ok {
+					return v
 				}
 			}
 		case "outcome":
