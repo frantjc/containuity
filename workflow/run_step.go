@@ -32,16 +32,16 @@ func RunStep(ctx context.Context, r runtime.Runtime, s *Step, opts ...RunOpt) (c
 func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (context.Context, *StepOut, error) {
 	var (
 		containerWorkdir = "/sqnc"
-		copts            = []actions.CtxOpt{
+		ghctx            *actions.GlobalContext
+		err              error
+	)
+	if ghctx, err = actions.Context(ctx); err != nil {
+		copts := []actions.CtxOpt{
 			actions.WithToken(ro.githubToken),
 			actions.WithSecrets(ro.secrets),
 			actions.WithWorkdir(containerWorkdir),
 			actions.WithJobName(ro.jobName),
 		}
-		ghctx *actions.GlobalContext
-		err   error
-	)
-	if ghctx, err = actions.Context(ctx); err != nil {
 		if ghctx, err = actions.NewContextFromPath(ctx, ro.repository, copts...); err != nil {
 			return ctx, nil, err
 		}
@@ -181,9 +181,12 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		spec.Env = append(spec.Env, env.ToArr("PATH", githubPathStr)...)
 	}
 
-	// TODO handle `uses: docker://some/action:latest`
+	// handle uses: docker://some/action:latest
 	// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-docker-hub-action
-	if es.Uses != "" {
+	if strings.HasPrefix(es.Uses, imagePrefix) {
+		spec.Image = strings.TrimPrefix(es.Uses, imagePrefix)
+		// handle uses: actions/checkout@v2
+	} else if es.Uses != "" {
 		action, err := actions.ParseReference(es.Uses)
 		if err != nil {
 			return ctx, nil, err
@@ -220,10 +223,11 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		}
 	}
 
+	// make sure all of the host directories that we intend to bind exist
+	// note that at this point all bind mounts are directories
 	for _, mount := range spec.Mounts {
 		if mount.Type == runtime.MountTypeBind {
-			err = os.MkdirAll(mount.Source, 0777)
-			if err != nil {
+			if err = os.MkdirAll(mount.Source, 0777); err != nil {
 				return ctx, nil, err
 			}
 		}
@@ -235,7 +239,10 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 	)
 	spec.Env = append(spec.Env, fmt.Sprintf("%s=%s", actions.EnvVarEnv, ghEnv), fmt.Sprintf("%s=%s", actions.EnvVarPath, ghPath))
 	// these are _files_, NOT directories
+	// now that we have done all of the set up for the directories we
+	// intend to bind, we can add the files we intend to bind
 	spec.Mounts = append(spec.Mounts, []specs.Mount{
+		// make networking stuff act more predictably for users
 		{
 			Source:      "/etc/hosts",
 			Destination: "/etc/hosts",
@@ -305,7 +312,8 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 					return ctx, nil, err
 				}
 
-				// TODO recurse for composite actions?
+				// TODO composite actions can contain other actions,
+				//      so should we recurse for composite actions?
 				// if es.Uses != "" {
 				// 	if ctx, _, err := runStep(ctx, r, es, ro); err != nil {
 				// 		return ctx, nil, err
