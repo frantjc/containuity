@@ -100,6 +100,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 				},
 			},
 		}
+		echo                  = false
 		stopCommandsTokens    = map[string]bool{}
 		commandWriterCallback = func(c *actions.Command) []byte {
 			if _, ok := stopCommandsTokens[c.Command]; ok {
@@ -125,7 +126,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 			case actions.CommandNotice:
 				return []byte(fmt.Sprintf("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, c.Value))
 			case actions.CommandDebug:
-				if ro.verbose {
+				if ro.verbose || echo {
 					return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
 				}
 			case actions.CommandSetOutput:
@@ -141,21 +142,27 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 						},
 					}
 				}
-				if ro.verbose {
+				if ro.verbose || echo {
 					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s for '%s'", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value, es.GetID()))
 				}
 			case actions.CommandSaveState:
 				spec.Env = append(spec.Env, fmt.Sprintf("STATE_%s=%s", c.Parameters["name"], c.Value))
-				if ro.verbose {
+				if ro.verbose || echo {
 					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value))
 				}
 			case actions.CommandStopCommands:
 				stopCommandsTokens[c.Value] = true
-				if ro.verbose {
+				if ro.verbose || echo {
 					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s until '%s'", log.ColorDebug, log.ColorNone, c.Command, c.Value))
 				}
+			case actions.CommandEcho:
+				if c.Value == "on" {
+					echo = true
+				} else if c.Value == "off" {
+					echo = false
+				}
 			default:
-				if ro.verbose {
+				if ro.verbose || echo {
 					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] swallowing unrecognized workflow command '%s'", log.ColorDebug, log.ColorNone, c.Command))
 				}
 			}

@@ -9,7 +9,6 @@ const (
 	CommandDebug        = "debug"
 	CommandGroup        = "group"
 	CommandEndGroup     = "endgroup"
-	CommandAddMatcher   = "addmatcher"
 	CommandSaveState    = "save-state"
 	CommandSetOutput    = "set-output"
 	CommandNotice       = "notice"
