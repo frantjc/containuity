@@ -1,0 +1,8 @@
+steps:
+  - id: step1
+    image: alpine:3.15
+    run: |
+      echo ::set-output name=test::hello there
+  - image: alpine:3.15
+    run: |
+      echo steps.step1.outputs.test=${{ steps.step1.outputs.test }}

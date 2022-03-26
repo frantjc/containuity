@@ -16,7 +16,7 @@ import (
 type globalContextKey struct{}
 
 func WithContext(ctx context.Context, gctx *GlobalContext) context.Context {
-	return context.WithValue(ctx, globalContextKey{}, gctx)
+	return context.WithValue(ctx, globalContextKey{}, *gctx)
 }
 
 func ContextFromEnv(ctx context.Context) context.Context {
@@ -26,11 +26,11 @@ func ContextFromEnv(ctx context.Context) context.Context {
 }
 
 func Context(ctx context.Context) (*GlobalContext, error) {
-	gctx, ok := ctx.Value(globalContextKey{}).(*GlobalContext)
+	gctx, ok := ctx.Value(globalContextKey{}).(GlobalContext)
 	if !ok {
 		return nil, fmt.Errorf("GlobalContext not found")
 	}
-	return gctx, nil
+	return &gctx, nil
 }
 
 type GlobalContext struct {

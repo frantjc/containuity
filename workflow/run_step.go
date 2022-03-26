@@ -39,11 +39,10 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 			actions.WithJobName(ro.jobName),
 		}
 		ghctx *actions.GlobalContext
+		err   error
 	)
-	ghctx, err := actions.Context(ctx)
-	if err != nil {
-		ghctx, err = actions.NewContextFromPath(ctx, ro.repository, copts...)
-		if err != nil {
+	if ghctx, err = actions.Context(ctx); err != nil {
+		if ghctx, err = actions.NewContextFromPath(ctx, ro.repository, copts...); err != nil {
 			return ctx, nil, err
 		}
 	}
@@ -101,6 +100,67 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 				},
 			},
 		}
+		stopCommandsTokens    = map[string]bool{}
+		commandWriterCallback = func(c *actions.Command) []byte {
+			if _, ok := stopCommandsTokens[c.Command]; ok {
+				stopCommandsTokens[c.Command] = false
+				if ro.verbose {
+					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s end token '%s'", log.ColorDebug, log.ColorNone, actions.CommandStopCommands, c.Command))
+				} else {
+					return make([]byte, 0)
+				}
+			}
+
+			for _, stop := range stopCommandsTokens {
+				if stop {
+					return []byte(c.String())
+				}
+			}
+
+			switch c.Command {
+			case actions.CommandError:
+				return []byte(fmt.Sprintf("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, c.Value))
+			case actions.CommandWarning:
+				return []byte(fmt.Sprintf("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, c.Value))
+			case actions.CommandNotice:
+				return []byte(fmt.Sprintf("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, c.Value))
+			case actions.CommandDebug:
+				if ro.verbose {
+					return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
+				}
+			case actions.CommandSetOutput:
+				if stepContext, ok := ghctx.StepsContext[es.GetID()]; ok {
+					if stepContext.Outputs == nil {
+						stepContext.Outputs = map[string]string{}
+					}
+					stepContext.Outputs[c.Parameters["name"]] = c.Value
+				} else {
+					ghctx.StepsContext[es.GetID()] = &actions.StepsContext{
+						Outputs: map[string]string{
+							c.Parameters["name"]: c.Value,
+						},
+					}
+				}
+				if ro.verbose {
+					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s for '%s'", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value, es.GetID()))
+				}
+			case actions.CommandSaveState:
+				spec.Env = append(spec.Env, fmt.Sprintf("STATE_%s=%s", c.Parameters["name"], c.Value))
+				if ro.verbose {
+					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value))
+				}
+			case actions.CommandStopCommands:
+				stopCommandsTokens[c.Value] = true
+				if ro.verbose {
+					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s until '%s'", log.ColorDebug, log.ColorNone, c.Command, c.Value))
+				}
+			default:
+				if ro.verbose {
+					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] swallowing unrecognized workflow command '%s'", log.ColorDebug, log.ColorNone, c.Command))
+				}
+			}
+			return make([]byte, 0)
+		}
 	)
 
 	githubEnvFile, err := createFile(githubEnv)
@@ -148,13 +208,12 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		if es.Run != "" {
 			switch es.Shell {
 			case "/bin/bash", "bash":
-				spec.Entrypoint = []string{"/bin/bash", "-c"}
+				spec.Entrypoint = []string{"/bin/bash", "-c", es.Run}
 			case "/bin/sh", "sh", "":
-				spec.Entrypoint = []string{"/bin/sh", "-c"}
+				spec.Entrypoint = []string{"/bin/sh", "-c", es.Run}
 			default:
 				return ctx, nil, fmt.Errorf("unsupported shell '%s'", es.Shell)
 			}
-			spec.Cmd = []string{es.Run}
 		} else {
 			spec.Entrypoint = es.Entrypoint
 			spec.Cmd = es.Cmd
@@ -207,11 +266,11 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 
 	var (
 		outbuf = new(bytes.Buffer)
-		errbuf = ro.stderr
+		errbuf = actions.NewCommandWriter(commandWriterCallback, ro.stderr)
 		eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 	)
 	if !s.IsStdoutResponse() {
-		eopts[0] = runtime.WithStreams(os.Stdin, ro.stdout, errbuf)
+		eopts[0] = runtime.WithStreams(os.Stdin, actions.NewCommandWriter(commandWriterCallback, ro.stdout), errbuf)
 	}
 	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running step '%s'\n", log.ColorInfo, log.ColorNone, s.GetID())))
 	if err = runSpec(ctx, r, spec, ro, eopts); err != nil {
@@ -231,60 +290,52 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 				return ctx, nil, err
 			}
 
-			rs, err := NewStepFromMetadata(action, ghctx.GitHubContext.ActionPath)
+			steps, err := NewStepsFromMetadata(action, ghctx.GitHubContext.ActionPath)
 			if err != nil {
 				return ctx, nil, err
-			}
-
-			es, err = expandStep(es.Merge(rs).Canonical(), ghctx)
-			if err != nil {
-				return ctx, nil, err
-			}
-
-			spec.Image = es.Image
-			if ro.actionImage != "" && (action.Runs.Using == "node12" || action.Runs.Using == "node16") {
-				spec.Image = ro.actionImage
-			}
-
-			spec.Entrypoint = es.Entrypoint
-			spec.Cmd = es.Cmd
-
-			for envVar, val := range es.With {
-				spec.Env = append(
-					spec.Env,
-					fmt.Sprintf(
-						"INPUT_%s=%s",
-						strings.ToUpper(strings.ReplaceAll(envVar, "-", "_")),
-						val,
-					),
-				)
-			}
-
-			commandWriterCallback := func(c *actions.Command) []byte {
-				switch c.Command {
-				case actions.CommandError:
-					return []byte(fmt.Sprintf("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, c.Value))
-				case actions.CommandWarning:
-					return []byte(fmt.Sprintf("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, c.Value))
-				case actions.CommandNotice:
-					return []byte(fmt.Sprintf("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, c.Value))
-				case actions.CommandDebug:
-					if ro.verbose {
-						return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
-					}
-				}
-				return make([]byte, 0)
 			}
 
 			var (
 				outbuf = actions.NewCommandWriter(commandWriterCallback, ro.stdout)
-				errbuf = actions.NewCommandWriter(commandWriterCallback, ro.stderr)
 				eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 			)
-			ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running action '%s'\n", log.ColorInfo, log.ColorNone, s.Uses)))
-			err = runSpec(ctx, r, spec, ro, eopts)
-			if err != nil {
-				return ctx, nil, err
+			for _, step := range steps {
+				es, err = expandStep(es.Merge(&step).Canonical(), ghctx)
+				if err != nil {
+					return ctx, nil, err
+				}
+
+				// TODO recurse for composite actions?
+				// if es.Uses != "" {
+				// 	if ctx, _, err := runStep(ctx, r, es, ro); err != nil {
+				// 		return ctx, nil, err
+				// 	}
+				// }
+
+				spec.Image = es.Image
+				if ro.actionImage != "" && (action.Runs.Using == "node12" || action.Runs.Using == "node16") {
+					spec.Image = ro.actionImage
+				}
+
+				spec.Entrypoint = es.Entrypoint
+				spec.Cmd = es.Cmd
+
+				for envVar, val := range es.With {
+					spec.Env = append(
+						spec.Env,
+						fmt.Sprintf(
+							"INPUT_%s=%s",
+							strings.ToUpper(strings.ReplaceAll(envVar, "-", "_")),
+							val,
+						),
+					)
+				}
+
+				ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running action '%s'\n", log.ColorInfo, log.ColorNone, s.Uses)))
+				err = runSpec(ctx, r, spec, ro, eopts)
+				if err != nil {
+					return ctx, nil, err
+				}
 			}
 		}
 	}

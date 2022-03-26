@@ -1,0 +1,7 @@
+shell: bash
+run: |
+  echo ::debug::test1
+  echo ::stop-commands::token
+  echo ::debug::test2
+  echo ::token::
+  echo ::debug::test3

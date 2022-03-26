@@ -4,7 +4,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: build
-        image: golang:1.17
+        image: golang:1.18-alpine3.15
         run: |
           go build ./cmd/sqnc
   test:
@@ -12,6 +12,6 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: test
-        image: golang:1.17
+        image: golang:1.18-alpine3.15
         run: |
           go test ./...

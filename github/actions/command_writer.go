@@ -1,6 +1,9 @@
 package actions
 
-import "io"
+import (
+	"io"
+	"strings"
+)
 
 type commandWriter struct {
 	callback func(*Command) []byte
@@ -10,15 +13,20 @@ type commandWriter struct {
 var _ io.Writer = &commandWriter{}
 
 func (w *commandWriter) Write(p []byte) (int, error) {
-	if c, err := ParseCommand(p); err == nil {
-		if b := w.callback(c); len(b) == 0 {
-			return len(p), nil
+	for _, line := range strings.Split(string(p), "\n") {
+		if c, err := ParseStringCommand(line); err == nil {
+			if b := w.callback(c); len(b) != 0 {
+				if _, err = w.w.Write(b); err != nil {
+					return len(p), err
+				}
+			}
 		} else {
-			_, err = w.w.Write(b)
-			return len(p), err
+			if _, err := w.w.Write([]byte(line)); err != nil {
+				return len(p), err
+			}
 		}
 	}
-	return w.w.Write(p)
+	return len(p), nil
 }
 
 func NewCommandWriter(callback func(*Command) []byte, w io.Writer) io.Writer {

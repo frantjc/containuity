@@ -166,37 +166,103 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 	return s, d.Decode(s)
 }
 
-// NewStepFromMetadata returns a Step from a given GitHub action
+// NewStepsFromMetadata returns a Step from a given GitHub action
 // that is cloned at the given path
-func NewStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
-	s := &Step{}
-	s.With = map[string]string{}
+func NewStepsFromMetadata(a *actions.Metadata, path string) ([]Step, error) {
+	var (
+		steps = []Step{}
+		with  = map[string]string{}
+	)
 	for inputName, input := range a.Inputs {
-		s.With[inputName] = input.Default
+		with[inputName] = input.Default
 	}
 	switch a.Runs.Using {
-	case "node12":
-		s.Image = node12
-		s.Entrypoint = []string{"node"}
-		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
-	case "node16":
-		s.Image = node16
-		s.Entrypoint = []string{"node"}
-		s.Cmd = []string{filepath.Join(path, a.Runs.Main)}
+	case "node12", "node16":
+		image := node12
+		if a.Runs.Using == "node16" {
+			image = node16
+		}
+		if a.Runs.Pre != "" {
+			steps = append(
+				steps,
+				Step{
+					Image:      image,
+					Entrypoint: []string{"node"},
+					Cmd:        []string{filepath.Join(path, a.Runs.Pre)},
+					With:       with,
+					Env:        a.Runs.Env,
+				},
+			)
+		}
+		if a.Runs.Main != "" {
+			steps = append(
+				steps,
+				Step{
+					Image:      image,
+					Entrypoint: []string{"node"},
+					Cmd:        []string{filepath.Join(path, a.Runs.Main)},
+					With:       with,
+					Env:        a.Runs.Env,
+				},
+			)
+		}
+		if a.Runs.Post != "" {
+			steps = append(
+				steps,
+				Step{
+					Image:      image,
+					Entrypoint: []string{"node"},
+					Cmd:        []string{filepath.Join(path, a.Runs.Post)},
+					With:       with,
+					Env:        a.Runs.Env,
+				},
+			)
+		}
 	case "docker":
 		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
-			s.Image = strings.TrimPrefix(a.Runs.Image, imagePrefix)
-			s.Entrypoint = []string{a.Runs.Entrypoint}
-			s.Cmd = a.Runs.Args
-			s.Env = a.Runs.Env
+			image := strings.TrimPrefix(a.Runs.Image, imagePrefix)
+			if entrypoint := a.Runs.PreEntrypoint; entrypoint != "" {
+				steps = append(
+					steps,
+					Step{
+						Image:      image,
+						Entrypoint: []string{entrypoint},
+						With:       with,
+						Env:        a.Runs.Env,
+					},
+				)
+			}
+			if entrypoint := a.Runs.Entrypoint; entrypoint != "" {
+				steps = append(
+					steps,
+					Step{
+						Image:      image,
+						Entrypoint: []string{entrypoint},
+						Cmd:        a.Runs.Args,
+						With:       with,
+						Env:        a.Runs.Env,
+					},
+				)
+			}
+			if entrypoint := a.Runs.PostEntrypoint; entrypoint != "" {
+				steps = append(
+					steps,
+					Step{
+						Image:      image,
+						Entrypoint: []string{entrypoint},
+						With:       with,
+						Env:        a.Runs.Env,
+					},
+				)
+			}
 		} else {
-			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix '%s'", imagePrefix)
+			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix '%s', got '%s'", imagePrefix, a.Runs.Image)
 		}
 	default:
-		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker'")
+		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker', got '%s'", a.Runs.Using)
 	}
 
-	return s, nil
+	return steps, nil
 }
 
 // StepOut is the optional parsable output of a Step

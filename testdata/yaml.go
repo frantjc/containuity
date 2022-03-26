@@ -35,4 +35,10 @@ var (
 
 	//go:embed job_container_job.yml
 	JobContainerJob []byte
+
+	//go:embed set_output_job.yml
+	SetOutputJob []byte
+
+	//go:embed stop_commands_step.yml
+	StopCommandsStep []byte
 )
