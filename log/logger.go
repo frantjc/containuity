@@ -73,7 +73,7 @@ func fmtNoOp(i interface{}) string {
 }
 
 func fmtMsg(i interface{}) string {
-	return fmt.Sprintf("%s", i)
+	return fmt.Sprint(i)
 }
 
 func fmtField(i interface{}) string {

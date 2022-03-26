@@ -34,7 +34,11 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		containerWorkdir = "/sqnc"
 		ghctx            *actions.GlobalContext
 		err              error
+		logout           = log.New(ro.stdout)
+		logerr           = log.New(ro.stderr)
 	)
+	logout.SetVerbose(ro.verbose)
+	logerr.SetVerbose(ro.verbose)
 	if ghctx, err = actions.Context(ctx); err != nil {
 		copts := []actions.CtxOpt{
 			actions.WithToken(ro.githubToken),
@@ -188,12 +192,12 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		spec.Env = append(spec.Env, env.ToArr("PATH", githubPathStr)...)
 	}
 
-	// handle uses: docker://some/action:latest
-	// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-docker-hub-action
 	if strings.HasPrefix(es.Uses, imagePrefix) {
+		// handle uses: docker://some/action:latest
+		// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-docker-hub-action
 		spec.Image = strings.TrimPrefix(es.Uses, imagePrefix)
-		// handle uses: actions/checkout@v2
 	} else if es.Uses != "" {
+		// handle uses: actions/checkout@v2
 		action, err := actions.ParseReference(es.Uses)
 		if err != nil {
 			return ctx, nil, err
@@ -209,7 +213,10 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 			Destination: ghctx.GitHubContext.ActionPath,
 			Type:        runtime.MountTypeBind,
 		})
-		spec.Env = append(spec.Env, fmt.Sprintf("%s=%s/%s", actions.EnvVarActionRepository, action.Owner(), action.Repository()))
+		spec.Env = append(
+			spec.Env,
+			fmt.Sprintf("%s=%s/%s", actions.EnvVarActionRepository, action.Owner(), action.Repository()),
+		)
 	} else {
 		if es.Image != "" {
 			spec.Image = es.Image
@@ -244,7 +251,11 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		ghEnv  = filepath.Join(containerWorkdir, "github", "env")
 		ghPath = filepath.Join(containerWorkdir, "github", "path")
 	)
-	spec.Env = append(spec.Env, fmt.Sprintf("%s=%s", actions.EnvVarEnv, ghEnv), fmt.Sprintf("%s=%s", actions.EnvVarPath, ghPath))
+	spec.Env = append(
+		spec.Env,
+		fmt.Sprintf("%s=%s", actions.EnvVarEnv, ghEnv),
+		fmt.Sprintf("%s=%s", actions.EnvVarPath, ghPath),
+	)
 	// these are _files_, NOT directories
 	// now that we have done all of the set up for the directories we
 	// intend to bind, we can add the files we intend to bind
@@ -286,8 +297,8 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 	if !s.IsStdoutResponse() {
 		eopts[0] = runtime.WithStreams(os.Stdin, actions.NewCommandWriter(commandWriterCallback, ro.stdout), errbuf)
 	}
-	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running step '%s'\n", log.ColorInfo, log.ColorNone, s.GetID())))
-	if err = runSpec(ctx, r, spec, ro, eopts); err != nil {
+	logout.Infof("[%sSQNC%s] running step '%s'", log.ColorInfo, log.ColorNone, s.GetID())
+	if err = runSpec(ctx, r, spec, ro, logout, logerr, eopts); err != nil {
 		return ctx, nil, err
 	}
 
@@ -310,7 +321,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 			}
 
 			var (
-				outbuf = actions.NewCommandWriter(commandWriterCallback, ro.stdout)
+				outbuf = actions.NewCommandWriter(commandWriterCallback, logout)
 				eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 			)
 			for _, step := range steps {
@@ -346,8 +357,8 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 					)
 				}
 
-				ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running action '%s'\n", log.ColorInfo, log.ColorNone, s.Uses)))
-				err = runSpec(ctx, r, spec, ro, eopts)
+				logout.Infof("[%sSQNC%s] running action '%s'", log.ColorInfo, log.ColorNone, s.Uses)
+				err = runSpec(ctx, r, spec, ro, logout, logerr, eopts)
 				if err != nil {
 					return ctx, nil, err
 				}
@@ -378,15 +389,13 @@ func expandStep(s *Step, ctx *actions.GlobalContext) (*Step, error) {
 	return es, nil
 }
 
-func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, ro *runOpts, opts []runtime.ExecOpt) error {
-	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] pulling image '%s'\n", log.ColorInfo, log.ColorNone, s.Image)))
+func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, ro *runOpts, logout, logerr log.Logger, opts []runtime.ExecOpt) error {
+	logout.Infof("[%sSQNC%s] pulling image '%s'", log.ColorInfo, log.ColorNone, s.Image)
 	image, err := r.PullImage(ctx, s.Image)
 	if err != nil {
 		return err
 	}
-	if ro.verbose {
-		ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC:DBG%s] finished pulling image '%s'\n", log.ColorDebug, log.ColorNone, image.Ref())))
-	}
+	logout.Debugf("[%sSQNC:DBG%s] finished pulling image '%s'", log.ColorDebug, log.ColorNone, image.Ref())
 
 	container, err := r.CreateContainer(ctx, s)
 	if err != nil {
@@ -402,8 +411,7 @@ func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, ro *runOpt
 }
 
 func createFile(name string) (*os.File, error) {
-	err := os.MkdirAll(filepath.Dir(name), 0777)
-	if err != nil {
+	if err := os.MkdirAll(filepath.Dir(name), 0777); err != nil {
 		return nil, err
 	}
 
