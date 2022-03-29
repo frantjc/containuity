@@ -32,6 +32,13 @@ type Output struct {
 	Description string `json:"output,omitempty" yaml:"output,omitempty"`
 }
 
+const (
+	RunsUsingDocker    = "docker"
+	RunsUsingNode12    = "node12"
+	RunsUsingNode16    = "node16"
+	RunsUsingComposite = "composite"
+)
+
 type Runs struct {
 	Plugin         string            `json:"plugin,omitempty" yaml:"plugin,omitempty"`
 	Using          string            `json:"using,omitempty" yaml:"using,omitempty"`
@@ -44,6 +51,7 @@ type Runs struct {
 	PostEntrypoint string            `json:"post-entrypoint,omitempty" yaml:"post-entrypoint,omitempty"`
 	Args           []string          `json:"args,omitempty" yaml:"args,omitempty"`
 	Env            map[string]string `json:"env,omitempty" yaml:"env,omitempty"`
+	Steps          []*Step           `json:"steps,omitempty" yaml:"steps,omitempty"`
 }
 
 type Step struct {

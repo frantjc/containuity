@@ -13,26 +13,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type globalContextKey struct{}
-
-func WithContext(ctx context.Context, gctx *GlobalContext) context.Context {
-	return context.WithValue(ctx, globalContextKey{}, *gctx)
-}
-
-func ContextFromEnv(ctx context.Context) context.Context {
-	// TODO
-	gctx := &GlobalContext{}
-	return WithContext(ctx, gctx)
-}
-
-func Context(ctx context.Context) (*GlobalContext, error) {
-	gctx, ok := ctx.Value(globalContextKey{}).(GlobalContext)
-	if !ok {
-		return nil, fmt.Errorf("GlobalContext not found")
-	}
-	return &gctx, nil
-}
-
 type GlobalContext struct {
 	GitHubContext  *GitHubContext
 	EnvContext     map[string]string
@@ -327,8 +307,13 @@ func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*Glob
 	}
 
 	c.GitHubContext.Sha = ref.Hash().String()
-	c.GitHubContext.RefName = ref.String()
-	c.GitHubContext.Ref = ref.String()
+	if shaBranch := strings.Split(ref.String(), " "); len(shaBranch) > 1 {
+		c.GitHubContext.RefName = strings.TrimPrefix(shaBranch[1], "refs/heads/")
+		c.GitHubContext.Ref = shaBranch[1]
+	} else {
+		c.GitHubContext.RefName = ref.Hash().String()
+		c.GitHubContext.Ref = ref.Hash().String()
+	}
 
 	if ref.Name().IsBranch() {
 		currentBranch = ref.Name().Short()

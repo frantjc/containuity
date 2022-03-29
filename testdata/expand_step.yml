@@ -1,7 +1,7 @@
 shell: bash
 run: |
-  if [ $GITHUB_TOKEN == ${{ secrets.GITHUB_TOKEN }} ]; then
-    echo expanded
+  if [ "$GITHUB_TOKEN" == "${{ secrets.GITHUB_TOKEN }}" ]; then
+    echo "::notice::expanded"
   else
-    echo did not expand
+    echo "::error::did not expand"
   fi

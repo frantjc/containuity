@@ -36,6 +36,9 @@ var (
 	//go:embed job_container_job.yml
 	JobContainerJob []byte
 
+	//go:embed save_state_job.yml
+	SaveStateJob []byte
+
 	//go:embed set_output_job.yml
 	SetOutputJob []byte
 

@@ -3,8 +3,12 @@ package workflow
 import (
 	"bytes"
 	"io"
+	"net/url"
 
 	"github.com/frantjc/sequence/conf"
+	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/log"
+	"github.com/frantjc/sequence/runtime"
 )
 
 type runOpts struct {
@@ -13,6 +17,7 @@ type runOpts struct {
 	job         *Job
 	workflow    *Workflow
 	githubToken string
+	githubURL   *url.URL
 	stdout      io.Writer
 	stderr      io.Writer
 	verbose     bool
@@ -20,6 +25,10 @@ type runOpts struct {
 	runnerImage string
 	workdir     string
 	secrets     map[string]string
+	gctx        *actions.GlobalContext
+	logout      log.Logger
+	logerr      log.Logger
+	specOpts    []runtime.SpecOpt
 }
 
 type RunOpt func(*runOpts) error
@@ -52,7 +61,7 @@ func WithWorkflow(w *Workflow) RunOpt {
 		ro.workflow = w
 		if ro.job != nil && ro.jobName == "" {
 			for name, job := range ro.workflow.Jobs {
-				if ro.job == &job {
+				if ro.job == job {
 					ro.jobName = name
 				}
 			}
@@ -65,6 +74,21 @@ func WithGitHubToken(token string) RunOpt {
 	return func(ro *runOpts) error {
 		ro.githubToken = token
 		return nil
+	}
+}
+
+func WithGitHubURL(githubURL *url.URL) RunOpt {
+	return func(ro *runOpts) error {
+		ro.githubURL = githubURL
+		return nil
+	}
+}
+
+func WithGitHubURLString(githubURL string) RunOpt {
+	return func(ro *runOpts) error {
+		var err error
+		ro.githubURL, err = url.Parse(githubURL)
+		return err
 	}
 }
 
@@ -147,6 +171,11 @@ func newRunOpts(opts ...RunOpt) (*runOpts, error) {
 			return nil, err
 		}
 	}
+
+	ro.logout = log.New(ro.stdout)
+	ro.logerr = log.New(ro.stderr)
+	ro.logout.SetVerbose(ro.verbose)
+	ro.logerr.SetVerbose(ro.verbose)
 
 	return ro, nil
 }

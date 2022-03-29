@@ -27,6 +27,7 @@ func (c *workflowClient) RunWorkflow(ctx context.Context, in *api.RunWorkflowReq
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithWorkdir(conf.RootDir),
 			workflow.WithSecrets(conf.Secrets),
+			workflow.WithGitHubURL(conf.GitHub.URL),
 		}
 	)
 	if err != nil {

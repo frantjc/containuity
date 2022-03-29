@@ -39,7 +39,7 @@ func JobToProtoJob(j *workflow.Job) *types.Job {
 	steps := make([]*types.Step, len(j.Steps))
 
 	for i, s := range j.Steps {
-		steps[i] = StepToProtoStep(&s)
+		steps[i] = StepToProtoStep(s)
 	}
 
 	container := &types.Job_Container{}
@@ -61,7 +61,7 @@ func WorkflowToProtoWorkflow(w *workflow.Workflow) *types.Workflow {
 	jobs := make(map[string]*types.Job, len(w.Jobs))
 
 	for i, j := range w.Jobs {
-		jobs[i] = JobToProtoJob(&j)
+		jobs[i] = JobToProtoJob(j)
 	}
 
 	return &types.Workflow{

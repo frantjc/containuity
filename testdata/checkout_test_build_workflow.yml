@@ -6,6 +6,7 @@ jobs:
       - name: build
         image: golang:1.18-alpine3.15
         run: |
+          echo "::debug::running '$(which go) build ./cmd/sqnc'"
           go build ./cmd/sqnc
   test:
     steps:
@@ -14,4 +15,5 @@ jobs:
       - name: test
         image: golang:1.18-alpine3.15
         run: |
+          echo "::debug::running '$(which go) test ./...'"
           go test ./...

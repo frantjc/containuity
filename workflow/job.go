@@ -38,13 +38,13 @@ type Job struct {
 	Outputs     map[string]string `json:"outputs,omitempty" yaml:"outputs,omitempty"`
 	Env         map[string]string `json:"env,omitempty" yaml:"env,omitempty"`
 	Container   interface{}       `json:"container,omitempty" yaml:"container,omitempty"`
-	Steps       []Step            `json:"steps,omitempty" yaml:"steps,omitempty"`
+	Steps       []*Step           `json:"steps,omitempty" yaml:"steps,omitempty"`
 }
 
 func (j *Job) GetStep(id string) (*Step, error) {
 	for _, step := range j.Steps {
 		if step.GetID() == id {
-			return &step, nil
+			return step, nil
 		}
 	}
 	return nil, fmt.Errorf("job has no step with name or id %s", id)

@@ -2,8 +2,8 @@ package workflow
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/runtime"
 )
@@ -14,7 +14,17 @@ func RunWorkflow(ctx context.Context, r runtime.Runtime, w *Workflow, opts ...Ru
 		return err
 	}
 
-	ro.stdout.Write([]byte(fmt.Sprintf("[%sSQNC%s] running workflow '%s'\n", log.ColorInfo, log.ColorNone, w.Name)))
+	ctxopts := []actions.CtxOpt{
+		actions.WithToken(ro.githubToken),
+		actions.WithSecrets(ro.secrets),
+		actions.WithWorkdir(containerWorkdir),
+	}
+	ro.gctx, err = actions.NewContextFromPath(ctx, ro.repository, ctxopts...)
+	if err != nil {
+		return err
+	}
+
+	ro.logout.Infof("[%sSQNC%s] running workflow '%s'", log.ColorInfo, log.ColorNone, w.Name)
 	for name, job := range w.Jobs {
 		jobName := name
 		if job.Name != "" {
@@ -22,7 +32,7 @@ func RunWorkflow(ctx context.Context, r runtime.Runtime, w *Workflow, opts ...Ru
 		}
 
 		for _, opt := range []RunOpt{
-			WithJob(&job),
+			WithJob(job),
 			WithJobName(jobName),
 		} {
 			err = opt(ro)
@@ -31,7 +41,8 @@ func RunWorkflow(ctx context.Context, r runtime.Runtime, w *Workflow, opts ...Ru
 			}
 		}
 
-		if ctx, err = runJob(ctx, r, &job, ro); err != nil {
+		ro.logout.Infof("[%sSQNC%s] running job '%s'", log.ColorInfo, log.ColorNone, jobName)
+		if err = runJob(ctx, r, job, ro); err != nil {
 			return err
 		}
 	}

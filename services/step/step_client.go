@@ -27,6 +27,7 @@ func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...g
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithWorkdir(conf.RootDir),
 			workflow.WithSecrets(conf.Secrets),
+			workflow.WithGitHubURL(conf.GitHub.URL),
 		}
 	)
 	if err != nil {
@@ -53,7 +54,7 @@ func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...g
 
 	go func() {
 		defer stream.CloseSend()
-		if ctx, _, err = workflow.RunStep(ctx, c.runtime, convert.ProtoStepToStep(in.Step), opts...); err != nil {
+		if err = workflow.RunStep(ctx, c.runtime, convert.ProtoStepToStep(in.Step), opts...); err != nil {
 			stream.SendErr(err)
 		}
 	}()

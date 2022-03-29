@@ -9,12 +9,10 @@ import (
 	"strings"
 )
 
-const defaultPath = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
 func PathFromReader(r io.Reader) (string, error) {
 	var (
 		lines   []string
-		path    = defaultPath
+		path    = ""
 		scanner = bufio.NewScanner(r)
 	)
 	for scanner.Scan() {

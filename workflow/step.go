@@ -24,8 +24,8 @@ const (
 
 // Step is a user's primary way of interacting with sequence;
 // a Step defines a containerized command to be ran
-// (or two if the Step is using a GitHub action from a GitHub repository:
-//  first to clone the action and get its metadata, second to execute it)
+// (or multiple if the Step is using a GitHub action from a GitHub repository:
+//  first to clone the action and get its metadata, then to execute it)
 type Step struct {
 	ID    string            `json:"id,omitempty" yaml:"id,omitempty"`
 	Name  string            `json:"name,omitempty" yaml:"name,omitempty"`
@@ -149,6 +149,8 @@ func (s *Step) Canonical() *Step {
 	return s
 }
 
+// NewStepFromFile parses and returns a Step
+// from the given file name
 func NewStepFromFile(name string) (*Step, error) {
 	f, err := os.Open(name)
 	if err != nil {
@@ -166,103 +168,146 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 	return s, d.Decode(s)
 }
 
-// NewStepsFromMetadata returns a Step from a given GitHub action
-// that is cloned at the given path
-func NewStepsFromMetadata(a *actions.Metadata, path string) ([]Step, error) {
-	var (
-		steps = []Step{}
-		with  = map[string]string{}
-	)
-	for inputName, input := range a.Inputs {
+func withFromInputs(inputs map[string]*actions.Input) map[string]string {
+	with := map[string]string{}
+	for inputName, input := range inputs {
 		with[inputName] = input.Default
 	}
+
+	return with
+}
+
+// NewPreStepFromMetadata returns a 'pre' Step from a given GitHub action
+// that is cloned at the given path
+func NewPreStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
+	return newPreStepFromMetadataWith(a, path, withFromInputs(a.Inputs))
+}
+
+func newPreStepFromMetadataWith(a *actions.Metadata, path string, with map[string]string) (*Step, error) {
 	switch a.Runs.Using {
-	case "node12", "node16":
+	case actions.RunsUsingNode12, actions.RunsUsingNode16:
 		image := node12
-		if a.Runs.Using == "node16" {
+		if a.Runs.Using == actions.RunsUsingNode16 {
 			image = node16
 		}
+
 		if a.Runs.Pre != "" {
-			steps = append(
-				steps,
-				Step{
-					Image:      image,
-					Entrypoint: []string{"node"},
-					Cmd:        []string{filepath.Join(path, a.Runs.Pre)},
-					With:       with,
-					Env:        a.Runs.Env,
-				},
-			)
+			return &Step{
+				Image:      image,
+				Entrypoint: []string{"node"},
+				Cmd:        []string{filepath.Join(path, a.Runs.Pre)},
+				With:       with,
+				Env:        a.Runs.Env,
+			}, nil
 		}
-		if a.Runs.Main != "" {
-			steps = append(
-				steps,
-				Step{
-					Image:      image,
-					Entrypoint: []string{"node"},
-					Cmd:        []string{filepath.Join(path, a.Runs.Main)},
-					With:       with,
-					Env:        a.Runs.Env,
-				},
-			)
-		}
-		if a.Runs.Post != "" {
-			steps = append(
-				steps,
-				Step{
-					Image:      image,
-					Entrypoint: []string{"node"},
-					Cmd:        []string{filepath.Join(path, a.Runs.Post)},
-					With:       with,
-					Env:        a.Runs.Env,
-				},
-			)
-		}
-	case "docker":
+	case actions.RunsUsingDocker:
 		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
 			image := strings.TrimPrefix(a.Runs.Image, imagePrefix)
 			if entrypoint := a.Runs.PreEntrypoint; entrypoint != "" {
-				steps = append(
-					steps,
-					Step{
-						Image:      image,
-						Entrypoint: []string{entrypoint},
-						With:       with,
-						Env:        a.Runs.Env,
-					},
-				)
-			}
-			if entrypoint := a.Runs.Entrypoint; entrypoint != "" {
-				steps = append(
-					steps,
-					Step{
-						Image:      image,
-						Entrypoint: []string{entrypoint},
-						Cmd:        a.Runs.Args,
-						With:       with,
-						Env:        a.Runs.Env,
-					},
-				)
-			}
-			if entrypoint := a.Runs.PostEntrypoint; entrypoint != "" {
-				steps = append(
-					steps,
-					Step{
-						Image:      image,
-						Entrypoint: []string{entrypoint},
-						With:       with,
-						Env:        a.Runs.Env,
-					},
-				)
+				return &Step{
+					Image:      image,
+					Entrypoint: []string{entrypoint},
+					With:       with,
+					Env:        a.Runs.Env,
+				}, nil
 			}
 		} else {
-			return nil, fmt.Errorf("action runs.using 'docker' only implemented for runs.image with prefix '%s', got '%s'", imagePrefix, a.Runs.Image)
+			return nil, fmt.Errorf("action runs.using '%s' only implemented for runs.image with prefix '%s', got '%s'", actions.RunsUsingDocker, imagePrefix, a.Runs.Image)
 		}
 	default:
-		return nil, fmt.Errorf("action runs.using only implemented for 'node12', 'node16' and 'docker', got '%s'", a.Runs.Using)
+		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", a.Runs.Using, actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16)
 	}
 
-	return steps, nil
+	return nil, nil
+}
+
+// NewMainStepFromMetadata returns a main Step from a given GitHub action
+// that is cloned at the given path
+func NewMainStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
+	return newMainStepFromMetadataWith(a, path, withFromInputs(a.Inputs))
+}
+
+func newMainStepFromMetadataWith(a *actions.Metadata, path string, with map[string]string) (*Step, error) {
+	switch a.Runs.Using {
+	case actions.RunsUsingNode12, actions.RunsUsingNode16:
+		image := node12
+		if a.Runs.Using == actions.RunsUsingNode16 {
+			image = node16
+		}
+
+		if a.Runs.Main != "" {
+			return &Step{
+				Image:      image,
+				Entrypoint: []string{"node"},
+				Cmd:        []string{filepath.Join(path, a.Runs.Main)},
+				With:       with,
+				Env:        a.Runs.Env,
+			}, nil
+		}
+	case actions.RunsUsingDocker:
+		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
+			image := strings.TrimPrefix(a.Runs.Image, imagePrefix)
+			if entrypoint := a.Runs.Entrypoint; entrypoint != "" {
+				return &Step{
+					Image:      image,
+					Entrypoint: []string{entrypoint},
+					Cmd:        a.Runs.Args,
+					With:       with,
+					Env:        a.Runs.Env,
+				}, nil
+			}
+		} else {
+			return nil, fmt.Errorf("action runs.using '%s' only implemented for runs.image with prefix '%s', got '%s'", actions.RunsUsingDocker, imagePrefix, a.Runs.Image)
+		}
+	default:
+		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", a.Runs.Using, actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16)
+	}
+
+	return nil, nil
+}
+
+// NewPostStepFromMetadata returns a post Step from a given GitHub action
+// that is cloned at the given path
+func NewPostStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
+	return newPostStepFromMetadataWith(a, path, withFromInputs(a.Inputs))
+}
+
+func newPostStepFromMetadataWith(a *actions.Metadata, path string, with map[string]string) (*Step, error) {
+	switch a.Runs.Using {
+	case actions.RunsUsingNode12, actions.RunsUsingNode16:
+		image := node12
+		if a.Runs.Using == actions.RunsUsingNode16 {
+			image = node16
+		}
+
+		if a.Runs.Post != "" {
+			return &Step{
+				Image:      image,
+				Entrypoint: []string{"node"},
+				Cmd:        []string{filepath.Join(path, a.Runs.Post)},
+				With:       with,
+				Env:        a.Runs.Env,
+			}, nil
+		}
+	case actions.RunsUsingDocker:
+		if strings.HasPrefix(a.Runs.Image, imagePrefix) {
+			image := strings.TrimPrefix(a.Runs.Image, imagePrefix)
+			if entrypoint := a.Runs.PostEntrypoint; entrypoint != "" {
+				return &Step{
+					Image:      image,
+					Entrypoint: []string{entrypoint},
+					With:       with,
+					Env:        a.Runs.Env,
+				}, nil
+			}
+		} else {
+			return nil, fmt.Errorf("action runs.using '%s' only implemented for runs.image with prefix '%s', got '%s'", actions.RunsUsingDocker, imagePrefix, a.Runs.Image)
+		}
+	default:
+		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", a.Runs.Using, actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16)
+	}
+
+	return nil, nil
 }
 
 // StepOut is the optional parsable output of a Step
@@ -272,4 +317,8 @@ func NewStepsFromMetadata(a *actions.Metadata, path string) ([]Step, error) {
 type StepOut struct {
 	Metadata map[string]string      `json:"metadata,omitempty"`
 	Version  map[string]interface{} `json:"version,omitempty"`
+}
+
+func (o *StepOut) GetActionMetadata() string {
+	return o.Metadata[ActionMetadataKey]
 }

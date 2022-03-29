@@ -3,7 +3,6 @@ package workflow
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,97 +12,145 @@ import (
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/env"
 	"github.com/frantjc/sequence/log"
-	"github.com/frantjc/sequence/meta"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 var readonly = []string{runtime.MountOptReadOnly}
 
-func RunStep(ctx context.Context, r runtime.Runtime, s *Step, opts ...RunOpt) (context.Context, *StepOut, error) {
+func RunStep(ctx context.Context, r runtime.Runtime, s *Step, opts ...RunOpt) error {
 	ro, err := newRunOpts(opts...)
 	if err != nil {
-		return ctx, nil, err
+		return err
 	}
 
-	return runStep(ctx, r, s, ro)
-}
-
-func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (context.Context, *StepOut, error) {
 	var (
-		containerWorkdir = "/sqnc"
-		ghctx            *actions.GlobalContext
-		err              error
-		logout           = log.New(ro.stdout)
-		logerr           = log.New(ro.stderr)
-	)
-	logout.SetVerbose(ro.verbose)
-	logerr.SetVerbose(ro.verbose)
-	if ghctx, err = actions.Context(ctx); err != nil {
-		copts := []actions.CtxOpt{
+		_       *StepOut
+		ctxopts = []actions.CtxOpt{
 			actions.WithToken(ro.githubToken),
 			actions.WithSecrets(ro.secrets),
 			actions.WithWorkdir(containerWorkdir),
 			actions.WithJobName(ro.jobName),
 		}
-		if ghctx, err = actions.NewContextFromPath(ctx, ro.repository, copts...); err != nil {
-			return ctx, nil, err
+	)
+	ro.gctx, err = actions.NewContextFromPath(ctx, ro.repository, ctxopts...)
+	if err != nil {
+		return err
+	}
+
+	if s.Uses != "" {
+		expandedStep, err := expandStep(s.Canonical(), ro.gctx)
+		if err != nil {
+			return err
+		}
+
+		if metadata, reference, ro, err := runStepSetup(ctx, r, expandedStep, ro); err != nil {
+			return err
+		} else if metadata != nil && reference != nil {
+			ro.specOpts = append(ro.specOpts, runtime.WithMounts(
+				specs.Mount{
+					Source:      getHostActionPath(reference, ro),
+					Destination: ro.gctx.GitHubContext.ActionPath,
+					Type:        runtime.MountTypeBind,
+				},
+			))
+			with := withFromInputs(metadata.Inputs)
+			if preStep, err := newPreStepFromMetadataWith(metadata, ro.gctx.GitHubContext.ActionPath, with); err != nil {
+				return err
+			} else if preStep != nil {
+				if ro.actionImage != "" {
+					preStep.Image = ro.actionImage
+				}
+				if expandedStep.ID != "" {
+					preStep.ID = fmt.Sprintf("Pre %s", expandedStep.ID)
+				}
+				if expandedStep.Name != "" {
+					preStep.Name = fmt.Sprintf("Pre %s", expandedStep.Name)
+				}
+
+				expandedPreStep, err := expandStep(preStep.Canonical(), ro.gctx)
+				if err != nil {
+					return err
+				}
+
+				ro.logout.Debugf("[%sSQNC:DBG%s] running action pre step '%s'", log.ColorDebug, log.ColorNone, expandedPreStep.GetID())
+				if _, ro, err = runStep(ctx, r, expandedPreStep, ro); err != nil {
+					return err
+				}
+			}
+
+			if mainStep, err := newMainStepFromMetadataWith(metadata, ro.gctx.GitHubContext.ActionPath, with); err != nil {
+				return err
+			} else if mainStep != nil {
+				if ro.actionImage != "" {
+					mainStep.Image = ro.actionImage
+				}
+				mainStep.ID = expandedStep.ID
+				mainStep.Name = expandedStep.Name
+
+				expandedMainStep, err := expandStep(mainStep.Canonical(), ro.gctx)
+				if err != nil {
+					return err
+				}
+
+				ro.logout.Debugf("[%sSQNC:DBG%s] running action main step '%s'", log.ColorDebug, log.ColorNone, expandedMainStep.GetID())
+				if _, ro, err = runStep(ctx, r, expandedMainStep, ro); err != nil {
+					return err
+				}
+			}
+
+			if postStep, err := newPostStepFromMetadataWith(metadata, ro.gctx.GitHubContext.ActionPath, with); err != nil {
+				return err
+			} else if postStep != nil {
+				if ro.actionImage != "" {
+					postStep.Image = ro.actionImage
+				}
+				if expandedStep.ID != "" {
+					postStep.ID = fmt.Sprintf("Post %s", expandedStep.ID)
+				}
+				if expandedStep.Name != "" {
+					postStep.Name = fmt.Sprintf("Post %s", expandedStep.Name)
+				}
+
+				expandedPostStep, err := expandStep(postStep.Canonical(), ro.gctx)
+				if err != nil {
+					return err
+				}
+
+				ro.logout.Debugf("[%sSQNC:DBG%s] running action post step '%s'", log.ColorDebug, log.ColorNone, expandedPostStep.GetID())
+				if _, ro, err = runStep(ctx, r, expandedPostStep, ro); err != nil {
+					return err
+				}
+			}
+		}
+	} else {
+		expandedStep, err := expandStep(s.Canonical(), ro.gctx)
+		if err != nil {
+			return err
+		}
+
+		ro.logout.Debugf("[%sSQNC:DBG%s] running raw step '%s'", log.ColorDebug, log.ColorNone, expandedStep.GetID())
+		if _, ro, err = runStep(ctx, r, expandedStep, ro); err != nil {
+			return err
 		}
 	}
 
-	es, err := expandStep(s.Canonical(), ghctx)
-	if err != nil {
-		return ctx, nil, err
-	}
+	return nil
+}
 
-	if err = actions.WithInputs(es.With)(ghctx); err != nil {
-		return ctx, nil, err
+func runStep(ctx context.Context, r runtime.Runtime, expandedStep *Step, ro *runOpts) (*StepOut, *runOpts, error) {
+	if expandedStep.Uses != "" {
+		return nil, nil, fmt.Errorf("steps with uses must be setup and shed their uses before being ran")
 	}
 
 	var (
 		// generate a unique, reproducible, directory-name-compliant ID from the current context
 		// so that steps that are a part of the same job share the same mounts
-		id = base64.StdEncoding.EncodeToString(
-			[]byte(fmt.Sprint(ro.repository, ro.workflow.Name, ro.jobName)),
-		)
-		workdirid  = filepath.Join(ro.workdir, id)
-		githubEnv  = filepath.Join(workdirid, "github", "env")
-		githubPath = filepath.Join(workdirid, "github", "path")
-		spec       = &runtime.Spec{
-			Image:      ro.runnerImage,
-			Cwd:        ghctx.GitHubContext.Workspace,
-			Privileged: es.Privileged,
-			Env: append(
-				ghctx.Arr(),
-				"SEQUENCE=true",
-				"SQNC=true",
-				"DEBIAN_FRONTEND=noninteractive",
-				"ACCEPT_EULA=Y",
-			),
-			Mounts: []specs.Mount{
-				{
-					Source:      "/etc/ssl",
-					Destination: "/etc/ssl",
-					Type:        runtime.MountTypeBind,
-					Options:     readonly,
-				},
-				{
-					Source:      filepath.Join(workdirid, "workspace"),
-					Destination: ghctx.GitHubContext.Workspace,
-					Type:        runtime.MountTypeBind,
-				},
-				{
-					Source:      filepath.Join(workdirid, "runner", "temp"),
-					Destination: ghctx.RunnerContext.Temp,
-					Type:        runtime.MountTypeBind,
-				},
-				{
-					Source:      filepath.Join(workdirid, "runner", "toolcache"),
-					Destination: ghctx.RunnerContext.ToolCache,
-					Type:        runtime.MountTypeBind,
-				},
-			},
-		}
+		stepID                = getID(ro)
+		stepWorkdir           = getHostWorkdir(stepID, ro)
+		githubEnv             = getHostGitHubEnvFilepath(stepWorkdir)
+		githubPath            = getHostGitHubPathFilepath(stepWorkdir)
+		spec                  = getDefaultSpec(ro.gctx, stepWorkdir, expandedStep.Privileged, ro)
 		echo                  = false
 		stopCommandsTokens    = map[string]bool{}
 		commandWriterCallback = func(c *actions.Command) []byte {
@@ -134,23 +181,28 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 					return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, c.Value))
 				}
 			case actions.CommandSetOutput:
-				if stepContext, ok := ghctx.StepsContext[es.GetID()]; ok {
+				if stepContext, ok := ro.gctx.StepsContext[expandedStep.GetID()]; ok {
 					if stepContext.Outputs == nil {
 						stepContext.Outputs = map[string]string{}
 					}
 					stepContext.Outputs[c.Parameters["name"]] = c.Value
 				} else {
-					ghctx.StepsContext[es.GetID()] = &actions.StepsContext{
+					ro.gctx.StepsContext[expandedStep.GetID()] = &actions.StepsContext{
 						Outputs: map[string]string{
 							c.Parameters["name"]: c.Value,
 						},
 					}
 				}
 				if ro.verbose || echo {
-					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s for '%s'", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value, es.GetID()))
+					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s for '%s'", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value, expandedStep.GetID()))
 				}
 			case actions.CommandSaveState:
-				spec.Env = append(spec.Env, fmt.Sprintf("STATE_%s=%s", c.Parameters["name"], c.Value))
+				ro.specOpts = append(
+					ro.specOpts,
+					runtime.WithEnv(map[string]string{
+						fmt.Sprintf("STATE_%s", c.Parameters["name"]): c.Value,
+					}),
+				)
 				if ro.verbose || echo {
 					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value))
 				}
@@ -176,7 +228,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 
 	githubEnvFile, err := createFile(githubEnv)
 	if err != nil {
-		return ctx, nil, err
+		return nil, ro, err
 	}
 
 	if githubEnvArr, err := env.ArrFromReader(githubEnvFile); err == nil {
@@ -185,55 +237,35 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 
 	githubPathFile, err := createFile(githubPath)
 	if err != nil {
-		return ctx, nil, err
+		return nil, ro, err
 	}
 
 	if githubPathStr, err := env.PathFromReader(githubPathFile); err == nil && githubPathStr != "" {
-		spec.Env = append(spec.Env, env.ToArr("PATH", githubPathStr)...)
+		// TODO this overrides the default PATH instead of adding to it
+		// spec.Env = append(spec.Env, env.ToArr("PATH", githubPathStr)...)
 	}
 
-	if strings.HasPrefix(es.Uses, imagePrefix) {
-		// handle uses: docker://some/action:latest
+	if strings.HasPrefix(expandedStep.Uses, imagePrefix) {
+		// handle `uses: docker://some/action:latest`
 		// https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-docker-hub-action
-		spec.Image = strings.TrimPrefix(es.Uses, imagePrefix)
-	} else if es.Uses != "" {
-		// handle uses: actions/checkout@v2
-		action, err := actions.ParseReference(es.Uses)
-		if err != nil {
-			return ctx, nil, err
-		}
-
-		spec.Image = meta.Image()
-		spec.Entrypoint = []string{"sqncshim"}
-		spec.Cmd = []string{"plugin", "uses", action.String(), ghctx.GitHubContext.ActionPath}
-		spec.Mounts = append(spec.Mounts, specs.Mount{
-			// actions can be global since every step that uses actions/checkout@v2
-			// expects it to function the same
-			Source:      filepath.Join(ro.workdir, "actions", action.Owner(), action.Repository(), action.Path(), action.Version()),
-			Destination: ghctx.GitHubContext.ActionPath,
-			Type:        runtime.MountTypeBind,
-		})
-		spec.Env = append(
-			spec.Env,
-			fmt.Sprintf("%s=%s/%s", actions.EnvVarActionRepository, action.Owner(), action.Repository()),
-		)
+		spec.Image = strings.TrimPrefix(expandedStep.Uses, imagePrefix)
 	} else {
-		if es.Image != "" {
-			spec.Image = es.Image
+		if expandedStep.Image != "" {
+			spec.Image = expandedStep.Image
 		}
 
-		if es.Run != "" {
-			switch es.Shell {
+		if expandedStep.Run != "" {
+			switch expandedStep.Shell {
 			case "/bin/bash", "bash":
-				spec.Entrypoint = []string{"/bin/bash", "-c", es.Run}
+				spec.Entrypoint = []string{"/bin/bash", "-c", expandedStep.Run}
 			case "/bin/sh", "sh", "":
-				spec.Entrypoint = []string{"/bin/sh", "-c", es.Run}
+				spec.Entrypoint = []string{"/bin/sh", "-c", expandedStep.Run}
 			default:
-				return ctx, nil, fmt.Errorf("unsupported shell '%s'", es.Shell)
+				return nil, ro, fmt.Errorf("unsupported shell '%s'", expandedStep.Shell)
 			}
 		} else {
-			spec.Entrypoint = es.Entrypoint
-			spec.Cmd = es.Cmd
+			spec.Entrypoint = expandedStep.Entrypoint
+			spec.Cmd = expandedStep.Cmd
 		}
 	}
 
@@ -242,7 +274,7 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 	for _, mount := range spec.Mounts {
 		if mount.Type == runtime.MountTypeBind {
 			if err = os.MkdirAll(mount.Source, 0777); err != nil {
-				return ctx, nil, err
+				return nil, ro, err
 			}
 		}
 	}
@@ -294,130 +326,19 @@ func runStep(ctx context.Context, r runtime.Runtime, s *Step, ro *runOpts) (cont
 		errbuf = actions.NewCommandWriter(commandWriterCallback, ro.stderr)
 		eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
 	)
-	if !s.IsStdoutResponse() {
+	if !expandedStep.IsStdoutResponse() {
 		eopts[0] = runtime.WithStreams(os.Stdin, actions.NewCommandWriter(commandWriterCallback, ro.stdout), errbuf)
 	}
-	logout.Infof("[%sSQNC%s] running step '%s'", log.ColorInfo, log.ColorNone, s.GetID())
-	if err = runSpec(ctx, r, spec, ro, logout, logerr, eopts); err != nil {
-		return ctx, nil, err
+	if err = runSpec(ctx, r, spec, ro, eopts); err != nil {
+		return nil, ro, err
 	}
 
 	resp := &StepOut{}
-	if s.IsStdoutResponse() {
+	if expandedStep.IsStdoutResponse() {
 		if err = json.NewDecoder(outbuf).Decode(resp); err != nil {
-			return ctx, nil, err
-		}
-
-		if actionj := resp.Metadata[ActionMetadataKey]; actionj != "" {
-			action := &actions.Metadata{}
-			err := json.Unmarshal([]byte(actionj), action)
-			if err != nil {
-				return ctx, nil, err
-			}
-
-			steps, err := NewStepsFromMetadata(action, ghctx.GitHubContext.ActionPath)
-			if err != nil {
-				return ctx, nil, err
-			}
-
-			var (
-				outbuf = actions.NewCommandWriter(commandWriterCallback, logout)
-				eopts  = []runtime.ExecOpt{runtime.WithStreams(os.Stdin, outbuf, errbuf)}
-			)
-			for _, step := range steps {
-				es, err = expandStep(es.Merge(&step).Canonical(), ghctx)
-				if err != nil {
-					return ctx, nil, err
-				}
-
-				// TODO composite actions can contain other actions,
-				//      so should we recurse for composite actions?
-				// if es.Uses != "" {
-				// 	if ctx, _, err := runStep(ctx, r, es, ro); err != nil {
-				// 		return ctx, nil, err
-				// 	}
-				// }
-
-				spec.Image = es.Image
-				if ro.actionImage != "" && (action.Runs.Using == "node12" || action.Runs.Using == "node16") {
-					spec.Image = ro.actionImage
-				}
-
-				spec.Entrypoint = es.Entrypoint
-				spec.Cmd = es.Cmd
-
-				for envVar, val := range es.With {
-					spec.Env = append(
-						spec.Env,
-						fmt.Sprintf(
-							"INPUT_%s=%s",
-							strings.ToUpper(strings.ReplaceAll(envVar, "-", "_")),
-							val,
-						),
-					)
-				}
-
-				logout.Infof("[%sSQNC%s] running action '%s'", log.ColorInfo, log.ColorNone, s.Uses)
-				err = runSpec(ctx, r, spec, ro, logout, logerr, eopts)
-				if err != nil {
-					return ctx, nil, err
-				}
-			}
+			return nil, ro, err
 		}
 	}
 
-	return actions.WithContext(ctx, ghctx), resp, nil
-}
-
-func expandStep(s *Step, ctx *actions.GlobalContext) (*Step, error) {
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-
-	es := &Step{}
-	err = json.Unmarshal(
-		actions.ExpandBytes(b, func(s string) string {
-			return ctx.Get(s)
-		}),
-		es,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return es, nil
-}
-
-func runSpec(ctx context.Context, r runtime.Runtime, s *runtime.Spec, ro *runOpts, logout, logerr log.Logger, opts []runtime.ExecOpt) error {
-	logout.Infof("[%sSQNC%s] pulling image '%s'", log.ColorInfo, log.ColorNone, s.Image)
-	image, err := r.PullImage(ctx, s.Image)
-	if err != nil {
-		return err
-	}
-	logout.Debugf("[%sSQNC:DBG%s] finished pulling image '%s'", log.ColorDebug, log.ColorNone, image.Ref())
-
-	container, err := r.CreateContainer(ctx, s)
-	if err != nil {
-		return err
-	}
-
-	err = container.Exec(ctx, opts...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func createFile(name string) (*os.File, error) {
-	if err := os.MkdirAll(filepath.Dir(name), 0777); err != nil {
-		return nil, err
-	}
-
-	if fs, err := os.Stat(name); err == nil && !fs.IsDir() {
-		return os.Open(name)
-	}
-
-	return os.Create(name)
+	return resp, ro, nil
 }

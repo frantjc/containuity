@@ -30,10 +30,10 @@ func ProtoStepToStep(s *types.Step) *workflow.Step {
 }
 
 func ProtoJobToJob(j *types.Job) *workflow.Job {
-	steps := make([]workflow.Step, len(j.Steps))
+	steps := make([]*workflow.Step, len(j.Steps))
 
 	for i, s := range j.Steps {
-		steps[i] = *ProtoStepToStep(s)
+		steps[i] = ProtoStepToStep(s)
 	}
 
 	return &workflow.Job{
@@ -49,10 +49,10 @@ func ProtoJobToJob(j *types.Job) *workflow.Job {
 }
 
 func ProtoWorkflowToWorkflow(w *types.Workflow) *workflow.Workflow {
-	jobs := make(map[string]workflow.Job, len(w.Jobs))
+	jobs := make(map[string]*workflow.Job, len(w.Jobs))
 
 	for i, j := range w.Jobs {
-		jobs[i] = *ProtoJobToJob(j)
+		jobs[i] = ProtoJobToJob(j)
 	}
 
 	return &workflow.Workflow{

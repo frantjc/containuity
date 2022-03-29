@@ -27,6 +27,7 @@ func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithWorkdir(conf.RootDir),
 			workflow.WithSecrets(conf.Secrets),
+			workflow.WithGitHubURL(conf.GitHub.URL),
 		}
 	)
 	if err != nil {
@@ -53,7 +54,7 @@ func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc
 
 	go func() {
 		defer stream.CloseSend()
-		if ctx, err = workflow.RunJob(ctx, c.runtime, convert.ProtoJobToJob(in.Job), opts...); err != nil {
+		if err = workflow.RunJob(ctx, c.runtime, convert.ProtoJobToJob(in.Job), opts...); err != nil {
 			stream.SendErr(err)
 		}
 	}()
