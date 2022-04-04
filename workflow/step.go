@@ -59,13 +59,17 @@ func (s *Step) GetID() string {
 // IsStdoutResponse returns whether or not this step is expected to
 // respond with a StepResponse on stdout or not
 func (s *Step) IsStdoutResponse() bool {
-	return s.Uses != "" || s.Get != "" || s.Put != ""
+	return s.IsGitHubAction() || s.IsConcourseResource()
 }
 
-// IsStdoutResponse returns whether or not this step is a GitHub Action
-// or not
-func (s *Step) IsAction() bool {
-	return s.Uses != "" || s.Run != ""
+// IsAction returns whether or not this step is a GitHub Action
+func (s *Step) IsGitHubAction() bool {
+	return s.Uses != ""
+}
+
+// IsResource returns whether or not this step is a Concourse Resoucre
+func (s *Step) IsConcourseResource() bool {
+	return s.Get != "" || s.Put != ""
 }
 
 // Merge sets all of this step's undefined fields with
@@ -104,13 +108,13 @@ func (s *Step) Merge(step *Step) *Step {
 // MergeOverride overrides all of this step's fields with
 // the given step's fields if they are defined
 func (s *Step) MergeOverride(step *Step) *Step {
-	if step.ID == "" {
+	if step.ID != "" {
 		s.ID = step.ID
 	}
-	if step.Name == "" {
+	if step.Name != "" {
 		s.Name = step.Name
 	}
-	if step.Image == "" {
+	if step.Image != "" {
 		s.Image = step.Image
 	}
 	if step.Privileged {
@@ -168,22 +172,9 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 	return s, d.Decode(s)
 }
 
-func withFromInputs(inputs map[string]*actions.Input) map[string]string {
-	with := map[string]string{}
-	for inputName, input := range inputs {
-		with[inputName] = input.Default
-	}
-
-	return with
-}
-
 // NewPreStepFromMetadata returns a 'pre' Step from a given GitHub action
 // that is cloned at the given path
 func NewPreStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
-	return newPreStepFromMetadataWith(a, path, withFromInputs(a.Inputs))
-}
-
-func newPreStepFromMetadataWith(a *actions.Metadata, path string, with map[string]string) (*Step, error) {
 	switch a.Runs.Using {
 	case actions.RunsUsingNode12, actions.RunsUsingNode16:
 		image := node12
@@ -196,7 +187,7 @@ func newPreStepFromMetadataWith(a *actions.Metadata, path string, with map[strin
 				Image:      image,
 				Entrypoint: []string{"node"},
 				Cmd:        []string{filepath.Join(path, a.Runs.Pre)},
-				With:       with,
+				With:       a.WithFromInputs(),
 				Env:        a.Runs.Env,
 			}, nil
 		}
@@ -207,7 +198,7 @@ func newPreStepFromMetadataWith(a *actions.Metadata, path string, with map[strin
 				return &Step{
 					Image:      image,
 					Entrypoint: []string{entrypoint},
-					With:       with,
+					With:       a.WithFromInputs(),
 					Env:        a.Runs.Env,
 				}, nil
 			}
@@ -224,10 +215,6 @@ func newPreStepFromMetadataWith(a *actions.Metadata, path string, with map[strin
 // NewMainStepFromMetadata returns a main Step from a given GitHub action
 // that is cloned at the given path
 func NewMainStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
-	return newMainStepFromMetadataWith(a, path, withFromInputs(a.Inputs))
-}
-
-func newMainStepFromMetadataWith(a *actions.Metadata, path string, with map[string]string) (*Step, error) {
 	switch a.Runs.Using {
 	case actions.RunsUsingNode12, actions.RunsUsingNode16:
 		image := node12
@@ -240,7 +227,7 @@ func newMainStepFromMetadataWith(a *actions.Metadata, path string, with map[stri
 				Image:      image,
 				Entrypoint: []string{"node"},
 				Cmd:        []string{filepath.Join(path, a.Runs.Main)},
-				With:       with,
+				With:       a.WithFromInputs(),
 				Env:        a.Runs.Env,
 			}, nil
 		}
@@ -252,7 +239,7 @@ func newMainStepFromMetadataWith(a *actions.Metadata, path string, with map[stri
 					Image:      image,
 					Entrypoint: []string{entrypoint},
 					Cmd:        a.Runs.Args,
-					With:       with,
+					With:       a.WithFromInputs(),
 					Env:        a.Runs.Env,
 				}, nil
 			}
@@ -269,10 +256,6 @@ func newMainStepFromMetadataWith(a *actions.Metadata, path string, with map[stri
 // NewPostStepFromMetadata returns a post Step from a given GitHub action
 // that is cloned at the given path
 func NewPostStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
-	return newPostStepFromMetadataWith(a, path, withFromInputs(a.Inputs))
-}
-
-func newPostStepFromMetadataWith(a *actions.Metadata, path string, with map[string]string) (*Step, error) {
 	switch a.Runs.Using {
 	case actions.RunsUsingNode12, actions.RunsUsingNode16:
 		image := node12
@@ -285,7 +268,7 @@ func newPostStepFromMetadataWith(a *actions.Metadata, path string, with map[stri
 				Image:      image,
 				Entrypoint: []string{"node"},
 				Cmd:        []string{filepath.Join(path, a.Runs.Post)},
-				With:       with,
+				With:       a.WithFromInputs(),
 				Env:        a.Runs.Env,
 			}, nil
 		}
@@ -296,7 +279,7 @@ func newPostStepFromMetadataWith(a *actions.Metadata, path string, with map[stri
 				return &Step{
 					Image:      image,
 					Entrypoint: []string{entrypoint},
-					With:       with,
+					With:       a.WithFromInputs(),
 					Env:        a.Runs.Env,
 				}, nil
 			}
@@ -308,6 +291,50 @@ func newPostStepFromMetadataWith(a *actions.Metadata, path string, with map[stri
 	}
 
 	return nil, nil
+}
+
+// NewPostStepFromMetadata returns a post Step from a given GitHub action
+// that is cloned at the given path
+func NewStepsFromMetadata(a *actions.Metadata, path string) ([]*Step, error) {
+	steps := []*Step{}
+	if a.IsComposite() {
+		for _, step := range a.Runs.Steps {
+			steps = append(steps, &Step{
+				Env:   step.Env,
+				ID:    step.ID,
+				If:    step.If,
+				Name:  step.Name,
+				Run:   step.Run,
+				Shell: step.Shell,
+				Uses:  step.Uses,
+				With:  step.With,
+				// TODO WorkingDirectory
+			})
+		}
+	} else {
+		if preStep, err := NewPreStepFromMetadata(a, path); err != nil {
+			return nil, err
+		} else if preStep != nil {
+			steps = append(steps, preStep)
+		}
+
+		if mainStep, err := NewMainStepFromMetadata(a, path); err != nil {
+			return nil, err
+		} else if mainStep != nil {
+			steps = append(steps, mainStep)
+		} else {
+			// every non-composite action must have a main step
+			return nil, actions.ErrNotAnAction
+		}
+
+		if postStep, err := NewPostStepFromMetadata(a, path); err != nil {
+			return nil, err
+		} else if postStep != nil {
+			steps = append(steps, postStep)
+		}
+	}
+
+	return steps, nil
 }
 
 // StepOut is the optional parsable output of a Step

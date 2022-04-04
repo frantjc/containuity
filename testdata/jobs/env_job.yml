@@ -3,7 +3,4 @@ steps:
     run: |
       echo FOO=bar >> $GITHUB_ENV
   - image: alpine:3.15
-    run: |
-      echo ::save-state name=SAVE_STATE::test save state
-  - image: alpine:3.15
     entrypoint: [env]

@@ -261,7 +261,7 @@ func (c *RunnerContext) Get(key string) string {
 	return ""
 }
 
-func defaultCtx() *GlobalContext {
+func EmptyContext() *GlobalContext {
 	u, _ := user.Current()
 	return &GlobalContext{
 		GitHubContext: &GitHubContext{
@@ -285,7 +285,7 @@ func defaultCtx() *GlobalContext {
 
 func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*GlobalContext, error) {
 	var (
-		c             = defaultCtx()
+		c             = EmptyContext()
 		currentBranch = defaultBranch
 		currentRemote = defaultRemote
 	)
@@ -357,15 +357,13 @@ func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*Glob
 		}
 	}
 
-	c.EnvContext = c.Map()
-
 	return c, nil
 }
 
-func (c *GlobalContext) Map() map[string]string {
+func (c *GlobalContext) EnvMap() map[string]string {
 	apiURL, _ := github.APIURLFromBaseURL(c.GitHubContext.ServerURL)
 	graphqlURL, _ := github.GraphQLURLFromBaseURL(c.GitHubContext.ServerURL)
-	return map[string]string{
+	env := map[string]string{
 		EnvVarCI:              fmt.Sprint(true),
 		EnvVarWorkflow:        c.GitHubContext.Workflow,
 		EnvVarRunID:           c.GitHubContext.RunID,
@@ -398,8 +396,14 @@ func (c *GlobalContext) Map() map[string]string {
 		EnvVarToken:           c.GitHubContext.Token,
 		EnvVarRepositoryOwner: c.GitHubContext.RepositoryOwner,
 	}
+
+	for k, v := range c.EnvContext {
+		env[k] = v
+	}
+
+	return env
 }
 
-func (c *GlobalContext) Arr() []string {
-	return env.ArrFromMap(c.Map())
+func (c *GlobalContext) EnvArr() []string {
+	return env.ArrFromMap(c.EnvMap())
 }

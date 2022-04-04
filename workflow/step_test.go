@@ -15,7 +15,7 @@ func TestNewStepFromReader(t *testing.T) {
 		actual, err = workflow.NewStepFromReader(bytes.NewReader(testdata.EnvStep))
 	)
 	assert.Nil(t, err)
-	assert.False(t, actual.IsAction())
+	assert.False(t, actual.IsGitHubAction())
 	assert.False(t, actual.IsStdoutResponse())
 
 	// assert.Equal(t, expected, actual)
@@ -27,7 +27,7 @@ func TestUsesNewStepFromReader(t *testing.T) {
 		actual, err = workflow.NewStepFromReader(bytes.NewReader(testdata.CheckoutStep))
 	)
 	assert.Nil(t, err)
-	assert.True(t, actual.IsAction())
+	assert.True(t, actual.IsGitHubAction())
 	assert.True(t, actual.IsStdoutResponse())
 
 	// assert.Equal(t, expected, actual)

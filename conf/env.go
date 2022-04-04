@@ -10,5 +10,4 @@ const (
 	EnvVarVerbose     = "SQNC_VERBOSE"
 	EnvVarRuntime     = "SQNC_RUNTIME"
 	EnvVarRunnerImage = "SQNC_RUNNER_IMAGE"
-	EnvVarActionImage = "SQNC_ACTION_IMAGE"
 )

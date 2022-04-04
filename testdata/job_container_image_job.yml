@@ -1,4 +1,0 @@
-container:
-  image: alpine/helm
-steps:
-  - run: helm version

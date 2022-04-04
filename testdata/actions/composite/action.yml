@@ -1,0 +1,8 @@
+name: Composite
+description: |
+  Simple action to test `runs.using: composite`
+author: frantjc
+runs:
+  using: composite
+  steps:
+    - uses: frantjc/sequence/testdata/actions/docker@main

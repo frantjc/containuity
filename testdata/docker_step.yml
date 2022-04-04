@@ -1,3 +1,0 @@
-run: |
-  echo pulling frantjc/sequence with $(which docker)
-  docker pull frantjc/sequence
