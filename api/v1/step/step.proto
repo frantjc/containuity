@@ -19,6 +19,5 @@ message RunStepRequest {
     sequence.types.Workflow workflow = 3;
     string repository = 4;
     string runner_image = 5;
-    string action_image = 6;
-    bool verbose = 7;
+    bool verbose = 6;
 }

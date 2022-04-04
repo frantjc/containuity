@@ -1,0 +1,9 @@
+steps:
+  - image: alpine:3.15
+    run: |
+      echo ::debug::should be unrecognized
+      echo ::save-state name=TEST::state test
+  - image: alpine:3.15
+    run: |
+      echo should be empty:
+      echo STATE_TEST=$STATE_TEST

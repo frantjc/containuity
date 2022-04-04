@@ -22,40 +22,37 @@ func (c *workflowClient) RunWorkflow(ctx context.Context, in *api.RunWorkflowReq
 	var (
 		conf, err = conf.NewFromFlagsWithRepository(in.Repository)
 		stream    = grpcio.NewLogStream(ctx)
-		opts      = []workflow.RunOpt{
-			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
+		opts      = []workflow.ExecOpt{
+			workflow.WithRuntime(c.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
+			workflow.WithRepository(in.Repository),
 			workflow.WithWorkdir(conf.RootDir),
-			workflow.WithSecrets(conf.Secrets),
+			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
+			workflow.WithStderr(grpcio.NewLogErrStreamWriter(stream)),
 		}
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if in.Repository != "" {
-		opts = append(opts, workflow.WithRepository(in.Repository))
+	if in.Verbose || conf.Verbose {
+		opts = append(opts, workflow.WithVerbose)
 	}
 
 	if in.RunnerImage != "" {
 		opts = append(opts, workflow.WithRunnerImage(in.RunnerImage))
 	} else {
-		opts = append(opts, workflow.WithRunnerImage(conf.Runtime.RunnerImage))
+		in.RunnerImage = conf.Runtime.RunnerImage
 	}
 
-	if in.ActionImage != "" {
-		opts = append(opts, workflow.WithActionImage(in.ActionImage))
-	} else if conf.Runtime.ActionImage != "" {
-		opts = append(opts, workflow.WithActionImage(conf.Runtime.ActionImage))
-	}
-
-	if conf.Verbose || in.Verbose {
-		opts = append(opts, workflow.WithVerbose)
+	executor, err := workflow.NewWorkflowExecutor(convert.ProtoWorkflowToWorkflow(in.Workflow), opts...)
+	if err != nil {
+		return nil, err
 	}
 
 	go func() {
 		defer stream.CloseSend()
-		if err := workflow.RunWorkflow(ctx, c.runtime, convert.ProtoWorkflowToWorkflow(in.Workflow), opts...); err != nil {
+		if err = executor.Start(ctx); err != nil {
 			stream.SendErr(err)
 		}
 	}()

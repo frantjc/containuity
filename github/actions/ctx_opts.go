@@ -34,6 +34,19 @@ func WithSecrets(secrets map[string]string) CtxOpt {
 	}
 }
 
+func WithEnv(env map[string]string) CtxOpt {
+	return func(gc *GlobalContext) error {
+		if gc.EnvContext == nil {
+			gc.EnvContext = env
+		} else {
+			for k, v := range env {
+				gc.EnvContext[k] = v
+			}
+		}
+		return nil
+	}
+}
+
 func WithWorkdir(workdir string) CtxOpt {
 	return func(gc *GlobalContext) error {
 		if gc.GitHubContext == nil {

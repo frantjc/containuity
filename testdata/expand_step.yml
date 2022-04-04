@@ -1,7 +1,0 @@
-shell: bash
-run: |
-  if [ $GITHUB_TOKEN == ${{ secrets.GITHUB_TOKEN }} ]; then
-    echo expanded
-  else
-    echo did not expand
-  fi

@@ -24,13 +24,13 @@ func NewWorkflowFromReader(r io.Reader) (*Workflow, error) {
 }
 
 type Workflow struct {
-	Name string         `json:"name,omitempty" yaml:"name,omitempty"`
-	Jobs map[string]Job `json:"jobs,omitempty" yaml:"jobs,omitempty"`
+	Name string          `json:"name,omitempty" yaml:"name,omitempty"`
+	Jobs map[string]*Job `json:"jobs,omitempty" yaml:"jobs,omitempty"`
 }
 
 func (w *Workflow) GetJob(name string) (*Job, error) {
 	if job, ok := w.Jobs[name]; ok {
-		return &job, nil
+		return job, nil
 	}
 	return nil, fmt.Errorf("workflow has no job with name %s", name)
 }

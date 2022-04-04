@@ -10,7 +10,7 @@ import (
 
 type Logger interface {
 	io.Writer
-	SetVerbose(bool)
+	SetVerbose(bool) Logger
 	Debug(string)
 	Debugf(string, ...interface{})
 	Info(string)
@@ -27,12 +27,13 @@ func (l *logger) Write(p []byte) (int, error) {
 	return l.l.Write(p)
 }
 
-func (l *logger) SetVerbose(v bool) {
+func (l *logger) SetVerbose(v bool) Logger {
 	if v {
 		l.l = l.l.Level(zerolog.DebugLevel)
 	} else {
 		l.l = l.l.Level(zerolog.InfoLevel)
 	}
+	return l
 }
 
 func (l *logger) Debug(s string) {

@@ -7,7 +7,7 @@ import (
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/frantjc/sequence/log"
+	"github.com/frantjc/sequence/internal/sio"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -31,5 +31,5 @@ func (r *dockerRuntime) PullImage(ctx context.Context, ref string) (runtime.Imag
 
 	return &dockerImage{
 		ref: pref.String(),
-	}, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(log.Writer()), nil)
+	}, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(sio.NewNoOpWriter()), nil)
 }

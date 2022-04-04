@@ -1,0 +1,10 @@
+name: Docker
+description: |
+  Simple action to test `runs.using: docker`
+author: frantjc
+runs:
+  using: docker
+  image: docker://alpine:3.15
+  pre-entrypoint: env
+  entrypoint: env
+  post-entrypoint: env
