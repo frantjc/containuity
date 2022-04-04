@@ -1,7 +1,0 @@
-ARG node=node:16-alpine3.15
-ARG docker=docker:20.10.13-alpine3.15
-
-FROM ${docker} AS docker
-
-FROM ${node} AS node
-COPY --from=docker /usr/local/bin/docker /usr/local/bin/docker
