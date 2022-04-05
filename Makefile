@@ -56,4 +56,7 @@ clean: tidy
 protos:
 	$(PROTOC) $(PROTOC_ARGS) $(PROTOS)
 
+coverage:
+	$(GO) test -v -cover -covermode=atomic -coverprofile=coverage.txt ./...
+
 .PHONY: bin bins binaries sqnc sqncd sqnctl sqncshim image img test fmt lint pretty vet tidy vendor clean protos

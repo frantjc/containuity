@@ -28,8 +28,14 @@ func (r *dockerRuntime) PullImage(ctx context.Context, ref string) (runtime.Imag
 		return nil, err
 	}
 	defer o.Close()
+	jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(sio.NewNoOpWriter()), nil)
+
+	_, _, err = r.client.ImageInspectWithRaw(ctx, pref.String())
+	if err != nil {
+		return nil, err
+	}
 
 	return &dockerImage{
 		ref: pref.String(),
-	}, jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(sio.NewNoOpWriter()), nil)
+	}, nil
 }

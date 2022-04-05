@@ -3,7 +3,7 @@ package workflow
 import "context"
 
 func NewWorkflowExecutor(w *Workflow, opts ...ExecOpt) (Executor, error) {
-	return &workflowExecutor{w, opts}, nil
+	return &workflowExecutor{w, append(opts, WithWorkflow(w))}, nil
 }
 
 type workflowExecutor struct {

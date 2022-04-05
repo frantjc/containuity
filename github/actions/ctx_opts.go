@@ -70,6 +70,16 @@ func WithJobName(job string) CtxOpt {
 	}
 }
 
+func WithWorkflowName(workflow string) CtxOpt {
+	return func(gc *GlobalContext) error {
+		if gc.GitHubContext == nil {
+			gc.GitHubContext = &GitHubContext{}
+		}
+		gc.GitHubContext.Workflow = workflow
+		return nil
+	}
+}
+
 func WithInputs(inputs map[string]string) CtxOpt {
 	return func(gc *GlobalContext) error {
 		if gc.InputsContext == nil {

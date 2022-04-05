@@ -19,6 +19,7 @@ var (
 	EnvStep = steps.EnvStep
 	ExpandStep = steps.ExpandStep
 	StopCommandsStep = steps.StopCommandsStep
+	hello = "there"
 )
 
 var (

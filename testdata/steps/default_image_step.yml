@@ -1,1 +1,2 @@
-run: ls /usr/local/bin
+run: |
+  ls /usr/local/bin

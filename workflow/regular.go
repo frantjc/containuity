@@ -161,7 +161,7 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 
 	if expanded.With != nil {
 		for k, v := range expanded.With {
-			spec.Env = append(spec.Env, fmt.Sprintf("INPUT_%s=%s", strings.ReplaceAll(strings.ToUpper(k), "-", "_"), v))
+			spec.Env = append(spec.Env, fmt.Sprintf("INPUT_%s=%s", strings.ReplaceAll(strings.ToUpper(k), " ", "_"), v))
 		}
 	}
 

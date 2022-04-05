@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"io"
 
 	"gopkg.in/yaml.v3"
@@ -24,10 +25,10 @@ type Metadata struct {
 	Author      string `json:"author,omitempty" yaml:"author,omitempty"`
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 	Inputs      map[string]*struct {
-		Description        string `json:"input,omitempty" yaml:"input,omitempty"`
-		Required           bool   `json:"required,omitempty" yaml:"required,omitempty"`
-		Default            string `json:"default,omitempty" yaml:"default,omitempty"`
-		DeprecationMessage string `json:"deprecationMessage,omitempty" yaml:"deprecationMessage,omitempty"`
+		Description        string      `json:"input,omitempty" yaml:"input,omitempty"`
+		Required           bool        `json:"required,omitempty" yaml:"required,omitempty"`
+		Default            interface{} `json:"default,omitempty" yaml:"default,omitempty"`
+		DeprecationMessage string      `json:"deprecationMessage,omitempty" yaml:"deprecationMessage,omitempty"`
 	} `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	Outputs map[string]*struct {
 		Description string `json:"output,omitempty" yaml:"output,omitempty"`
@@ -51,7 +52,7 @@ type Metadata struct {
 func (m *Metadata) WithFromInputs() map[string]string {
 	with := make(map[string]string, len(m.Inputs))
 	for name, input := range m.Inputs {
-		with[name] = input.Default
+		with[name] = fmt.Sprint(input.Default)
 	}
 	return with
 }

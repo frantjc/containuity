@@ -28,6 +28,7 @@ func NewJobExecutor(j *Job, opts ...ExecOpt) (Executor, error) {
 		ctxOpts: []actions.CtxOpt{
 			actions.WithWorkdir(containerWorkdir),
 			actions.WithEnv(j.Env),
+			actions.WithJobName(j.Name),
 		},
 
 		states: map[string]map[string]string{},
@@ -174,7 +175,7 @@ func (e *jobExecutor) expandBytes(p []byte) []byte {
 	return actions.ExpandBytes(p, e.globalContext.Get)
 }
 
-func (e *jobExecutor) stepWorkdir() string {
+func (e *jobExecutor) jobWorkdir() string {
 	return filepath.Join(
 		e.workdir,
 		base64.StdEncoding.EncodeToString(
@@ -189,23 +190,23 @@ func (e *jobExecutor) stepWorkdir() string {
 }
 
 func (e *jobExecutor) githubPathFilepath() string {
-	return filepath.Join(e.stepWorkdir(), "github", "path")
+	return filepath.Join(e.jobWorkdir(), "github", "path")
 }
 
 func (e *jobExecutor) githubEnvFilepath() string {
-	return filepath.Join(e.stepWorkdir(), "github", "env")
+	return filepath.Join(e.jobWorkdir(), "github", "env")
 }
 
 func (e *jobExecutor) workspace() string {
-	return filepath.Join(e.stepWorkdir(), "workspace")
+	return filepath.Join(e.jobWorkdir(), "workspace")
 }
 
 func (e *jobExecutor) runnerTemp() string {
-	return filepath.Join(e.stepWorkdir(), "runner", "temp")
+	return filepath.Join(e.jobWorkdir(), "runner", "temp")
 }
 
 func (e *jobExecutor) runnerToolCache() string {
-	return filepath.Join(e.stepWorkdir(), "runner", "toolcache")
+	return filepath.Join(e.jobWorkdir(), "runner", "toolcache")
 }
 
 func (e *jobExecutor) actionPath(action actions.Reference) string {

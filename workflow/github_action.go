@@ -40,21 +40,11 @@ func (e *githubActionStep) id() string {
 
 func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 	var (
-		logout   = log.New(ex.stdout).SetVerbose(ex.verbose)
-		expanded = &githubActionStep{
-			ID:   ex.expandString(e.ID),
-			Name: ex.expandString(e.Name),
-			Env:  ex.expandStringMap(e.Env),
-			Uses: ex.expandString(e.Uses),
-			With: ex.expandStringMap(e.With),
-			If:   ex.expandString(fmt.Sprint(e.If)),
-
-			Privileged: e.Privileged,
-		}
+		logout = log.New(ex.stdout).SetVerbose(ex.verbose)
 	)
 
-	logout.Debugf("[%sSQNC:DBG%s] parsing 'uses: %s'", log.ColorDebug, log.ColorNone, expanded.Uses)
-	action, err := actions.ParseReference(expanded.Uses)
+	logout.Debugf("[%sSQNC:DBG%s] parsing 'uses: %s'", log.ColorDebug, log.ColorNone, e.Uses)
+	action, err := actions.ParseReference(e.Uses)
 	if err != nil {
 		return err
 	}
@@ -167,16 +157,16 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 					specOpts: specOpts,
 				}
 
-				for k, v := range expanded.With {
+				for k, v := range e.With {
 					regularStep.With[k] = v
 				}
 
-				if expanded.ID != "" {
-					regularStep.ID = fmt.Sprintf("Pre %s", expanded.ID)
-				} else if expanded.Name != "" {
-					regularStep.Name = fmt.Sprintf("Pre %s", expanded.Name)
+				if e.ID != "" {
+					regularStep.ID = fmt.Sprintf("Pre %s", e.ID)
+				} else if e.Name != "" {
+					regularStep.Name = fmt.Sprintf("Pre %s", e.Name)
 				} else {
-					regularStep.Name = fmt.Sprintf("Pre %s", expanded.Uses)
+					regularStep.Name = fmt.Sprintf("Pre %s", e.Uses)
 				}
 
 				ex.pre = append(ex.pre, regularStep)
@@ -186,8 +176,8 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				return err
 			} else if mainStep != nil {
 				regularStep := &regularStep{
-					ID:    expanded.ID,
-					Name:  expanded.Name,
+					ID:    e.ID,
+					Name:  e.Name,
 					Env:   mainStep.Env,
 					Shell: mainStep.Shell,
 					Run:   mainStep.Run,
@@ -203,11 +193,11 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 					specOpts: specOpts,
 				}
 
-				if expanded.Name == "" {
-					regularStep.Name = expanded.Uses
+				if e.Name == "" {
+					regularStep.Name = e.Uses
 				}
 
-				for k, v := range expanded.With {
+				for k, v := range e.With {
 					regularStep.With[k] = v
 				}
 
@@ -236,16 +226,16 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 					specOpts: specOpts,
 				}
 
-				for k, v := range expanded.With {
+				for k, v := range e.With {
 					regularStep.With[k] = v
 				}
 
-				if expanded.ID != "" {
-					regularStep.ID = fmt.Sprintf("Post %s", expanded.ID)
-				} else if expanded.Name != "" {
-					regularStep.Name = fmt.Sprintf("Post %s", expanded.Name)
+				if e.ID != "" {
+					regularStep.ID = fmt.Sprintf("Post %s", e.ID)
+				} else if e.Name != "" {
+					regularStep.Name = fmt.Sprintf("Post %s", e.Name)
 				} else {
-					regularStep.Name = fmt.Sprintf("Post %s", expanded.Uses)
+					regularStep.Name = fmt.Sprintf("Post %s", e.Uses)
 				}
 
 				ex.post = append([]executable{regularStep}, ex.post...)
