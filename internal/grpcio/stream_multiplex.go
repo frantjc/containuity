@@ -15,11 +15,12 @@ type LogStreamClient interface {
 func DemultiplexLogStream(stream LogStreamClient, stdout, stderr io.Writer) error {
 	for {
 		l, err := stream.Recv()
-		if err == io.EOF {
+		switch {
+		case err == io.EOF:
 			return nil
-		} else if err != nil {
+		case err != nil:
 			return err
-		} else if l != nil {
+		case l != nil:
 			if len(l.Out) > 0 {
 				stdout.Write([]byte(l.Out))
 			}

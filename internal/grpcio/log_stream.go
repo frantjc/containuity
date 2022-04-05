@@ -8,7 +8,13 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func NewLogStream(ctx context.Context) *logStream {
+type LogStream interface {
+	LogStreamClient
+	LogStreamServer
+	SendErr(error)
+}
+
+func NewLogStream(ctx context.Context) LogStream {
 	return &logStream{
 		ctx:    ctx,
 		logC:   make(chan *types.Log),
@@ -23,6 +29,8 @@ type logStream struct {
 	closed bool
 	errC   chan error
 }
+
+var _ LogStream = &logStream{}
 
 func (s *logStream) Recv() (*types.Log, error) {
 	if s.closed {

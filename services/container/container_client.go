@@ -28,8 +28,8 @@ func (c *containerClient) CreateContainer(ctx context.Context, req *api.CreateCo
 	}, nil
 }
 
-func (s *containerClient) GetContainer(ctx context.Context, req *api.GetContainerRequest, _ ...grpc.CallOption) (*api.GetContainerResponse, error) {
-	container, err := s.runtime.GetContainer(ctx, req.Id)
+func (c *containerClient) GetContainer(ctx context.Context, req *api.GetContainerRequest, _ ...grpc.CallOption) (*api.GetContainerResponse, error) {
+	container, err := c.runtime.GetContainer(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (s *containerClient) GetContainer(ctx context.Context, req *api.GetContaine
 	}, nil
 }
 
-func (s *containerClient) ExecContainer(ctx context.Context, in *api.ExecContainerRequest, _ ...grpc.CallOption) (api.Container_ExecContainerClient, error) {
+func (c *containerClient) ExecContainer(ctx context.Context, in *api.ExecContainerRequest, _ ...grpc.CallOption) (api.Container_ExecContainerClient, error) {
 	var (
 		stream         = grpcio.NewLogStream(ctx)
 		stdout, stderr = grpcio.NewLogStreamMultiplexWriter(stream)
@@ -51,7 +51,7 @@ func (s *containerClient) ExecContainer(ctx context.Context, in *api.ExecContain
 			),
 		}
 	)
-	container, err := s.runtime.GetContainer(ctx, in.Id)
+	container, err := c.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}

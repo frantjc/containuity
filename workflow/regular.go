@@ -95,9 +95,8 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 				stopCommandsTokens[c.Command] = false
 				if ex.verbose {
 					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s end token '%s'", log.ColorDebug, log.ColorNone, actions.CommandStopCommands, c.Command))
-				} else {
-					return make([]byte, 0)
 				}
+				return make([]byte, 0)
 			}
 
 			for _, stop := range stopCommandsTokens {
@@ -139,10 +138,8 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 					if ex.verbose || echo {
 						return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s", log.ColorDebug, log.ColorNone, c.Command, c.Parameters["name"], c.Value))
 					}
-				} else {
-					if ex.verbose || echo {
-						return []byte(fmt.Sprintf("[%sSQNC:DBG%s] swallowing unrecognized workflow command '%s'", log.ColorDebug, log.ColorNone, c.Command))
-					}
+				} else if ex.verbose || echo {
+					return []byte(fmt.Sprintf("[%sSQNC:DBG%s] swallowing unrecognized workflow command '%s'", log.ColorDebug, log.ColorNone, c.Command))
 				}
 			default:
 				if ex.verbose || echo {

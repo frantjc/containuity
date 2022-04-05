@@ -25,8 +25,8 @@ func init() {
 func runJob(cmd *cobra.Command, args []string) error {
 	var (
 		ctx  = cmd.Context()
-		j    = &workflow.Job{}
-		w    = &workflow.Workflow{}
+		j    *workflow.Job
+		w    *workflow.Workflow
 		path = args[0]
 		r    io.Reader
 		err  error

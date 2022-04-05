@@ -26,9 +26,9 @@ func init() {
 func runStep(cmd *cobra.Command, args []string) error {
 	var (
 		ctx  = cmd.Context()
-		s    = &workflow.Step{}
-		j    = &workflow.Job{}
-		w    = &workflow.Workflow{}
+		s    *workflow.Step
+		j    *workflow.Job
+		w    *workflow.Workflow
 		path = args[0]
 		r    io.Reader
 		err  error

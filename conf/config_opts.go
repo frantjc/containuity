@@ -41,42 +41,45 @@ func WithDefaultUserConfig() (*Config, error) {
 	}, nil
 }
 
-func WithConfigFromEnv() (c *Config, err error) {
-	c = &Config{
-		Socket:   os.Getenv(EnvVarSocket),
-		RootDir:  os.Getenv(EnvVarRootDir),
-		StateDir: os.Getenv(EnvVarStateDir),
-		GitHub: &GitHubConfig{
-			Token: os.Getenv(EnvVarGitHubToken),
-		},
-		Runtime: &RuntimeConfig{
-			Name:        os.Getenv(EnvVarRuntime),
-			RunnerImage: os.Getenv(EnvVarRunnerImage),
-		},
-		Secrets: map[string]string{},
-	}
+func WithConfigFromEnv() (*Config, error) {
+	var (
+		c = &Config{
+			Socket:   os.Getenv(EnvVarSocket),
+			RootDir:  os.Getenv(EnvVarRootDir),
+			StateDir: os.Getenv(EnvVarStateDir),
+			GitHub: &GitHubConfig{
+				Token: os.Getenv(EnvVarGitHubToken),
+			},
+			Runtime: &RuntimeConfig{
+				Name:        os.Getenv(EnvVarRuntime),
+				RunnerImage: os.Getenv(EnvVarRunnerImage),
+			},
+			Secrets: map[string]string{},
+		}
+		err error
+	)
 	if rawVerbose := os.Getenv(EnvVarVerbose); rawVerbose != "" {
 		c.Verbose, err = strconv.ParseBool(rawVerbose)
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
 
 	if rawPort := os.Getenv(EnvVarPort); rawPort != "" {
 		c.Port, err = strconv.Atoi(rawPort)
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
 
 	if rawGitHubURL := os.Getenv(EnvVarGitHubURL); rawGitHubURL != "" {
 		c.GitHub.URL, err = url.Parse(rawGitHubURL)
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
 
-	return
+	return c, nil
 }
 
 func WithConfigFilePath(repository string, path string) ConfigOpt {

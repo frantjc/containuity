@@ -16,12 +16,13 @@ var _ Executor = &workflowExecutor{}
 func (e *workflowExecutor) Start(ctx context.Context) error {
 	// TODO ordering, job outputs, needs, etc
 	for _, job := range e.workflow.Jobs {
-		if ex, err := NewJobExecutor(job, e.opts...); err != nil {
+		ex, err := NewJobExecutor(job, e.opts...)
+		if err != nil {
 			return err
-		} else {
-			if err = ex.Start(ctx); err != nil {
-				return err
-			}
+		}
+
+		if err = ex.Start(ctx); err != nil {
+			return err
 		}
 	}
 

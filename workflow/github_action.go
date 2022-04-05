@@ -97,10 +97,10 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 		return err
 	}
 
-	if actionMetadataJson := []byte(resp.GetActionMetadata()); len(actionMetadataJson) != 0 {
+	if actionMetadataJSON := []byte(resp.GetActionMetadata()); len(actionMetadataJSON) != 0 {
 		logout.Debugf("[%sSQNC:DBG%s] parsing metadata for action '%s'", log.ColorDebug, log.ColorNone, action.String())
 		actionMetadata := &actions.Metadata{}
-		if err = json.Unmarshal(actionMetadataJson, actionMetadata); err != nil {
+		if err = json.Unmarshal(actionMetadataJSON, actionMetadata); err != nil {
 			return err
 		}
 
@@ -127,122 +127,119 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 					}
 				}
 			}
-
-			return nil
-		} else {
-			// pre, main and post steps must remain connected via their state
-			// but should not share that state with other steps
-			// see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#sending-values-to-the-pre-and-post-actions
-			stateKey := uuid.NewString()
-			ex.states[stateKey] = map[string]string{}
-			specOpts := []runtime.SpecOpt{
-				runtime.WithMounts(spec.Mounts...),
-			}
-			if preStep, err := NewPreStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
-				return err
-			} else if preStep != nil {
-				regularStep := &regularStep{
-					Env:   preStep.Env,
-					Shell: preStep.Shell,
-					Run:   preStep.Run,
-					If:    preStep.If,
-					With:  preStep.With,
-
-					Image:      preStep.Image,
-					Entrypoint: preStep.Entrypoint,
-					Cmd:        preStep.Cmd,
-					Privileged: preStep.Privileged,
-
-					stateKey: stateKey,
-					specOpts: specOpts,
-				}
-
-				for k, v := range e.With {
-					regularStep.With[k] = v
-				}
-
-				if e.ID != "" {
-					regularStep.ID = fmt.Sprintf("Pre %s", e.ID)
-				} else if e.Name != "" {
-					regularStep.Name = fmt.Sprintf("Pre %s", e.Name)
-				} else {
-					regularStep.Name = fmt.Sprintf("Pre %s", e.Uses)
-				}
-
-				ex.pre = append(ex.pre, regularStep)
-			}
-
-			if mainStep, err := NewMainStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
-				return err
-			} else if mainStep != nil {
-				regularStep := &regularStep{
-					ID:    e.ID,
-					Name:  e.Name,
-					Env:   mainStep.Env,
-					Shell: mainStep.Shell,
-					Run:   mainStep.Run,
-					If:    mainStep.If,
-					With:  mainStep.With,
-
-					Image:      mainStep.Image,
-					Entrypoint: mainStep.Entrypoint,
-					Cmd:        mainStep.Cmd,
-					Privileged: mainStep.Privileged,
-
-					stateKey: stateKey,
-					specOpts: specOpts,
-				}
-
-				if e.Name == "" {
-					regularStep.Name = e.Uses
-				}
-
-				for k, v := range e.With {
-					regularStep.With[k] = v
-				}
-
-				ex.main = append(ex.main, regularStep)
-			} else {
-				// every non-composite action must have a main step
-				return actions.ErrNotAnAction
-			}
-
-			if postStep, err := NewPostStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
-				return err
-			} else if postStep != nil {
-				regularStep := &regularStep{
-					Env:   postStep.Env,
-					Shell: postStep.Shell,
-					Run:   postStep.Run,
-					If:    postStep.If,
-					With:  postStep.With,
-
-					Image:      postStep.Image,
-					Entrypoint: postStep.Entrypoint,
-					Cmd:        postStep.Cmd,
-					Privileged: postStep.Privileged,
-
-					stateKey: stateKey,
-					specOpts: specOpts,
-				}
-
-				for k, v := range e.With {
-					regularStep.With[k] = v
-				}
-
-				if e.ID != "" {
-					regularStep.ID = fmt.Sprintf("Post %s", e.ID)
-				} else if e.Name != "" {
-					regularStep.Name = fmt.Sprintf("Post %s", e.Name)
-				} else {
-					regularStep.Name = fmt.Sprintf("Post %s", e.Uses)
-				}
-
-				ex.post = append([]executable{regularStep}, ex.post...)
-			}
-
-			return nil
 		}
+		// pre, main and post steps must remain connected via their state
+		// but should not share that state with other steps
+		// see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#sending-values-to-the-pre-and-post-actions
+		stateKey := uuid.NewString()
+		ex.states[stateKey] = map[string]string{}
+		specOpts := []runtime.SpecOpt{
+			runtime.WithMounts(spec.Mounts...),
+		}
+		if preStep, err := NewPreStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
+			return err
+		} else if preStep != nil {
+			regularStep := &regularStep{
+				Env:   preStep.Env,
+				Shell: preStep.Shell,
+				Run:   preStep.Run,
+				If:    preStep.If,
+				With:  preStep.With,
+
+				Image:      preStep.Image,
+				Entrypoint: preStep.Entrypoint,
+				Cmd:        preStep.Cmd,
+				Privileged: preStep.Privileged,
+
+				stateKey: stateKey,
+				specOpts: specOpts,
+			}
+
+			for k, v := range e.With {
+				regularStep.With[k] = v
+			}
+
+			switch {
+			case e.ID != "":
+				regularStep.ID = fmt.Sprintf("Pre %s", e.ID)
+			case e.Name != "":
+				regularStep.Name = fmt.Sprintf("Pre %s", e.Name)
+			default:
+				regularStep.Name = fmt.Sprintf("Pre %s", e.Uses)
+			}
+
+			ex.pre = append(ex.pre, regularStep)
+		}
+
+		if mainStep, err := NewMainStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
+			return err
+		} else if mainStep != nil {
+			regularStep := &regularStep{
+				ID:    e.ID,
+				Name:  e.Name,
+				Env:   mainStep.Env,
+				Shell: mainStep.Shell,
+				Run:   mainStep.Run,
+				If:    mainStep.If,
+				With:  mainStep.With,
+
+				Image:      mainStep.Image,
+				Entrypoint: mainStep.Entrypoint,
+				Cmd:        mainStep.Cmd,
+				Privileged: mainStep.Privileged,
+
+				stateKey: stateKey,
+				specOpts: specOpts,
+			}
+
+			if e.Name == "" {
+				regularStep.Name = e.Uses
+			}
+
+			for k, v := range e.With {
+				regularStep.With[k] = v
+			}
+
+			ex.main = append(ex.main, regularStep)
+		} else {
+			// every non-composite action must have a main step
+			return actions.ErrNotAnAction
+		}
+
+		if postStep, err := NewPostStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
+			return err
+		} else if postStep != nil {
+			regularStep := &regularStep{
+				Env:   postStep.Env,
+				Shell: postStep.Shell,
+				Run:   postStep.Run,
+				If:    postStep.If,
+				With:  postStep.With,
+
+				Image:      postStep.Image,
+				Entrypoint: postStep.Entrypoint,
+				Cmd:        postStep.Cmd,
+				Privileged: postStep.Privileged,
+
+				stateKey: stateKey,
+				specOpts: specOpts,
+			}
+
+			for k, v := range e.With {
+				regularStep.With[k] = v
+			}
+
+			if e.ID != "" {
+				regularStep.ID = fmt.Sprintf("Post %s", e.ID)
+			} else if e.Name != "" {
+				regularStep.Name = fmt.Sprintf("Post %s", e.Name)
+			} else {
+				regularStep.Name = fmt.Sprintf("Post %s", e.Uses)
+			}
+
+			ex.post = append([]executable{regularStep}, ex.post...)
+		}
+		return nil
 	}
 
 	logout.Infof("[%sSQNC:ERR%s] not an action '%s'", log.ColorError, log.ColorNone, action.String())

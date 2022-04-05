@@ -73,8 +73,7 @@ func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (r
 		}
 
 		for _, opt := range m.Options {
-			switch opt {
-			case runtime.MountOptReadOnly:
+			if opt == runtime.MountOptReadOnly {
 				dm.ReadOnly = true
 			}
 		}

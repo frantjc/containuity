@@ -35,15 +35,16 @@ func (c *runtimeContainer) Exec(ctx context.Context, opts ...runtime.ExecOpt) er
 		stdout = sio.NewNoOpWriter()
 		stderr = stdout
 	)
-	if exec, err := runtime.NewExec(opts...); err != nil {
+	exec, err := runtime.NewExec(opts...)
+	if err != nil {
 		return err
-	} else {
-		if exec.Stdout != nil {
-			stdout = exec.Stdout
-		}
-		if exec.Stderr != nil {
-			stderr = exec.Stderr
-		}
+	}
+
+	if exec.Stdout != nil {
+		stdout = exec.Stdout
+	}
+	if exec.Stderr != nil {
+		stderr = exec.Stderr
 	}
 
 	stream, err := c.client.ExecContainer(ctx, &containerapi.ExecContainerRequest{

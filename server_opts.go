@@ -27,4 +27,4 @@ func WithRuntimeName(names ...string) ServerOpt {
 	}
 }
 
-var WithAnyRuntime ServerOpt = WithRuntimeName()
+var WithAnyRuntime = WithRuntimeName()
