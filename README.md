@@ -1,5 +1,7 @@
 # sequence
 
+[![push](https://github.com/frantjc/sequence/workflows/push/badge.svg?branch=master&event=push)](https://github.com/frantjc/sequence/actions)
+
 ## developing
 
 - `golang` is _required_ - version 1.16 or above is required for go mod to work
