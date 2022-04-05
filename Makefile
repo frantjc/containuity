@@ -9,7 +9,7 @@ BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null)
 SHORT_SHA ?= $(shell git rev-parse --short $(COMMIT))
 
-REGISTRY ?= docker.io
+REGISTRY ?= ghcr.io
 REPOSITORY ?= frantjc/sequence
 MODULE ?= github.com/$(REPOSITORY)
 TAG ?= latest

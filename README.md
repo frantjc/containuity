@@ -1,6 +1,6 @@
 # sequence
 
-[![push](https://github.com/frantjc/sequence/workflows/push/badge.svg?branch=main&event=push)](https://github.com/frantjc/sequence/actions)
+[![push](https://github.com/frantjc/sequence/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/frantjc/sequence/actions)
 
 ## developing
 

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Registry = "docker.io"
+	Registry = "ghcr.io"
 
 	Repository = "frantjc/sequence"
 )
