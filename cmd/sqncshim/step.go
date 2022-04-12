@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/env"
@@ -24,12 +25,22 @@ func runStep(cmd *cobra.Command, args []string) error {
 		githubPathFile = os.Getenv(actions.EnvVarPath)
 	)
 
-	if githubPath, err := env.PathFromFile(githubPathFile); err != nil {
-		command.Path = fmt.Sprintf("%s:%s", command.Path, githubPath)
-	}
-
 	if githubEnv, err := env.ArrFromFile(githubEnvFile); err != nil {
 		command.Env = append(command.Env, githubEnv...)
+	}
+
+	if githubPath, err := env.PathFromFile(githubPathFile); err != nil {
+		pathIndex := -1
+		for i, env := range command.Env {
+			if spl := strings.Split(env, "="); len(spl) > 0 && strings.EqualFold(spl[0], "PATH") {
+				pathIndex = i
+			}
+		}
+		if pathIndex >= 0 {
+			command.Env[pathIndex] = fmt.Sprintf("PATH=%s", githubPath)
+		} else {
+			command.Env = append(command.Env, fmt.Sprintf("PATH=%s", githubPath))
+		}
 	}
 
 	command.Stdin = os.Stdin
