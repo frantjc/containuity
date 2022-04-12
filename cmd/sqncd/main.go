@@ -13,13 +13,12 @@ import (
 	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/conf/flags"
 	"github.com/frantjc/sequence/log"
-	"github.com/frantjc/sequence/meta"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:               fmt.Sprintf("%sd", meta.Name),
-	Version:           fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()),
+	Use:               "sqncd",
+	Version:           fmt.Sprintf("sqncd%s %s", sequence.Semver(), runtime.Version()),
 	PersistentPreRunE: persistentPreRun,
 	RunE:              run,
 }

@@ -7,13 +7,17 @@ import (
 
 const (
 	EnvVarRuntime      = "SQNC_RUNTIME"
-	DefaultRuntimeName = "docker"
+	DockerRuntimeName  = "docker"
+	DefaultRuntimeName = DockerRuntimeName
 )
 
 type Runtime interface {
 	PullImage(context.Context, string) (Image, error)
 	CreateContainer(context.Context, *Spec) (Container, error)
-	GetContainer(ctx context.Context, id string) (Container, error)
+	GetContainer(context.Context, string) (Container, error)
+	CreateVolume(context.Context, string) (Volume, error)
+	GetVolume(context.Context, string) (Volume, error)
+	Prune(context.Context) error
 }
 
 type InitF func(context.Context) (Runtime, error)

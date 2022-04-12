@@ -11,7 +11,6 @@ import (
 	workflowapi "github.com/frantjc/sequence/api/v1/workflow"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
-	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -71,9 +70,9 @@ func (c *Client) ImageClient() imageapi.ImageClient {
 }
 
 // Runtime returns a runtime.Runtime implementation using the underlying clients
-func (c *Client) Runtime() runtime.Runtime {
-	return NewGRPCRuntime(c.ImageClient(), c.ContainerClient())
-}
+// func (c *Client) Runtime() runtime.Runtime {
+// 	return NewGRPCRuntime(c.ImageClient(), c.ContainerClient())
+// }
 
 // RunStep calls the underlying gRPC StepClient's RunStep and
 // writes its logs to the given io.Writer

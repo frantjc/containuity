@@ -11,12 +11,6 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type noOpWriter struct{}
-
-func (w *noOpWriter) Write(p []byte) (int, error) {
-	return len(p), nil
-}
-
 func (r *dockerRuntime) PullImage(ctx context.Context, ref string) (runtime.Image, error) {
 	pref, err := reference.Parse(ref)
 	if err != nil {

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/frantjc/sequence/github"
-	"github.com/frantjc/sequence/meta"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/pelletier/go-toml/v2"
 )
@@ -19,7 +18,7 @@ var ExampleRawConfigFile = &RawConfigFile{}
 
 func init() {
 	if err := toml.NewDecoder(bytes.NewReader(ExampleRawConfigFileBytes)).Decode(ExampleRawConfigFile); err != nil {
-		panic(fmt.Sprintf("%s/config.ExampleConfigFile is not a valid config file", meta.Module))
+		panic(fmt.Sprintf("conf.ExampleConfigFile is not a valid config file"))
 	}
 }
 
@@ -31,21 +30,24 @@ const (
 	DefaultConfigFileName = "config.toml"
 )
 
-var home = os.Getenv("HOME")
+var (
+	home = os.Getenv("HOME")
+	name = "sqnc"
+)
 
 var (
-	DefaultSystemRootDir   = filepath.Join("/var/lib", meta.Name)
-	DefaultSystemStateDir  = filepath.Join("/var/run", meta.Name)
-	DefaultSystemConfigDir = filepath.Join("/etc", meta.Name)
-	DefaultUserDir         = filepath.Join(home, fmt.Sprintf(".%s", meta.Name))
+	DefaultSystemRootDir   = filepath.Join("/var/lib", name)
+	DefaultSystemStateDir  = filepath.Join("/var/run", name)
+	DefaultSystemConfigDir = filepath.Join("/etc", name)
+	DefaultUserDir         = filepath.Join(home, fmt.Sprintf(".%s", name))
 	DefaultUserConfigDir   = DefaultUserDir
 	DefaultUserRootDir     = filepath.Join(DefaultUserDir, "lib")
 	DefaultUserStateDir    = filepath.Join(DefaultUserDir, "run")
 )
 
 var (
-	DefaultSystemSocket         = fmt.Sprintf("unix://%s", filepath.Join(DefaultSystemStateDir, fmt.Sprintf("%s.sock", meta.Name)))
+	DefaultSystemSocket         = fmt.Sprintf("unix://%s", filepath.Join(DefaultSystemStateDir, fmt.Sprintf("%s.sock", name)))
 	DefaultSystemConfigFilePath = filepath.Join(DefaultSystemConfigDir, DefaultConfigFileName)
 	DefaultUserConfigFilePath   = filepath.Join(DefaultUserDir, DefaultConfigFileName)
-	DefaultUserSocket           = fmt.Sprintf("unix://%s", filepath.Join(DefaultUserStateDir, fmt.Sprintf("%s.sock", meta.Name)))
+	DefaultUserSocket           = fmt.Sprintf("unix://%s", filepath.Join(DefaultUserStateDir, fmt.Sprintf("%s.sock", name)))
 )

@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	containerapi "github.com/frantjc/sequence/api/v1/container"
-	imageapi "github.com/frantjc/sequence/api/v1/image"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/services/container"
 	"github.com/frantjc/sequence/services/image"
@@ -63,17 +61,6 @@ func NewServer(ctx context.Context, opts ...ServerOpt) (*Server, error) {
 	}
 	containerService.Register(grpcServer)
 	log.Info("registered container service")
-
-	var (
-		imageClient, _     = imageService.Client()
-		containerClient, _ = containerService.Client()
-	)
-	if ic, ok := imageClient.(imageapi.ImageClient); ok {
-		if cc, ok := containerClient.(containerapi.ContainerClient); ok {
-			log.Info("using container and image services as runtime")
-			runtime = NewGRPCRuntime(ic, cc)
-		}
-	}
 
 	stepService, err := step.NewService(step.WithRuntime(runtime))
 	if err != nil {

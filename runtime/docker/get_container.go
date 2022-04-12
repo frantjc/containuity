@@ -7,8 +7,5 @@ import (
 )
 
 func (r *dockerRuntime) GetContainer(ctx context.Context, id string) (runtime.Container, error) {
-	return &dockerContainer{
-		id:     id,
-		client: r.client,
-	}, nil
+	return &dockerContainer{id, r.client}, nil
 }

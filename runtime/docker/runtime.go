@@ -7,7 +7,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-const RuntimeName = runtime.DefaultRuntimeName
+const RuntimeName = runtime.DockerRuntimeName
 
 type dockerRuntime struct {
 	client *dclient.Client

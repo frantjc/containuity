@@ -6,19 +6,20 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/frantjc/sequence/meta"
+	"github.com/frantjc/sequence"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:     fmt.Sprintf("%sshim", meta.Name),
-	Version: fmt.Sprintf("%s%s %s", meta.Name, meta.Semver(), runtime.Version()),
+	Use:     "sqncshim",
+	Version: fmt.Sprintf("sqncshim%s %s", sequence.Semver(), runtime.Version()),
 }
 
 func init() {
 	rootCmd.SetVersionTemplate("{{ .Version }}\n")
 	rootCmd.AddCommand(
 		pluginCmd,
+		stepCmd,
 		versionCmd,
 	)
 }

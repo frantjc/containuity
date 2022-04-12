@@ -43,13 +43,6 @@ func (c *containerClient) ExecContainer(ctx context.Context, in *api.ExecContain
 	var (
 		stream         = grpcio.NewLogStream(ctx)
 		stdout, stderr = grpcio.NewLogStreamMultiplexWriter(stream)
-		opts           = []runtime.ExecOpt{
-			runtime.WithStreams(
-				os.Stdin,
-				stdout,
-				stderr,
-			),
-		}
 	)
 	container, err := c.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
@@ -58,7 +51,11 @@ func (c *containerClient) ExecContainer(ctx context.Context, in *api.ExecContain
 
 	go func() {
 		defer stream.CloseSend()
-		if err := container.Exec(ctx, opts...); err != nil {
+		if err := container.Exec(ctx, runtime.ExecStreams(
+			os.Stdin,
+			stdout,
+			stderr,
+		)); err != nil {
 			stream.SendErr(err)
 		}
 	}()

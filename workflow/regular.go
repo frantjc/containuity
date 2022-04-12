@@ -273,7 +273,7 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 
 	return container.Exec(
 		ctx,
-		runtime.WithStreams(
+		runtime.ExecStreams(
 			os.Stdin,
 			actions.NewCommandWriter(commandWriterCallback, ex.stdout),
 			actions.NewCommandWriter(commandWriterCallback, ex.stderr),

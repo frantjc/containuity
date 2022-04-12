@@ -1,11 +1,8 @@
 package github
 
 import (
-	"fmt"
 	"net/url"
 	"path"
-
-	"github.com/frantjc/sequence/meta"
 )
 
 var (
@@ -18,17 +15,17 @@ func init() {
 	var err error
 	DefaultURL, err = url.Parse("https://github.com")
 	if err != nil {
-		panic(fmt.Sprintf("%s/github.DefaultURL is not a valid URL", meta.Module))
+		panic("github.com/frantjc/sequence/github.DefaultURL is not a valid URL")
 	}
 
 	DefaultAPIURL, err = APIURLFromBaseURL(DefaultURL)
 	if err != nil {
-		panic(fmt.Sprintf("%s/github.DefaultAPIURL is not a valid URL", meta.Module))
+		panic("github.com/frantjc/sequence/github.DefaultAPIURL is not a valid URL")
 	}
 
 	DefaultGraphQLURL, err = GraphQLURLFromBaseURL(DefaultURL)
 	if err != nil {
-		panic(fmt.Sprintf("%s/github.DefaultGraphQLURL is not a valid URL", meta.Module))
+		panic("github.com/frantjc/sequence/github.DefaultGraphQLURL is not a valid URL")
 	}
 }
 

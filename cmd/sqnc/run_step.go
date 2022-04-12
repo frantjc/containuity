@@ -82,13 +82,17 @@ func runStep(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := []sequence.RunOpt{
-		sequence.WithJob(j),
-		sequence.WithWorkflow(w),
 		sequence.WithRunnerImage(c.Runtime.RunnerImage),
 		sequence.WithRepository(flags.FlagWorkDir),
 	}
 	if c.Verbose {
 		opts = append(opts, sequence.WithVerbose)
+	}
+	if j != nil {
+		opts = append(opts, sequence.WithJob(j))
+	}
+	if w != nil {
+		opts = append(opts, sequence.WithWorkflow(w))
 	}
 
 	return client.RunStep(ctx, s, log.Writer(), opts...)

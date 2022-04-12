@@ -3,7 +3,6 @@ package sequence
 import (
 	"os"
 
-	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/workflow"
 )
 
@@ -19,8 +18,7 @@ type runOpts struct {
 func defaultRunOpts() *runOpts {
 	wd, _ := os.Getwd()
 	return &runOpts{
-		repository:  wd,
-		runnerImage: conf.DefaultRunnerImage,
+		repository: wd,
 	}
 }
 

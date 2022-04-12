@@ -5,9 +5,9 @@ GIT ?= git
 DOCKER ?= docker
 PROTOC ?= protoc
 
-BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
-COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null)
-SHORT_SHA ?= $(shell git rev-parse --short $(COMMIT))
+BRANCH ?= $(shell $(GIT) rev-parse --abbrev-ref HEAD 2>/dev/null)
+COMMIT ?= $(shell $(GIT) rev-parse HEAD 2>/dev/null)
+SHORT_SHA ?= $(shell $(GIT) rev-parse --short $(COMMIT))
 
 REGISTRY ?= ghcr.io
 REPOSITORY ?= frantjc/sequence
@@ -24,11 +24,17 @@ INSTALL ?= sudo install
 
 .DEFAULT: bin
 
-bin bins binaries: sqnc sqncd sqnctl sqncshim
+bin: sqnc
+
+bins binaries: sqnc sqncd sqnctl sqncshim
 
 sqnc sqncd sqnctl sqncshim:
-	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence/meta.Build=$(SHORT_SHA) -X github.com/frantjc/sequence/meta.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence.Build=$(SHORT_SHA) -X github.com/frantjc/sequence.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
+
+shim:
+	GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w -X github.com/frantjc/sequence.Build=$(SHORT_SHA) -X github.com/frantjc/sequence.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim
+# TODO mv $(CURDUR)/bin/sqncshim -o $(CURDUR)/sqncshim
 
 image img: 
 	$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
@@ -59,4 +65,4 @@ protos:
 coverage:
 	$(GO) test -v -cover -covermode=atomic -coverprofile=coverage.txt ./...
 
-.PHONY: bin bins binaries sqnc sqncd sqnctl sqncshim image img test fmt lint pretty vet tidy vendor clean protos
+.PHONY: bin bins binaries sqnc sqncd sqnctl sqncshim shim image img test fmt lint pretty vet tidy vendor clean protos coverage

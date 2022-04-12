@@ -1,8 +1,13 @@
 package runtime
 
-import "context"
+import (
+	"context"
+	"io"
+)
 
 type Container interface {
 	ID() string
-	Exec(context.Context, ...ExecOpt) error
+	Exec(context.Context, *Exec) error
+	CopyTo(context.Context, io.Reader, string) error
+	CopyFrom(context.Context, string) (io.ReadCloser, error)
 }

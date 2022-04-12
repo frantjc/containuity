@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# placeholder for github.com/frantjc/sequence/cmd/sqncshim
+# which overrides this at build time
+
+echo 'github.com/frantjc/sequence.Shim is incorrect--did you build sequence properly?'
+exit 1

@@ -18,10 +18,11 @@ func (r *dockerRuntime) Prune(ctx context.Context) error {
 		return err
 	}
 
-	_, err = r.client.VolumesPrune(ctx, filter)
+	_, err = r.client.ImagesPrune(ctx, filter)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	_, err = r.client.VolumesPrune(ctx, filter)
+	return err
 }

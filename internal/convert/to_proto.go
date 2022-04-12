@@ -17,6 +17,10 @@ func MapInterfaceToAnyProto(i map[string]interface{}) map[string]*anypb.Any {
 }
 
 func StepToProtoStep(s *workflow.Step) *types.Step {
+	if s == nil {
+		return nil
+	}
+
 	return &types.Step{
 		Id:         s.ID,
 		Name:       s.Name,
@@ -36,8 +40,11 @@ func StepToProtoStep(s *workflow.Step) *types.Step {
 }
 
 func JobToProtoJob(j *workflow.Job) *types.Job {
-	steps := make([]*types.Step, len(j.Steps))
+	if j == nil {
+		return nil
+	}
 
+	steps := make([]*types.Step, len(j.Steps))
 	for i, s := range j.Steps {
 		steps[i] = StepToProtoStep(s)
 	}
@@ -58,8 +65,11 @@ func JobToProtoJob(j *workflow.Job) *types.Job {
 }
 
 func WorkflowToProtoWorkflow(w *workflow.Workflow) *types.Workflow {
-	jobs := make(map[string]*types.Job, len(w.Jobs))
+	if w == nil {
+		return nil
+	}
 
+	jobs := make(map[string]*types.Job, len(w.Jobs))
 	for i, j := range w.Jobs {
 		jobs[i] = JobToProtoJob(j)
 	}
@@ -82,6 +92,10 @@ func RuntimeImageToProtoImage(image runtime.Image) *types.Image {
 }
 
 func RuntimeSpecToProtoSpec(s *runtime.Spec) *types.Spec {
+	if s == nil {
+		return nil
+	}
+
 	return &types.Spec{
 		Image:      s.Image,
 		Cwd:        s.Cwd,
@@ -95,7 +109,6 @@ func RuntimeSpecToProtoSpec(s *runtime.Spec) *types.Spec {
 
 func SpecsMountsToProtoMounts(m []specs.Mount) []*types.Mount {
 	mounts := make([]*types.Mount, len(m))
-
 	for i, j := range m {
 		mounts[i] = &types.Mount{
 			Source:      j.Source,

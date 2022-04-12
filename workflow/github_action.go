@@ -9,7 +9,6 @@ import (
 
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/log"
-	"github.com/frantjc/sequence/meta"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/google/uuid"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -51,7 +50,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 
 	logout.Infof("[%sSQNC%s] setting up action '%s'", log.ColorInfo, log.ColorNone, action.String())
 	spec := &runtime.Spec{
-		Image:      meta.Image(),
+		Image:      "ghcr.io/frantjc/sequence",
 		Entrypoint: []string{"sqncshim"},
 		Cmd:        []string{"plugin", "uses", action.String(), ex.globalContext.GitHubContext.ActionPath},
 		Mounts: []specs.Mount{
@@ -88,7 +87,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 	}
 
 	outbuf := new(bytes.Buffer)
-	if err = container.Exec(ctx, runtime.WithStreams(os.Stdin, outbuf, ex.stderr)); err != nil {
+	if err = container.Exec(ctx, runtime.ExecStreams(os.Stdin, outbuf, ex.stderr)); err != nil {
 		return err
 	}
 

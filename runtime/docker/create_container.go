@@ -30,7 +30,6 @@ func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (r
 			Labels:     labels,
 		}
 		hconf = &container.HostConfig{
-			AutoRemove: true,
 			Privileged: s.Privileged,
 		}
 	)
