@@ -1,4 +1,4 @@
-package sequence
+package workflow
 
 import (
 	"archive/tar"
@@ -15,12 +15,12 @@ var (
 )
 
 func init() {
-	if _, err := ShimTarball(); err != nil {
-		panic("github.com/frantjc/sequence.Shim is not able to be tarballed")
+	if _, err := shimTarArchive(); err != nil {
+		panic("github.com/frantjc/sequence/workflow.Shim is not able to be tarballed")
 	}
 }
 
-func ShimTarball() (io.Reader, error) {
+func shimTarArchive() (io.Reader, error) {
 	tarball := new(bytes.Buffer)
 
 	gzipWriter := gzip.NewWriter(tarball)

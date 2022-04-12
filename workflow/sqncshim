@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# placeholder for github.com/frantjc/sequence/cmd/sqncshim
+# which overrides this at build time
+
+echo 'github.com/frantjc/sequence/workflow.Shim is incorrect--did you build sequence properly?'
+echo 'call:'
+echo "sqncshim $@"
+exit 1
