@@ -14,11 +14,11 @@ COPY . .
 ARG version=0.0.0
 ARG prerelease=
 ARG commit=
-ARG repository=frantjc/sequence
-ARG tag=latest
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqncshim
-RUN cp /usr/local/bin/sqncshim .
+RUN cp /usr/local/bin/sqncshim ./workflow
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqnc
+RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqncd
+RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqnctl
 RUN set -e; for pkg in $(go list ./...); do \
 		go test -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/test/bin/$(basename $pkg).test -c $pkg; \
 	done

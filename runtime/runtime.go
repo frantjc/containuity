@@ -17,7 +17,9 @@ type Runtime interface {
 	GetContainer(context.Context, string) (Container, error)
 	CreateVolume(context.Context, string) (Volume, error)
 	GetVolume(context.Context, string) (Volume, error)
-	Prune(context.Context) error
+	PruneContainers(context.Context) error
+	PruneImages(context.Context) error
+	PruneVolumes(context.Context) error
 }
 
 type InitF func(context.Context) (Runtime, error)

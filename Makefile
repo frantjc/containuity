@@ -26,15 +26,17 @@ INSTALL ?= sudo install
 
 bin: sqnc
 
-bins binaries: sqnc sqncd sqnctl sqncshim
+bins binaries: sqnc sqncd sqnctl
 
-sqnc sqncd sqnctl sqncshim:
+sqnc sqncd sqnctl: shims
 	$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence.Build=$(SHORT_SHA) -X github.com/frantjc/sequence.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
-shim:
-	GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w -X github.com/frantjc/sequence.Build=$(SHORT_SHA) -X github.com/frantjc/sequence.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim
-# TODO mv $(CURDUR)/bin/sqncshim -o $(CURDUR)/sqncshim
+shims:
+	GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim
+	mv $(CURDIR)/bin/sqncshim $(CURDIR)/workflow/sqncshim
+	GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim-uses
+	mv $(CURDIR)/bin/sqncshim-uses $(CURDIR)/workflow/sqncshim-uses
 
 image img: 
 	$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .

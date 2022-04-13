@@ -26,7 +26,6 @@ func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...g
 			workflow.WithRuntime(c.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRepository(in.Repository),
-			workflow.WithWorkdir(conf.RootDir),
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
 			workflow.WithStderr(grpcio.NewLogErrStreamWriter(stream)),
 		}

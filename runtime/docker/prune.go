@@ -1,28 +1,18 @@
 package docker
 
-import (
-	"context"
-	"fmt"
+import "context"
 
-	"github.com/docker/docker/api/types/filters"
-)
-
-func (r *dockerRuntime) Prune(ctx context.Context) error {
-	filter := filters.NewArgs()
-	for k, v := range labels {
-		filter.Add("label", fmt.Sprintf("%s=%s", k, v))
-	}
-
+func (r *dockerRuntime) PruneContainers(ctx context.Context) error {
 	_, err := r.client.ContainersPrune(ctx, filter)
-	if err != nil {
-		return err
-	}
+	return err
+}
 
-	_, err = r.client.ImagesPrune(ctx, filter)
-	if err != nil {
-		return err
-	}
+func (r *dockerRuntime) PruneImages(ctx context.Context) error {
+	_, err := r.client.ImagesPrune(ctx, filter)
+	return err
+}
 
-	_, err = r.client.VolumesPrune(ctx, filter)
+func (r *dockerRuntime) PruneVolumes(ctx context.Context) error {
+	_, err := r.client.VolumesPrune(ctx, filter)
 	return err
 }

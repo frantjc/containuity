@@ -26,7 +26,6 @@ func (c *workflowClient) RunWorkflow(ctx context.Context, in *api.RunWorkflowReq
 			workflow.WithRuntime(c.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRepository(in.Repository),
-			workflow.WithWorkdir(conf.RootDir),
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
 			workflow.WithStderr(grpcio.NewLogErrStreamWriter(stream)),
 		}

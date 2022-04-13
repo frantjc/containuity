@@ -1,24 +1,26 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/workflow"
-	"github.com/spf13/cobra"
 )
 
-var pluginUsesCmd = &cobra.Command{
-	RunE: runPluginUses,
-	Use:  "uses",
-	Args: cobra.RangeArgs(1, 2),
+func main() {
+	if err := mainE(); err != nil {
+		panic(err)
+	}
 }
 
-func runPluginUses(cmd *cobra.Command, args []string) error {
+func mainE() error {
 	var (
+		args = os.Args
+		ctx  = context.Background()
 		actionRef = args[0]
-		path      = "."
+		path = "."
 	)
 
 	if len(args) > 1 {
@@ -30,7 +32,7 @@ func runPluginUses(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	m, err := actions.CloneContext(cmd.Context(), parsed, actions.WithPath(path))
+	m, err := actions.CloneContext(ctx, parsed, actions.WithPath(path))
 	if err != nil {
 		return err
 	}

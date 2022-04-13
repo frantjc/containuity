@@ -26,7 +26,6 @@ func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc
 			workflow.WithRuntime(c.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRepository(in.Repository),
-			workflow.WithWorkdir(conf.RootDir),
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
 			workflow.WithStderr(grpcio.NewLogErrStreamWriter(stream)),
 		}
