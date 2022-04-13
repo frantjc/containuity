@@ -11,23 +11,11 @@ import (
 
 var (
 	//go:embed sqncshim
-	shim     []byte
+	shim []byte
 	//go:embed sqncshim-uses
 	shimUses []byte
 	shimName = "sqncshim"
 )
-
-func init() {
-	go func () {
-		if _, err := shimTarArchive(); err != nil {
-			panic("github.com/frantjc/sequence/workflow.shim is not able to be tarballed")
-		}
-	
-		if _, err := shimUsesTarArchive(); err != nil {
-			panic("github.com/frantjc/sequence/workflow.shimUses is not able to be tarballed")
-		}
-	}()
-}
 
 func shimTarArchive() (io.Reader, error) {
 	tarball := new(bytes.Buffer)

@@ -4,7 +4,7 @@
 # or github.com/frantjc/sequence/cmd/sqncshim
 # which overrides this at build time
 #
-# sqncshim and sqncshim-uses are symlinked to sqncshim.sh in case one of the former
+# sqncshim and sqncshim-uses are copies of sqncshim.sh in case one of the former
 # gets accidentally overwritten in source control :)
 
 echo '::error::this should not happen'

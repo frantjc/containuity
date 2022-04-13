@@ -17,10 +17,10 @@ func main() {
 
 func mainE() error {
 	var (
-		args = os.Args
-		ctx  = context.Background()
+		args      = os.Args
+		ctx       = context.Background()
 		actionRef = args[0]
-		path = "."
+		path      = "."
 	)
 
 	if len(args) > 1 {
