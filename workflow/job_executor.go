@@ -213,12 +213,16 @@ func (e *jobExecutor) id() string {
 	)
 }
 
+func (e *jobExecutor) github() string {
+	return strings.Join([]string{e.id(), "github"}, "-")
+}
+
 func (e *jobExecutor) githubPath() string {
-	return strings.Join([]string{e.id(), "github", "path"}, "-")
+	return strings.Join([]string{e.github(), "path"}, "-")
 }
 
 func (e *jobExecutor) githubEnv() string {
-	return strings.Join([]string{e.id(), "github", "env"}, "-")
+	return strings.Join([]string{e.github(), "env"}, "-")
 }
 
 func (e *jobExecutor) workspace() string {
@@ -253,8 +257,9 @@ var (
 	containerWorkspace       = filepath.Join(containerRoot, "workspace")
 	containerRunnerTemp      = filepath.Join(containerRoot, "runner", "temp")
 	containerRunnerToolCache = filepath.Join(containerRoot, "runner", "toolcache")
-	containerGitHubEnvDir    = filepath.Join(containerRoot, "github")
-	containerGitHubPathDir   = containerGitHubEnvDir
+	containerGitHubDir       = filepath.Join(containerRoot, "github")
+	containerGitHubEnvDir    = containerGitHubDir
+	containerGitHubPathDir   = containerGitHubDir
 	containerGitHubEnv       = filepath.Join(containerGitHubEnvDir, "env")
 	containerGitHubPath      = filepath.Join(containerGitHubPathDir, "path")
 	containerShimDir         = filepath.Join(containerRoot)
@@ -286,13 +291,8 @@ func (e *jobExecutor) mounts() []specs.Mount {
 			Type:        runtime.MountTypeVolume,
 		},
 		{
-			Source:      e.githubEnv(),
-			Destination: containerGitHubEnv,
-			Type:        runtime.MountTypeVolume,
-		},
-		{
-			Source:      e.githubPath(),
-			Destination: containerGitHubPath,
+			Source:      e.github(),
+			Destination: containerGitHubDir,
 			Type:        runtime.MountTypeVolume,
 		},
 		// {

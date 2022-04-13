@@ -15,7 +15,9 @@ ARG version=0.0.0
 ARG prerelease=
 ARG commit=
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqncshim
+RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqncshim-uses
 RUN cp /usr/local/bin/sqncshim ./workflow
+RUN cp /usr/local/bin/sqncshim-uses ./workflow
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqnc
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqncd
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease} -X github.com/frantjc/sequence.Build=${commit}" -o /usr/local/bin ./cmd/sqnctl

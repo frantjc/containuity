@@ -38,11 +38,11 @@ func mainE() error {
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 
-	if githubEnv, err := env.ArrFromFile(githubEnvFile); err != nil {
+	if githubEnv, err := env.ArrFromFile(githubEnvFile); err == nil {
 		command.Env = append(command.Env, githubEnv...)
 	}
 
-	if githubPath, err := env.PathFromFile(githubPathFile); err != nil && githubPath != "" {
+	if githubPath, err := env.PathFromFile(githubPathFile); err == nil && githubPath != "" {
 		pathIndex := -1
 		for i, env := range command.Env {
 			if spl := strings.Split(env, "="); len(spl) > 0 && strings.EqualFold(spl[0], "PATH") {
