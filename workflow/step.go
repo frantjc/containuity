@@ -176,15 +176,20 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 // that is cloned at the given path
 func NewPreStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 	switch a.Runs.Using {
-	case actions.RunsUsingNode12, actions.RunsUsingNode16:
-		image := node12
-		if a.Runs.Using == actions.RunsUsingNode16 {
-			image = node16
-		}
-
+	case actions.RunsUsingNode12:
 		if a.Runs.Pre != "" {
 			return &Step{
-				Image:      image,
+				Image:      node12,
+				Entrypoint: []string{"node"},
+				Cmd:        []string{filepath.Join(path, a.Runs.Pre)},
+				With:       a.WithFromInputs(),
+				Env:        a.Runs.Env,
+			}, nil
+		}
+	case actions.RunsUsingNode16:
+		if a.Runs.Pre != "" {
+			return &Step{
+				Image:      node16,
 				Entrypoint: []string{"node"},
 				Cmd:        []string{filepath.Join(path, a.Runs.Pre)},
 				With:       a.WithFromInputs(),
@@ -206,7 +211,7 @@ func NewPreStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 			return nil, fmt.Errorf("action runs.using '%s' only implemented for runs.image with prefix '%s', got '%s'", actions.RunsUsingDocker, imagePrefix, a.Runs.Image)
 		}
 	default:
-		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", a.Runs.Using, actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16)
+		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16, a.Runs.Using)
 	}
 
 	return nil, nil
@@ -216,15 +221,20 @@ func NewPreStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 // that is cloned at the given path
 func NewMainStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 	switch a.Runs.Using {
-	case actions.RunsUsingNode12, actions.RunsUsingNode16:
-		image := node12
-		if a.Runs.Using == actions.RunsUsingNode16 {
-			image = node16
-		}
-
+	case actions.RunsUsingNode12:
 		if a.Runs.Main != "" {
 			return &Step{
-				Image:      image,
+				Image:      node12,
+				Entrypoint: []string{"node"},
+				Cmd:        []string{filepath.Join(path, a.Runs.Main)},
+				With:       a.WithFromInputs(),
+				Env:        a.Runs.Env,
+			}, nil
+		}
+	case actions.RunsUsingNode16:
+		if a.Runs.Main != "" {
+			return &Step{
+				Image:      node16,
 				Entrypoint: []string{"node"},
 				Cmd:        []string{filepath.Join(path, a.Runs.Main)},
 				With:       a.WithFromInputs(),
@@ -247,7 +257,7 @@ func NewMainStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 			return nil, fmt.Errorf("action runs.using '%s' only implemented for runs.image with prefix '%s', got '%s'", actions.RunsUsingDocker, imagePrefix, a.Runs.Image)
 		}
 	default:
-		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", a.Runs.Using, actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16)
+		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16, a.Runs.Using)
 	}
 
 	return nil, nil
@@ -257,15 +267,20 @@ func NewMainStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 // that is cloned at the given path
 func NewPostStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 	switch a.Runs.Using {
-	case actions.RunsUsingNode12, actions.RunsUsingNode16:
-		image := node12
-		if a.Runs.Using == actions.RunsUsingNode16 {
-			image = node16
-		}
-
+	case actions.RunsUsingNode12:
 		if a.Runs.Post != "" {
 			return &Step{
-				Image:      image,
+				Image:      node12,
+				Entrypoint: []string{"node"},
+				Cmd:        []string{filepath.Join(path, a.Runs.Post)},
+				With:       a.WithFromInputs(),
+				Env:        a.Runs.Env,
+			}, nil
+		}
+	case actions.RunsUsingNode16:
+		if a.Runs.Post != "" {
+			return &Step{
+				Image:      node16,
 				Entrypoint: []string{"node"},
 				Cmd:        []string{filepath.Join(path, a.Runs.Post)},
 				With:       a.WithFromInputs(),
@@ -287,7 +302,7 @@ func NewPostStepFromMetadata(a *actions.Metadata, path string) (*Step, error) {
 			return nil, fmt.Errorf("action runs.using '%s' only implemented for runs.image with prefix '%s', got '%s'", actions.RunsUsingDocker, imagePrefix, a.Runs.Image)
 		}
 	default:
-		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", a.Runs.Using, actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16)
+		return nil, fmt.Errorf("action runs.using only implemented for '%s', '%s' and '%s', got '%s'", actions.RunsUsingDocker, actions.RunsUsingNode12, actions.RunsUsingNode16, a.Runs.Using)
 	}
 
 	return nil, nil

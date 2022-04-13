@@ -86,6 +86,14 @@ func WithJob(j *Job) ExecOpt {
 	}
 }
 
+func WithJobName(jobName string) ExecOpt {
+	return func(e *jobExecutor) error {
+		e.globalContext.GitHubContext.Job = jobName
+		e.ctxOpts = append(e.ctxOpts, actions.WithJobName(jobName))
+		return nil
+	}
+}
+
 func WithWorkflow(w *Workflow) ExecOpt {
 	return func(e *jobExecutor) error {
 		if w.Name != "" {

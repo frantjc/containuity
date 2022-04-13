@@ -11,6 +11,7 @@ import (
 
 	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
@@ -104,6 +105,8 @@ type jobExecutor struct {
 var _ Executor = &jobExecutor{}
 
 func (e *jobExecutor) Start(ctx context.Context) error {
+	logout := log.New(e.stdout).SetVerbose(e.verbose)
+	logout.Infof("[%sSQNC%s] running job '%s'", log.ColorInfo, log.ColorNone, e.globalContext.GitHubContext.Job)
 	for _, step := range e.steps {
 		if step.IsGitHubAction() {
 			githubAction := &githubActionStep{
@@ -192,8 +195,9 @@ func (e *jobExecutor) expandBytes(p []byte) []byte {
 	return actions.ExpandBytes(p, e.globalContext.Get)
 }
 
+var idRxp = regexp.MustCompile("[^a-zA-Z0-9_.-]")
+
 func (e *jobExecutor) id() string {
-	rxp := regexp.MustCompile("[^a-zA-Z0-9_.-]")
 	ids := []string{e.repository}
 	if e.globalContext.GitHubContext.Job != "" {
 		ids = append(ids, e.globalContext.GitHubContext.Job)
@@ -204,7 +208,7 @@ func (e *jobExecutor) id() string {
 	return fmt.Sprintf(
 		"sqnc-%s",
 		strings.TrimPrefix(
-			rxp.ReplaceAllLiteralString(
+			idRxp.ReplaceAllLiteralString(
 				strings.Join(ids, "-"),
 				"-",
 			),
@@ -238,7 +242,10 @@ func (e *jobExecutor) runnerToolCache() string {
 }
 
 func (e *jobExecutor) actionPath(action actions.Reference) string {
-	return strings.Join([]string{"actions", action.Owner(), action.Repository(), action.Path(), action.Version()}, "-")
+	return idRxp.ReplaceAllLiteralString(
+		strings.Join([]string{"actions", action.Owner(), action.Repository(), action.Path(), action.Version()}, "-"),
+		"-",
+	)
 }
 
 var (

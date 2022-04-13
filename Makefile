@@ -61,7 +61,7 @@ vendor: tidy
 	@$(GO) mod vendor
 	@$(GO) mod verify
 
-clean: tidy
+clean: tidy placeholders
 	@rm -rf bin/* vendor
 	@$(DOCKER) system prune --volumes -a --filter label=sequence=true
 

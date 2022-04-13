@@ -137,6 +137,8 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 					}
 				}
 			}
+
+			return nil
 		}
 		// pre, main and post steps must remain connected via their state
 		// but should not share that state with other steps
