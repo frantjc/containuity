@@ -53,7 +53,7 @@ func shimUsesTarArchive() (io.Reader, error) {
 
 	if err := tarWriter.WriteHeader(&tar.Header{
 		Name:    shimName,
-		Size:    int64(len(shim)),
+		Size:    int64(len(shimUses)),
 		Mode:    0777,
 		ModTime: time.Now(),
 	}); err != nil {

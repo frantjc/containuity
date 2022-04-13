@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence/github/actions"
-	"github.com/frantjc/sequence/internal/env"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/runtime"
 	"golang.org/x/net/context"
@@ -49,7 +48,7 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 		}
 		spec = &runtime.Spec{
 			Image:      ex.runnerImage,
-			Entrypoint: []string{containerShim, "step", "--"},
+			Entrypoint: []string{containerShim},
 			Cwd:        ex.globalContext.GitHubContext.Workspace,
 			Env: append(
 				ex.env(),
@@ -68,16 +67,19 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 	logout.Infof("[%sSQNC%s] running step '%s'", log.ColorInfo, log.ColorNone, id)
 	ex.globalContext.InputsContext = expanded.With
 	expanded.Env = ex.expandStringMap(e.Env)
+	if ex.globalContext.EnvContext == nil {
+		ex.globalContext.EnvContext = map[string]string{}
+	}
 	for k, v := range expanded.Env {
 		ex.globalContext.EnvContext[k] = v
 	}
 	expanded = &regularStep{
-		ID:         ex.expandString(expanded.ID),
-		Name:       ex.expandString(expanded.Name),
+		ID:         expanded.ID,
+		Name:       expanded.Name,
 		Shell:      ex.expandString(e.Shell),
 		Run:        ex.expandString(e.Run),
 		If:         ex.expandString(fmt.Sprint(e.If)),
-		With:       ex.expandStringMap(expanded.With),
+		With:       expanded.With,
 		Image:      ex.expandString(e.Image),
 		Privileged: e.Privileged,
 		Env:        ex.expandStringMap(expanded.Env),
@@ -88,9 +90,6 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 		Outputs: map[string]string{},
 	}
 	spec.Env = append(spec.Env, ex.globalContext.EnvArr()...)
-	spec.Env = append(spec.Env, env.ArrFromMap(expanded.Env)...)
-
-	logout.Infof("%s", spec.Env)
 
 	var (
 		echo                  = false

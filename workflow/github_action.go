@@ -49,7 +49,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 	logout.Infof("[%sSQNC%s] setting up action '%s'", log.ColorInfo, log.ColorNone, action.String())
 	spec := &runtime.Spec{
 		Image:      ex.runnerImage,
-		Entrypoint: []string{containerShim, "plugin", "uses", action.String(), ex.globalContext.GitHubContext.ActionPath},
+		Entrypoint: []string{containerShim, action.String(), ex.globalContext.GitHubContext.ActionPath},
 		Cmd:        []string{},
 		Mounts: []specs.Mount{
 			{
@@ -88,7 +88,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 	}
 
 	logout.Debugf("[%sSQNC:DBG%s] copying shim to container", log.ColorDebug, log.ColorNone)
-	sqncshim, err := shimTarArchive()
+	sqncshim, err := shimUsesTarArchive()
 	if err != nil {
 		return err
 	}
@@ -169,6 +169,10 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				regularStep.With[k] = v
 			}
 
+			for k, v := range e.Env {
+				regularStep.Env[k] = v
+			}
+
 			switch {
 			case e.ID != "":
 				regularStep.ID = fmt.Sprintf("Pre %s", e.ID)
@@ -206,6 +210,10 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				regularStep.Name = e.Uses
 			}
 
+			for k, v := range e.Env {
+				regularStep.Env[k] = v
+			}
+
 			for k, v := range e.With {
 				regularStep.With[k] = v
 			}
@@ -237,6 +245,10 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 
 			for k, v := range e.With {
 				regularStep.With[k] = v
+			}
+
+			for k, v := range e.Env {
+				regularStep.Env[k] = v
 			}
 
 			if e.ID != "" {

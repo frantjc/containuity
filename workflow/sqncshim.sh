@@ -10,4 +10,4 @@
 echo '::error::this should not happen'
 echo '::error::github.com/frantjc/sequence/workflow.Shim is incorrect--did you build sequence properly?'
 echo '::error::attempting to salvage...'
-exec ${@:2}
+exec ${@:1}
