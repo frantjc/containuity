@@ -5,6 +5,8 @@ jobs:
         uses: actions/checkout@v2
       - name: build
         image: golang:1.18-alpine3.15
+        env:
+          CGO_ENABLED: 0
         run: |
           echo "::debug::running '$(which go) build ./cmd/sqnc'"
           go build ./cmd/sqnc
@@ -14,6 +16,8 @@ jobs:
         uses: actions/checkout@v2
       - name: test
         image: golang:1.18-alpine3.15
+        env:
+          CGO_ENABLED: 0
         run: |
           echo "::debug::running '$(which go) test ./...'"
           go test ./...

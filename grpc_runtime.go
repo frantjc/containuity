@@ -2,12 +2,13 @@ package sequence
 
 import (
 	"context"
+	"io"
 
 	containerapi "github.com/frantjc/sequence/api/v1/container"
 	imageapi "github.com/frantjc/sequence/api/v1/image"
+
 	// "github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
-	"github.com/frantjc/sequence/internal/sio"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -32,7 +33,7 @@ func (c *runtimeContainer) ID() string {
 
 func (c *runtimeContainer) Exec(ctx context.Context, exec *runtime.Exec) error {
 	var (
-		stdout = sio.NewNoOpWriter()
+		stdout = io.Discard
 		stderr = stdout
 	)
 	if exec.Stdout != nil {

@@ -397,8 +397,18 @@ func (c *GlobalContext) EnvMap() map[string]string {
 		EnvVarRepositoryOwner: c.GitHubContext.RepositoryOwner,
 	}
 
-	for k, v := range c.EnvContext {
-		env[k] = v
+	if c.EnvContext != nil {
+		for k, v := range c.EnvContext {
+			env[k] = v
+		}
+	}
+
+	if c.InputsContext != nil {
+		for k, v := range c.InputsContext {
+			if v != "" {
+				env[fmt.Sprintf("INPUT_%s", strings.ReplaceAll(strings.ToUpper(k), " ", "_"))] = v
+			}
+		}
 	}
 
 	return env

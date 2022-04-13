@@ -3,14 +3,10 @@ package workflow
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/frantjc/sequence/github/actions"
-	"github.com/frantjc/sequence/internal/env"
 	"github.com/frantjc/sequence/log"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/opencontainers/runtime-spec/specs-go"
 	"golang.org/x/net/context"
 )
 
@@ -46,46 +42,54 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 	var (
 		logout   = log.New(ex.stdout).SetVerbose(ex.verbose)
 		expanded = &regularStep{
-			ID:         ex.expandString(e.ID),
-			Name:       ex.expandString(e.Name),
-			Shell:      ex.expandString(e.Shell),
-			Run:        ex.expandString(e.Run),
-			If:         ex.expandString(fmt.Sprint(e.If)),
-			With:       ex.expandStringMap(e.With),
-			Image:      ex.expandString(e.Image),
-			Privileged: e.Privileged,
-			Env:        ex.expandStringMap(e.Env),
-			Entrypoint: ex.expandStringArr(e.Entrypoint),
-			Cmd:        ex.expandStringArr(e.Cmd),
+			ID:   ex.expandString(e.ID),
+			Name: ex.expandString(e.Name),
+			With: ex.expandStringMap(e.With),
 		}
-		githubEnv  = ex.githubEnvFilepath()
-		githubPath = ex.githubPathFilepath()
-		id         = expanded.Name
-		spec       = &runtime.Spec{
-			Image: ex.runnerImage,
-			Cwd:   ex.globalContext.GitHubContext.Workspace,
+		spec = &runtime.Spec{
+			Image:      ex.runnerImage,
+			Entrypoint: []string{containerShim},
+			Cwd:        ex.globalContext.GitHubContext.Workspace,
 			Env: append(
-				ex.globalContext.EnvArr(),
+				ex.env(),
 				"SQNC=true",
 				"SEQUENCE=true",
 				"DEBIAN_FRONTEND=noninteractive",
 			),
-			Mounts: ex.dirMounts(),
+			Mounts: ex.mounts(),
 		}
 	)
 
+	id := expanded.Name
 	if expanded.ID != "" {
 		id = expanded.ID
 	}
-	ex.globalContext.InputsContext = e.With
-	for k, v := range e.Env {
+	logout.Infof("[%sSQNC%s] running step '%s'", log.ColorInfo, log.ColorNone, id)
+	ex.globalContext.InputsContext = expanded.With
+	expanded.Env = ex.expandStringMap(e.Env)
+	if ex.globalContext.EnvContext == nil {
+		ex.globalContext.EnvContext = map[string]string{}
+	}
+	for k, v := range expanded.Env {
 		ex.globalContext.EnvContext[k] = v
+	}
+	expanded = &regularStep{
+		ID:         expanded.ID,
+		Name:       expanded.Name,
+		Shell:      ex.expandString(e.Shell),
+		Run:        ex.expandString(e.Run),
+		If:         ex.expandString(fmt.Sprint(e.If)),
+		With:       expanded.With,
+		Image:      ex.expandString(e.Image),
+		Privileged: e.Privileged,
+		Env:        ex.expandStringMap(expanded.Env),
+		Entrypoint: ex.expandStringArr(e.Entrypoint),
+		Cmd:        ex.expandStringArr(e.Cmd),
 	}
 	ex.globalContext.StepsContext[id] = &actions.StepsContext{
 		Outputs: map[string]string{},
 	}
-
-	logout.Infof("[%sSQNC%s] running step '%s'", log.ColorInfo, log.ColorNone, id)
+	spec.Env = append(spec.Env, ex.globalContext.EnvArr()...)
 
 	var (
 		echo                  = false
@@ -156,31 +160,6 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 		}
 	}
 
-	if expanded.With != nil {
-		for k, v := range expanded.With {
-			spec.Env = append(spec.Env, fmt.Sprintf("INPUT_%s=%s", strings.ReplaceAll(strings.ToUpper(k), " ", "_"), v))
-		}
-	}
-
-	githubEnvFile, err := createOrOpen(githubEnv)
-	if err != nil {
-		return err
-	}
-
-	if githubEnvArr, err := env.ArrFromReader(githubEnvFile); err == nil {
-		spec.Env = append(spec.Env, githubEnvArr...)
-	}
-
-	githubPathFile, err := createOrOpen(githubPath)
-	if err != nil {
-		return err
-	}
-
-	if githubPathStr, err := env.PathFromReader(githubPathFile); err == nil && githubPathStr != "" {
-		// TODO this overrides the default PATH instead of adding to it
-		// spec.Env = append(spec.Env, env.ToArr("PATH", githubPathStr)...)
-	}
-
 	if expanded.Image != "" {
 		spec.Image = expanded.Image
 	}
@@ -188,68 +167,15 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 	if expanded.Run != "" {
 		switch expanded.Shell {
 		case "/bin/bash", "bash":
-			spec.Entrypoint = []string{"/bin/bash", "-c", expanded.Run}
+			spec.Cmd = []string{"/bin/bash", "-c", expanded.Run}
 		case "/bin/sh", "sh", "":
-			spec.Entrypoint = []string{"/bin/sh", "-c", expanded.Run}
+			spec.Cmd = []string{"/bin/sh", "-c", expanded.Run}
 		default:
 			return fmt.Errorf("unsupported shell '%s'", expanded.Shell)
 		}
 	} else {
-		spec.Entrypoint = expanded.Entrypoint
-		spec.Cmd = expanded.Cmd
+		spec.Cmd = append(expanded.Entrypoint, expanded.Cmd...)
 	}
-
-	// make sure all of the host directories that we intend to bind exist
-	// note that at this point all bind mounts are directories
-	for _, mount := range spec.Mounts {
-		if mount.Type == runtime.MountTypeBind {
-			if err = os.MkdirAll(mount.Source, 0777); err != nil {
-				return err
-			}
-		}
-	}
-
-	var (
-		ghEnv  = filepath.Join(containerWorkdir, "github", "env")
-		ghPath = filepath.Join(containerWorkdir, "github", "path")
-	)
-	spec.Env = append(
-		spec.Env,
-		fmt.Sprintf("%s=%s", actions.EnvVarEnv, ghEnv),
-		fmt.Sprintf("%s=%s", actions.EnvVarPath, ghPath),
-	)
-	// these are _files_, NOT directories
-	// now that we have done all of the set up for the directories we
-	// intend to bind, we can add the files we intend to bind
-	spec.Mounts = append(spec.Mounts, []specs.Mount{
-		// make networking stuff act more predictably for users
-		{
-			Source:      hostsFile,
-			Destination: hostsFile,
-			Type:        runtime.MountTypeBind,
-			Options:     readOnly,
-		},
-		{
-			Source:      resolveConf,
-			Destination: resolveConf,
-			Type:        runtime.MountTypeBind,
-			Options:     readOnly,
-		},
-		// these are used like
-		// $ echo "MY_VAR=myval" >> $GITHUB_ENV
-		// $ echo "/.mybin" >> $GITHUB_PATH
-		// respectively
-		{
-			Source:      githubEnv,
-			Destination: ghEnv,
-			Type:        runtime.MountTypeBind,
-		},
-		{
-			Source:      githubPath,
-			Destination: ghPath,
-			Type:        runtime.MountTypeBind,
-		},
-	}...)
 
 	logout.Infof("[%sSQNC%s] pulling image '%s'", log.ColorInfo, log.ColorNone, spec.Image)
 	image, err := ex.runtime.PullImage(ctx, spec.Image)
@@ -266,8 +192,33 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 		}
 	}
 
+	logout.Debugf("[%sSQNC:DBG%s] getting or creating volumes", log.ColorDebug, log.ColorNone)
+	for _, mount := range spec.Mounts {
+		if mount.Type == runtime.MountTypeVolume {
+			vol, err := ex.runtime.CreateVolume(ctx, mount.Source)
+			if err != nil {
+				if vol, err = ex.runtime.GetVolume(ctx, mount.Source); err != nil {
+					return err
+				}
+			}
+			mount.Source = vol.Source()
+		}
+	}
+	logout.Debugf("[%sSQNC:DBG%s] finished setting up volumes", log.ColorDebug, log.ColorNone)
+
+	logout.Debugf("[%sSQNC:DBG%s] creating container", log.ColorDebug, log.ColorNone)
 	container, err := ex.runtime.CreateContainer(ctx, spec)
 	if err != nil {
+		return err
+	}
+
+	logout.Debugf("[%sSQNC:DBG%s] copying shim to container", log.ColorDebug, log.ColorNone)
+	sqncshim, err := shimTarArchive()
+	if err != nil {
+		return err
+	}
+
+	if err = container.CopyTo(ctx, sqncshim, containerShimDir); err != nil {
 		return err
 	}
 

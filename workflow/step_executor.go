@@ -19,8 +19,20 @@ func NewStepExecutor(s *Step, opts ...ExecOpt) (Executor, error) {
 		steps: []*Step{s},
 
 		ctxOpts: []actions.CtxOpt{
-			actions.WithWorkdir(containerWorkdir),
 			actions.WithEnv(s.Env),
+			func(gc *actions.GlobalContext) error {
+				if gc.GitHubContext == nil {
+					gc.GitHubContext = &actions.GitHubContext{}
+				}
+				if gc.RunnerContext == nil {
+					gc.RunnerContext = &actions.RunnerContext{}
+				}
+				gc.GitHubContext.ActionPath = containerActionPath
+				gc.GitHubContext.Workspace = containerWorkspace
+				gc.RunnerContext.Temp = containerRunnerTemp
+				gc.RunnerContext.ToolCache = containerRunnerToolCache
+				return nil
+			},
 		},
 
 		states: map[string]map[string]string{},

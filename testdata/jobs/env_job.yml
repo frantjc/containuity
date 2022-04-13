@@ -2,5 +2,12 @@ steps:
   - image: alpine:3.15
     run: |
       echo FOO=bar >> $GITHUB_ENV
+      echo /.bin >> $GITHUB_PATH
   - image: alpine:3.15
-    entrypoint: [env]
+    run: |
+      echo "$GITHUB_ENV:"
+      cat $GITHUB_ENV
+      echo "$GITHUB_PATH:"
+      cat $GITHUB_PATH
+      echo "env:"
+      env

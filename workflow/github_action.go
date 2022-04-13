@@ -38,9 +38,7 @@ func (e *githubActionStep) id() string {
 }
 
 func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
-	var (
-		logout = log.New(ex.stdout).SetVerbose(ex.verbose)
-	)
+	logout := log.New(ex.stdout).SetVerbose(ex.verbose)
 
 	logout.Debugf("[%sSQNC:DBG%s] parsing 'uses: %s'", log.ColorDebug, log.ColorNone, e.Uses)
 	action, err := actions.ParseReference(e.Uses)
@@ -50,28 +48,18 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 
 	logout.Infof("[%sSQNC%s] setting up action '%s'", log.ColorInfo, log.ColorNone, action.String())
 	spec := &runtime.Spec{
-		Image:      "ghcr.io/frantjc/sequence",
-		Entrypoint: []string{"sqncshim"},
-		Cmd:        []string{"plugin", "uses", action.String(), ex.globalContext.GitHubContext.ActionPath},
+		Image:      ex.runnerImage,
+		Entrypoint: []string{containerShim, action.String(), ex.globalContext.GitHubContext.ActionPath},
+		Cmd:        []string{},
 		Mounts: []specs.Mount{
 			{
 				// actions are global because each step that uses
 				// actions/checkout@v2 expects it to function the same
 				Source:      ex.actionPath(action),
 				Destination: ex.globalContext.GitHubContext.ActionPath,
-				Type:        runtime.MountTypeBind,
+				Type:        runtime.MountTypeVolume,
 			},
 		},
-	}
-
-	// make sure all of the host directories that we intend to bind exist
-	// note that at this point all bind mounts are directories
-	for _, mount := range spec.Mounts {
-		if mount.Type == runtime.MountTypeBind {
-			if err = os.MkdirAll(mount.Source, 0777); err != nil {
-				return err
-			}
-		}
 	}
 
 	logout.Infof("[%sSQNC%s] pulling image '%s'", log.ColorInfo, log.ColorNone, spec.Image)
@@ -81,8 +69,31 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 	}
 	logout.Debugf("[%sSQNC:DBG%s] finished pulling image '%s'", log.ColorDebug, log.ColorNone, image.Ref())
 
+	logout.Debugf("[%sSQNC:DBG%s] getting or creating volumes", log.ColorDebug, log.ColorNone)
+	for _, mount := range spec.Mounts {
+		if mount.Type == runtime.MountTypeVolume {
+			vol, err := ex.runtime.CreateVolume(ctx, mount.Source)
+			if err != nil {
+				vol, _ = ex.runtime.GetVolume(ctx, mount.Source)
+			}
+			mount.Source = vol.Source()
+		}
+	}
+	logout.Debugf("[%sSQNC:DBG%s] finished setting up volumes", log.ColorDebug, log.ColorNone)
+
+	logout.Debugf("[%sSQNC:DBG%s] creating container", log.ColorDebug, log.ColorNone)
 	container, err := ex.runtime.CreateContainer(ctx, spec)
 	if err != nil {
+		return err
+	}
+
+	logout.Debugf("[%sSQNC:DBG%s] copying shim to container", log.ColorDebug, log.ColorNone)
+	sqncshim, err := shimUsesTarArchive()
+	if err != nil {
+		return err
+	}
+
+	if err = container.CopyTo(ctx, sqncshim, containerShimDir); err != nil {
 		return err
 	}
 
@@ -158,6 +169,10 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				regularStep.With[k] = v
 			}
 
+			for k, v := range e.Env {
+				regularStep.Env[k] = v
+			}
+
 			switch {
 			case e.ID != "":
 				regularStep.ID = fmt.Sprintf("Pre %s", e.ID)
@@ -195,6 +210,10 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				regularStep.Name = e.Uses
 			}
 
+			for k, v := range e.Env {
+				regularStep.Env[k] = v
+			}
+
 			for k, v := range e.With {
 				regularStep.With[k] = v
 			}
@@ -226,6 +245,10 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 
 			for k, v := range e.With {
 				regularStep.With[k] = v
+			}
+
+			for k, v := range e.Env {
+				regularStep.Env[k] = v
 			}
 
 			if e.ID != "" {

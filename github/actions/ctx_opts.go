@@ -1,7 +1,5 @@
 package actions
 
-import "path/filepath"
-
 type CtxOpt func(*GlobalContext) error
 
 func WithToken(token string) CtxOpt {
@@ -43,19 +41,6 @@ func WithEnv(env map[string]string) CtxOpt {
 				gc.EnvContext[k] = v
 			}
 		}
-		return nil
-	}
-}
-
-func WithWorkdir(workdir string) CtxOpt {
-	return func(gc *GlobalContext) error {
-		if gc.GitHubContext == nil {
-			gc.GitHubContext = &GitHubContext{}
-		}
-		gc.GitHubContext.ActionPath = filepath.Join(workdir, "action")
-		gc.GitHubContext.Workspace = filepath.Join(workdir, "workspace")
-		gc.RunnerContext.Temp = filepath.Join(workdir, "runner", "temp")
-		gc.RunnerContext.ToolCache = filepath.Join(workdir, "runner", "toolcache")
 		return nil
 	}
 }

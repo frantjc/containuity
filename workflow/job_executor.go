@@ -2,11 +2,12 @@ package workflow
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/github/actions"
@@ -26,9 +27,21 @@ func NewJobExecutor(j *Job, opts ...ExecOpt) (Executor, error) {
 		steps: j.Steps,
 
 		ctxOpts: []actions.CtxOpt{
-			actions.WithWorkdir(containerWorkdir),
 			actions.WithEnv(j.Env),
 			actions.WithJobName(j.Name),
+			func(gc *actions.GlobalContext) error {
+				if gc.GitHubContext == nil {
+					gc.GitHubContext = &actions.GitHubContext{}
+				}
+				if gc.RunnerContext == nil {
+					gc.RunnerContext = &actions.RunnerContext{}
+				}
+				gc.GitHubContext.ActionPath = containerActionPath
+				gc.GitHubContext.Workspace = containerWorkspace
+				gc.RunnerContext.Temp = containerRunnerTemp
+				gc.RunnerContext.ToolCache = containerRunnerToolCache
+				return nil
+			},
 		},
 
 		states: map[string]map[string]string{},
@@ -55,7 +68,11 @@ type Executor interface {
 type jobExecutor struct {
 	runtime runtime.Runtime
 
-	workdir string
+	// the path or url to the GitHub repository the actions should
+	// execute with the context of
+	// also used to generate a unique id so that steps of the
+	// same job share state
+	repository string
 
 	stdout  io.Writer
 	stderr  io.Writer
@@ -81,7 +98,7 @@ type jobExecutor struct {
 	states map[string]map[string]string
 
 	// env is used to reset globalContext.EnvContext after each step
-	env map[string]string
+	jobEnv map[string]string
 }
 
 var _ Executor = &jobExecutor{}
@@ -148,7 +165,7 @@ func (e *jobExecutor) Start(ctx context.Context) error {
 
 func (e *jobExecutor) resetContext() {
 	e.globalContext.InputsContext = map[string]string{}
-	e.globalContext.EnvContext = e.env
+	e.globalContext.EnvContext = e.jobEnv
 }
 
 func (e *jobExecutor) expandStringMap(s map[string]string) map[string]string {
@@ -175,42 +192,53 @@ func (e *jobExecutor) expandBytes(p []byte) []byte {
 	return actions.ExpandBytes(p, e.globalContext.Get)
 }
 
-func (e *jobExecutor) jobWorkdir() string {
-	return filepath.Join(
-		e.workdir,
-		base64.StdEncoding.EncodeToString(
-			[]byte(
-				fmt.Sprint(
-					e.globalContext.GitHubContext.Workflow,
-					e.globalContext.GitHubContext.Job,
-				),
+func (e *jobExecutor) id() string {
+	rxp := regexp.MustCompile("[^a-zA-Z0-9_.-]")
+	ids := []string{e.repository}
+	if e.globalContext.GitHubContext.Job != "" {
+		ids = append(ids, e.globalContext.GitHubContext.Job)
+	}
+	if e.globalContext.GitHubContext.Workflow != "" {
+		ids = append(ids, e.globalContext.GitHubContext.Workflow)
+	}
+	return fmt.Sprintf(
+		"sqnc-%s",
+		strings.TrimPrefix(
+			rxp.ReplaceAllLiteralString(
+				strings.Join(ids, "-"),
+				"-",
 			),
+			"-",
 		),
 	)
 }
 
-func (e *jobExecutor) githubPathFilepath() string {
-	return filepath.Join(e.jobWorkdir(), "github", "path")
+func (e *jobExecutor) github() string {
+	return strings.Join([]string{e.id(), "github"}, "-")
 }
 
-func (e *jobExecutor) githubEnvFilepath() string {
-	return filepath.Join(e.jobWorkdir(), "github", "env")
+func (e *jobExecutor) githubPath() string {
+	return strings.Join([]string{e.github(), "path"}, "-")
+}
+
+func (e *jobExecutor) githubEnv() string {
+	return strings.Join([]string{e.github(), "env"}, "-")
 }
 
 func (e *jobExecutor) workspace() string {
-	return filepath.Join(e.jobWorkdir(), "workspace")
+	return strings.Join([]string{e.id(), "workspace"}, "-")
 }
 
 func (e *jobExecutor) runnerTemp() string {
-	return filepath.Join(e.jobWorkdir(), "runner", "temp")
+	return strings.Join([]string{e.id(), "runner", "temp"}, "-")
 }
 
 func (e *jobExecutor) runnerToolCache() string {
-	return filepath.Join(e.jobWorkdir(), "runner", "toolcache")
+	return strings.Join([]string{e.id(), "runner", "toolcache"}, "-")
 }
 
 func (e *jobExecutor) actionPath(action actions.Reference) string {
-	return filepath.Join(e.workdir, "actions", action.Owner(), action.Repository(), action.Path(), action.Version())
+	return strings.Join([]string{"actions", action.Owner(), action.Repository(), action.Path(), action.Version()}, "-")
 }
 
 var (
@@ -218,14 +246,60 @@ var (
 )
 
 const (
-	containerWorkdir = "/sqnc"
-	crtsDir          = "/etc/ssl"
-	hostsFile        = "/etc/hosts"
-	resolveConf      = "/etc/resolv.conf"
+	crtsDir     = "/etc/ssl"
+	hostsFile   = "/etc/hosts"
+	resolveConf = "/etc/resolv.conf"
 )
 
-func (e *jobExecutor) dirMounts() []specs.Mount {
+var (
+	containerRoot            = "/sqnc"
+	containerActionPath      = filepath.Join(containerRoot, "action")
+	containerWorkspace       = filepath.Join(containerRoot, "workspace")
+	containerRunnerTemp      = filepath.Join(containerRoot, "runner", "temp")
+	containerRunnerToolCache = filepath.Join(containerRoot, "runner", "toolcache")
+	containerGitHubDir       = filepath.Join(containerRoot, "github")
+	containerGitHubEnvDir    = containerGitHubDir
+	containerGitHubPathDir   = containerGitHubDir
+	containerGitHubEnv       = filepath.Join(containerGitHubEnvDir, "env")
+	containerGitHubPath      = filepath.Join(containerGitHubPathDir, "path")
+	containerShimDir         = filepath.Join(containerRoot)
+	containerShim            = filepath.Join(containerShimDir, shimName)
+)
+
+func (e *jobExecutor) env() []string {
+	return []string{
+		fmt.Sprintf("%s=%s", actions.EnvVarEnv, containerGitHubEnv),
+		fmt.Sprintf("%s=%s", actions.EnvVarPath, containerGitHubPath),
+	}
+}
+
+func (e *jobExecutor) mounts() []specs.Mount {
 	return []specs.Mount{
+		{
+			Source:      e.workspace(),
+			Destination: e.globalContext.GitHubContext.Workspace,
+			Type:        runtime.MountTypeVolume,
+		},
+		{
+			Source:      e.runnerTemp(),
+			Destination: e.globalContext.RunnerContext.Temp,
+			Type:        runtime.MountTypeVolume,
+		},
+		{
+			Source:      e.runnerToolCache(),
+			Destination: e.globalContext.RunnerContext.ToolCache,
+			Type:        runtime.MountTypeVolume,
+		},
+		{
+			Source:      e.github(),
+			Destination: containerGitHubDir,
+			Type:        runtime.MountTypeVolume,
+		},
+		// {
+		// 	Destination: containerShimDir,
+		// 	Type:        runtime.MountTypeTmpfs,
+		// },
+		// make networking stuff act more predictably for users
 		{
 			Source:      crtsDir,
 			Destination: crtsDir,
@@ -233,31 +307,16 @@ func (e *jobExecutor) dirMounts() []specs.Mount {
 			Options:     readOnly,
 		},
 		{
-			Source:      e.workspace(),
-			Destination: e.globalContext.GitHubContext.Workspace,
+			Source:      hostsFile,
+			Destination: hostsFile,
 			Type:        runtime.MountTypeBind,
+			Options:     readOnly,
 		},
 		{
-			Source:      e.runnerTemp(),
-			Destination: e.globalContext.RunnerContext.Temp,
+			Source:      resolveConf,
+			Destination: resolveConf,
 			Type:        runtime.MountTypeBind,
-		},
-		{
-			Source:      e.runnerToolCache(),
-			Destination: e.globalContext.RunnerContext.ToolCache,
-			Type:        runtime.MountTypeBind,
+			Options:     readOnly,
 		},
 	}
-}
-
-func createOrOpen(name string) (*os.File, error) {
-	if err := os.MkdirAll(filepath.Dir(name), 0777); err != nil {
-		return nil, err
-	}
-
-	if _, err := os.Stat(name); err == nil {
-		return os.Open(name)
-	}
-
-	return os.Create(name)
 }

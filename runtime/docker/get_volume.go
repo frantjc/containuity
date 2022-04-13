@@ -7,5 +7,6 @@ import (
 )
 
 func (r *dockerRuntime) GetVolume(ctx context.Context, name string) (runtime.Volume, error) {
-	return &dockerVolume{name, r.client}, nil
+	_, err := r.client.VolumeInspect(ctx, name)
+	return &dockerVolume{name, r.client}, err
 }

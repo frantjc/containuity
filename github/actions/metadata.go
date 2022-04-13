@@ -52,7 +52,9 @@ type Metadata struct {
 func (m *Metadata) WithFromInputs() map[string]string {
 	with := make(map[string]string, len(m.Inputs))
 	for name, input := range m.Inputs {
-		with[name] = fmt.Sprint(input.Default)
+		if input.Default != nil {
+			with[name] = fmt.Sprint(input.Default)
+		}
 	}
 	return with
 }
