@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/frantjc/sequence/github/actions"
@@ -17,14 +18,21 @@ func main() {
 
 func mainE() error {
 	var (
-		args      = os.Args
-		ctx       = context.Background()
-		actionRef = args[0]
+		ctx  = context.Background()
+		args = os.Args
+	)
+
+	if len(args) == 1 {
+		return fmt.Errorf("sqncshim requires at least 1 argument")
+	}
+
+	var (
+		actionRef = args[1]
 		path      = "."
 	)
 
 	if len(args) > 1 {
-		path = args[1]
+		path = args[2]
 	}
 
 	parsed, err := actions.ParseReference(actionRef)

@@ -13,15 +13,22 @@ import (
 
 func main() {
 	if err := mainE(); err != nil {
-		panic(err)
+		os.Exit(1)
 	}
 }
 
 func mainE() error {
 	var (
-		ctx            = context.Background()
-		args           = os.Args
-		command        = exec.CommandContext(ctx, args[0], args[1:]...)
+		ctx  = context.Background()
+		args = os.Args
+	)
+
+	if len(args) == 1 {
+		return fmt.Errorf("sqncshim requires at least 1 argument")
+	}
+
+	var (
+		command        = exec.CommandContext(ctx, args[1], args[2:]...)
 		githubEnvFile  = os.Getenv(actions.EnvVarEnv)
 		githubPathFile = os.Getenv(actions.EnvVarPath)
 	)
