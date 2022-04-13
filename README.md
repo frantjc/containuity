@@ -15,12 +15,10 @@
 ```sh
 # fmt
 make vet
-# install binaries
-make sqnc sqncd
-# build frantjc/sequence image
-make image
+# install binary
+make sqnc
 # run gRPC server
-sqncd
+sqnc
 # run workflows (usually requires github.token in ~/.sqnc/config.toml)
-sqnc run testdata/checkout_test_build_workflow.yml
+sqnc run testdata/workflows/checkout_test_build_workflow.yml
 ```
