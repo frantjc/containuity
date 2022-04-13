@@ -26,6 +26,7 @@ func WithGlobalContext(globalContext *actions.GlobalContext) ExecOpt {
 
 func WithRepository(repository string) ExecOpt {
 	return func(e *jobExecutor) (err error) {
+		e.repository = repository
 		e.globalContext, err = actions.NewContextFromPath(context.Background(), repository, e.ctxOpts...)
 		return
 	}
@@ -116,10 +117,3 @@ func WithRuntimeName(names ...string) ExecOpt {
 }
 
 var WithAnyRuntime = WithRuntimeName()
-
-func WithWorkdir(workdir string) ExecOpt {
-	return func(e *jobExecutor) error {
-		e.workdir = workdir
-		return nil
-	}
-}
