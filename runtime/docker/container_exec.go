@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -36,7 +37,14 @@ func (c *dockerContainer) Exec(ctx context.Context, e *runtime.Exec) error {
 			Force: true,
 		})
 		return ctx.Err()
-	case <-statusC:
+	case status := <-statusC:
+		if status.StatusCode != 0 {
+			msg := ""
+			if status.Error != nil {
+				msg = fmt.Sprintf(": %s", status.Error.Message)
+			}
+			return fmt.Errorf("container exited with nonzero code %d%s", status.StatusCode, msg)
+		}
 	}
 
 	return nil
