@@ -242,8 +242,13 @@ func (e *jobExecutor) runnerToolCache() string {
 }
 
 func (e *jobExecutor) actionPath(action actions.Reference) string {
+	ids := []string{"sqnc", "actions", action.Owner(), action.Repository()}
+	if action.Path() != "" {
+		ids = append(ids, action.Path())
+	}
+	ids = append(ids, action.Version())
 	return idRxp.ReplaceAllLiteralString(
-		strings.Join([]string{"actions", action.Owner(), action.Repository(), action.Path(), action.Version()}, "-"),
+		strings.Join(ids, "-"),
 		"-",
 	)
 }
