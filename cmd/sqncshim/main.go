@@ -40,6 +40,8 @@ func mainE() error {
 
 	if githubEnv, err := env.ArrFromFile(githubEnvFile); err == nil {
 		command.Env = append(command.Env, githubEnv...)
+	} else {
+		os.Create(githubEnvFile)
 	}
 
 	if githubPath, err := env.PathFromFile(githubPathFile); err == nil && githubPath != "" {
@@ -55,6 +57,8 @@ func mainE() error {
 		} else {
 			command.Env = append(command.Env, fmt.Sprintf("PATH=%s", githubPath))
 		}
+	} else {
+		os.Create(githubPathFile)
 	}
 
 	return command.Run()
