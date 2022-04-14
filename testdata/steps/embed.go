@@ -15,6 +15,9 @@ var (
 	//go:embed expand_step.yml
 	ExpandStep []byte
 
+	//go:embed fail_step.yml
+	FailStep []byte
+
 	//go:embed stop_commands_step.yml
 	StopCommandsStep []byte
 )

@@ -18,8 +18,8 @@ var (
 	DefaultImageStep = steps.DefaultImageStep
 	EnvStep = steps.EnvStep
 	ExpandStep = steps.ExpandStep
+	FailStep = steps.FailStep
 	StopCommandsStep = steps.StopCommandsStep
-	hello = "there"
 )
 
 var (
