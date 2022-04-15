@@ -75,6 +75,7 @@ func WorkflowToProtoWorkflow(w *workflow.Workflow) *types.Workflow {
 	}
 
 	return &types.Workflow{
+		Name: w.Name,
 		Jobs: jobs,
 	}
 }

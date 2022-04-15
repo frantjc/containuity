@@ -56,6 +56,7 @@ func ProtoWorkflowToWorkflow(w *types.Workflow) *workflow.Workflow {
 	}
 
 	return &workflow.Workflow{
+		Name: w.Name,
 		Jobs: jobs,
 	}
 }

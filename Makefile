@@ -26,9 +26,9 @@ INSTALL ?= sudo install
 
 bin: sqnc
 
-bins binaries: sqnc sqncd sqnctl
+bins binaries: sqnc sqncd
 
-sqnc sqncd sqnctl: shims
+sqnc sqncd: shims
 	@$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence.Build=$(SHORT_SHA) -X github.com/frantjc/sequence.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	@$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
@@ -71,4 +71,4 @@ protos:
 coverage:
 	@$(GO) test -v -cover -covermode=atomic -coverprofile=coverage.txt ./...
 
-.PHONY: bin bins binaries sqnc sqncd sqnctl shims placeholders image img test fmt lint pretty vet tidy vendor clean protos coverage
+.PHONY: bin bins binaries sqnc sqncd shims placeholders image img test fmt lint pretty vet tidy vendor clean protos coverage

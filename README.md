@@ -2,6 +2,10 @@
 
 [![push](https://github.com/frantjc/sequence/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/frantjc/sequence/actions)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/frantjc/sequence/main/docs/demo.gif">
+</p>
+
 ## developing
 
 - `golang` is _required_ - version 1.16 or above is required for go mod to work

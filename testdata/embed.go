@@ -31,4 +31,5 @@ var (
 
 var (
 	CheckoutTestBuildWorkflow = workflows.CheckoutTestBuildWorkflow
+	DemoWorkflow = workflows.DemoWorkflow
 )

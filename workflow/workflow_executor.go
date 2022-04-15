@@ -20,6 +20,10 @@ var _ Executor = &workflowExecutor{}
 func (e *workflowExecutor) Start(ctx context.Context) error {
 	// TODO ordering, job outputs, needs, etc
 	for jobName, job := range e.workflow.Jobs {
+		if job.Name != "" {
+			jobName = job.Name
+		}
+
 		ex, err := NewJobExecutor(job, append(e.opts, WithJobName(jobName))...)
 		if err != nil {
 			return err

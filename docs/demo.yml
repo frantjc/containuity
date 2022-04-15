@@ -1,0 +1,229 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+
+  # Specify a command to be executed
+  # like `/bin/bash -l`, `ls`, or any other commands
+  # the default is bash for Linux
+  # or powershell.exe for Windows
+  command: /bin/bash -l
+  
+  # Specify the current working directory path
+  # the default is the current working directory path
+  cwd: $GOPATH/src/github.com/frantjc/sequence
+  
+  # Export additional ENV variables
+  env:
+    recording: true
+  
+  # Explicitly set the number of columns
+  # or use `auto` to take the current
+  # number of columns of your shell
+  cols: 80
+  
+  # Explicitly set the number of rows
+  # or use `auto` to take the current
+  # number of rows of your shell
+  rows: 24
+  
+  # Amount of times to repeat GIF
+  # If value is -1, play once
+  # If value is 0, loop indefinitely
+  # If value is a positive number, loop n times
+  repeat: 0
+  
+  # Quality
+  # 1 - 100
+  quality: 100
+  
+  # Delay between frames in ms
+  # If the value is `auto` use the actual recording delays
+  frameDelay: auto
+  
+  # Maximum delay between frames in ms
+  # Ignored if the `frameDelay` isn't set to `auto`
+  # Set to `auto` to prevent limiting the max idle time
+  maxIdleTime: 2000
+  
+  # The surrounding frame box
+  # The `type` can be null, window, floating, or solid`
+  # To hide the title use the value null
+  # Don't forget to add a backgroundColor style with a null as type
+  frameBox:
+    type: floating
+    title: sequence
+    style:
+      border: 0px black solid
+      # boxShadow: none
+      # margin: 0px
+  
+  # Add a watermark image to the rendered gif
+  # You need to specify an absolute path for
+  # the image on your machine or a URL, and you can also
+  # add your own CSS styles
+  watermark:
+    imagePath: null
+    style:
+      position: absolute
+      right: 15px
+      bottom: 15px
+      width: 100px
+      opacity: 0.9
+  
+  # Cursor style can be one of
+  # `block`, `underline`, or `bar`
+  cursorStyle: block
+  
+  # Font family
+  # You can use any font that is installed on your machine
+  # in CSS-like syntax
+  fontFamily: "Monaco, Lucida Console, Ubuntu Mono, Monospace"
+  
+  # The size of the font
+  fontSize: 12
+  
+  # The height of lines
+  lineHeight: 1
+  
+  # The spacing between letters
+  letterSpacing: 0
+  
+  # Theme
+  theme:
+    background: "transparent"
+    foreground: "#afafaf"
+    cursor: "#c7c7c7"
+    black: "#232628"
+    red: "#fc4384"
+    green: "#b3e33b"
+    yellow: "#ffa727"
+    blue: "#75dff2"
+    magenta: "#ae89fe"
+    cyan: "#708387"
+    white: "#d5d5d0"
+    brightBlack: "#626566"
+    brightRed: "#ff7fac"
+    brightGreen: "#c8ed71"
+    brightYellow: "#ebdf86"
+    brightBlue: "#75dff2"
+    brightMagenta: "#ae89fe"
+    brightCyan: "#b1c6ca"
+    brightWhite: "#f9f9f4"
+  
+# Records, feel free to edit them
+records:
+  - delay: 5
+    content: "\e[37m$\e[0m "
+  - delay: 1000
+    content: cat demo.yml
+  - delay: 1000
+    content: "\r\n"
+  - delay: 5
+    content: "name: Demo\r\njobs:\r\n  checkout-build:\r\n    name: Checkout and build\r\n    steps:\r\n      - name: Checkout action\r\n        uses: actions/checkout@v2\r\n      - name: Go build\r\n        image: golang:1.18-alpine3.15\r\n        env:\r\n          CGO_ENABLED: 0\r\n        run: |\r\n          echo \"::notice::running \\\"$(which go) build ./cmd/sqnc\\\"\"\r\n          go build ./cmd/sqnc\r\n\e]7;\a"
+  - delay: 5
+    content: "\e[37m$\e[0m "
+  - delay: 1000
+    content: "sqnc run demo.yml"
+  - delay: 1000
+    content: "\r\n"
+  - delay: 31
+    content: "[\e[36mSQNC\e[0m] running workflow 'Demo'\r\n[\e[36mSQNC\e[0m] running job 'Checkout and build'\r\n[\e[36mSQNC\e[0m] setting up action 'actions/checkout@v2'\r\n[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:16'\r\n"
+  - delay: 2635
+    content: "[\e[36mSQNC\e[0m] running step 'Checkout action'\r\n[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:12'\r\n"
+  - delay: 2336
+    content: "Syncing repository: frantjc/sequence\r\nWorking directory is '/sqnc/workspace'\r\n"
+  - delay: 21
+    content: "[command]/usr/bin/git version\r\n"
+  - delay: 17
+    content: "git version 2.11.0\r\n"
+  - delay: 10
+    content: "Deleting the contents of '/sqnc/workspace'\r\n"
+  - delay: 161
+    content: "The repository will be downloaded using the GitHub REST API\r\nTo create a local Git repository instead, add Git 2.18 or higher to the PATH\r\nDownloading the archive\r\n"
+  - delay: 86
+    content: "(node:12) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.\r\n"
+  - delay: 498
+    content: "Writing archive to disk\r\n"
+  - delay: 6
+    content: "Extracting the archive\r\n"
+  - delay: 5
+    content: "[command]/bin/tar xz -C /sqnc/workspace/52e86055-9d62-42d7-a49f-bf8ba826666f -f /sqnc/workspace/52e86055-9d62-42d7-a49f-bf8ba826666f.tar.gz\r\n"
+  - delay: 33
+    content: "Resolved version frantjc-sequence-29b9fa1\r\n"
+  - delay: 231
+    content: "[\e[36mSQNC\e[0m] running step 'Go build'\r\n[\e[36mSQNC\e[0m] pulling image 'golang:1.18-alpine3.15'\r\n"
+  - delay: 1847
+    content: "[\e[37mACTN:NTC\e[0m] running \"/usr/local/go/bin/go build ./cmd/sqnc\"\r\n"
+  - delay: 76
+    content: "go: downloading github.com/pelletier/go-toml/v2 v2.0.0-beta.6\r\ngo: downloading github.com/spf13/cobra v1.3.0\r\n"
+  - delay: 14
+    content: "go: downloading github.com/mattn/go-colorable v0.1.12\r\n"
+  - delay: 66
+    content: "go: downloading github.com/rs/zerolog v1.26.1\r\n"
+  - delay: 204
+    content: "go: downloading github.com/google/uuid v1.3.0\r\n"
+  - delay: 163
+    content: "go: downloading github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417\r\n"
+  - delay: 89
+    content: "go: downloading golang.org/x/net v0.0.0-20220225172249-27dd8689420f\r\n"
+  - delay: 35
+    content: "go: downloading gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b\r\n"
+  - delay: 90
+    content: "go: downloading google.golang.org/grpc v1.44.0\r\n"
+  - delay: 246
+    content: "go: downloading github.com/mattn/go-isatty v0.0.14\r\n"
+  - delay: 55
+    content: "go: downloading github.com/go-git/go-git/v5 v5.4.2\r\n"
+  - delay: 444
+    content: "go: downloading github.com/spf13/pflag v1.0.5\r\n"
+  - delay: 228
+    content: "go: downloading google.golang.org/protobuf v1.27.1\r\ngo: downloading github.com/docker/cli v20.10.14+incompatible\r\n"
+  - delay: 1025
+    content: "go: downloading github.com/docker/distribution v2.8.1+incompatible\r\ngo: downloading github.com/docker/docker v20.10.12+incompatible\r\n"
+  - delay: 1542
+    content: "go: downloading github.com/joho/godotenv v1.4.0\r\ngo: downloading golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7\r\ngo: downloading github.com/ProtonMail/go-crypto v0.0.0-20220113124808-70ae35bab23f\r\n"
+  - delay: 6
+    content: "go: downloading github.com/go-git/go-billy/v5 v5.3.1\r\n"
+  - delay: 82
+    content: "go: downloading github.com/imdario/mergo v0.3.12\r\ngo: downloading github.com/sergi/go-diff v1.2.0\r\n"
+  - delay: 16
+    content: "go: downloading github.com/emirpasic/gods v1.12.0\r\n"
+  - delay: 64
+    content: "go: downloading google.golang.org/genproto v0.0.0-20220308174144-ae0e22291548\r\n"
+  - delay: 212
+    content: "go: downloading github.com/moby/term v0.0.0-20210610120745-9d4ed1856297\r\n"
+  - delay: 120
+    content: "go: downloading github.com/sirupsen/logrus v1.8.1\r\n"
+  - delay: 79
+    content: "go: downloading github.com/opencontainers/go-digest v1.0.0\r\ngo: downloading github.com/docker/go-units v0.4.0\r\n"
+  - delay: 67
+    content: "go: downloading github.com/docker/go-connections v0.4.0\r\n"
+  - delay: 9
+    content: "go: downloading github.com/morikuni/aec v1.0.0\r\n"
+  - delay: 62
+    content: "go: downloading github.com/opencontainers/image-spec v1.0.2\r\n"
+  - delay: 22
+    content: "go: downloading github.com/containerd/containerd v1.6.1\r\n"
+  - delay: 108
+    content: "go: downloading github.com/pkg/errors v0.9.1\r\n"
+  - delay: 72
+    content: "go: downloading github.com/mitchellh/go-homedir v1.1.0\r\n"
+  - delay: 72
+    content: "go: downloading github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99\r\n"
+  - delay: 14
+    content: "go: downloading golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70\r\n"
+  - delay: 96
+    content: "go: downloading github.com/golang/protobuf v1.5.2\r\n"
+  - delay: 577
+    content: "go: downloading github.com/go-git/gcfg v1.5.0\r\n"
+  - delay: 162
+    content: "go: downloading github.com/kevinburke/ssh_config v1.1.0\r\n"
+  - delay: 52
+    content: "go: downloading github.com/xanzy/ssh-agent v0.3.1\r\n"
+  - delay: 69
+    content: "go: downloading github.com/gogo/protobuf v1.3.2\r\ngo: downloading gopkg.in/warnings.v0 v0.1.2\r\n"
+  - delay: 11
+    content: "go: downloading golang.org/x/text v0.3.7\r\n"
+  - delay: 19497
+    content: "[\e[36mSQNC\e[0m] running step 'Post Checkout action'\r\n"
+  - delay: 5
+    content: "[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:12'\r\n"

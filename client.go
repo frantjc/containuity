@@ -18,10 +18,9 @@ import (
 
 // Client is a wrapper around each of sequence's gRPC clients
 type Client struct {
-	jobClient      jobapi.JobClient
-	stepClient     stepapi.StepClient
-	workflowClient workflowapi.WorkflowClient
-
+	jobClient       jobapi.JobClient
+	stepClient      stepapi.StepClient
+	workflowClient  workflowapi.WorkflowClient
 	containerClient containerapi.ContainerClient
 	imageClient     imageapi.ImageClient
 }

@@ -1,0 +1,14 @@
+name: Demo
+jobs:
+  checkout-build:
+    name: Checkout and build
+    steps:
+      - name: Checkout action
+        uses: actions/checkout@v2
+      - name: Go build
+        image: golang:1.18-alpine3.15
+        env:
+          CGO_ENABLED: 0
+        run: |
+          echo "::notice::running \"$(which go) build ./cmd/sqnc\""
+          go build ./cmd/sqnc
