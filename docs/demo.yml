@@ -45,16 +45,16 @@ config:
   maxIdleTime: 2000
   
   # The surrounding frame box
-  # The `type` can be null, window, floating, or solid`
+  # The `type` can be null, window, floating, or solid
   # To hide the title use the value null
   # Don't forget to add a backgroundColor style with a null as type
   frameBox:
-    type: floating
-    title: sequence
+    type: window
+    title: null
     style:
-      border: 0px black solid
-      # boxShadow: none
-      # margin: 0px
+      backgroundColor: null
+      boxShadow: none
+      margin: 0px
   
   # Add a watermark image to the rendered gif
   # You need to specify an absolute path for
@@ -108,11 +108,11 @@ config:
     brightMagenta: "#ae89fe"
     brightCyan: "#b1c6ca"
     brightWhite: "#f9f9f4"
-  
+
 # Records, feel free to edit them
 records:
   - delay: 5
-    content: "\e[37m$\e[0m "
+    content: &terminal "\e[32m$\e[0m "
   - delay: 1000
     content: cat demo.yml
   - delay: 1000
@@ -120,16 +120,16 @@ records:
   - delay: 5
     content: "name: Demo\r\njobs:\r\n  checkout-build:\r\n    name: Checkout and build\r\n    steps:\r\n      - name: Checkout action\r\n        uses: actions/checkout@v2\r\n      - name: Go build\r\n        image: golang:1.18-alpine3.15\r\n        env:\r\n          CGO_ENABLED: 0\r\n        run: |\r\n          echo \"::notice::running \\\"$(which go) build ./cmd/sqnc\\\"\"\r\n          go build ./cmd/sqnc\r\n\e]7;\a"
   - delay: 5
-    content: "\e[37m$\e[0m "
+    content: *terminal
   - delay: 1000
     content: "sqnc run demo.yml"
   - delay: 1000
     content: "\r\n"
   - delay: 31
     content: "[\e[36mSQNC\e[0m] running workflow 'Demo'\r\n[\e[36mSQNC\e[0m] running job 'Checkout and build'\r\n[\e[36mSQNC\e[0m] setting up action 'actions/checkout@v2'\r\n[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:16'\r\n"
-  - delay: 2635
+  - delay: 2000
     content: "[\e[36mSQNC\e[0m] running step 'Checkout action'\r\n[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:12'\r\n"
-  - delay: 2336
+  - delay: 2000
     content: "Syncing repository: frantjc/sequence\r\nWorking directory is '/sqnc/workspace'\r\n"
   - delay: 21
     content: "[command]/usr/bin/git version\r\n"
@@ -223,7 +223,13 @@ records:
     content: "go: downloading github.com/gogo/protobuf v1.3.2\r\ngo: downloading gopkg.in/warnings.v0 v0.1.2\r\n"
   - delay: 11
     content: "go: downloading golang.org/x/text v0.3.7\r\n"
-  - delay: 19497
+  - delay: 2000
     content: "[\e[36mSQNC\e[0m] running step 'Post Checkout action'\r\n"
   - delay: 5
     content: "[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:12'\r\n"
+  - delay: 5
+    content: *terminal
+  - delay: 1000
+    content: "clear"
+  - delay: 1000
+    content: "\r\n"
