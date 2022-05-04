@@ -10,7 +10,6 @@ import (
 	stepapi "github.com/frantjc/sequence/api/v1/step"
 	volumeapi "github.com/frantjc/sequence/api/v1/volume"
 	workflowapi "github.com/frantjc/sequence/api/v1/workflow"
-	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
 	"github.com/frantjc/sequence/runtime"
@@ -97,56 +96,19 @@ func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer, 
 		}
 	}
 
-	var (
-		conf, err    = conf.NewFromFlagsWithRepository(ro.repository)
-		workflowOpts = []workflow.ExecOpt{
-			workflow.WithRuntime(c.Runtime()),
-			workflow.WithGitHubToken(conf.GitHub.Token),
-			workflow.WithRepository(ro.repository),
-			workflow.WithStdout(w),
-			workflow.WithStderr(w),
-		}
-	)
+	stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
+		Step:        convert.StepToProtoStep(step),
+		Job:         convert.JobToProtoJob(ro.job),
+		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
+		Repository:  ro.repository,
+		RunnerImage: ro.runnerImage,
+		Verbose:     ro.verbose,
+	})
 	if err != nil {
 		return err
 	}
 
-	if ro.verbose || conf.Verbose {
-		workflowOpts = append(workflowOpts, workflow.WithVerbose)
-	}
-
-	if ro.runnerImage != "" {
-		workflowOpts = append(workflowOpts, workflow.WithRunnerImage(ro.runnerImage))
-	} else {
-		workflowOpts = append(workflowOpts, workflow.WithRunnerImage(ro.runnerImage))
-	}
-
-	if ro.job != nil {
-		workflowOpts = append(workflowOpts, workflow.WithJob(
-			ro.job,
-		))
-	}
-
-	executor, err := workflow.NewStepExecutor(step, workflowOpts...)
-	if err != nil {
-		return err
-	}
-
-	return executor.Start(ctx)
-
-	// stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
-	// 	Step:        convert.StepToProtoStep(step),
-	// 	Job:         convert.JobToProtoJob(ro.job),
-	// 	Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
-	// 	Repository:  ro.repository,
-	// 	RunnerImage: ro.runnerImage,
-	// 	Verbose:     ro.verbose,
-	// })
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return grpcio.DemultiplexLogStream(stream, w, w)
+	return grpcio.DemultiplexLogStream(stream, w, w)
 }
 
 // RunJob calls the underlying gRPC JobClient's RunJob and

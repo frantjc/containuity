@@ -29,6 +29,10 @@ type logOutStreamWriter struct {
 }
 
 func (w *logOutStreamWriter) Write(p []byte) (int, error) {
+	if p == nil {
+		return len(p), nil
+	}
+
 	w.Lock()
 	defer w.Unlock()
 	err := w.s.Send(&types.Log{
@@ -47,6 +51,10 @@ type logErrStreamWriter struct {
 }
 
 func (w *logErrStreamWriter) Write(p []byte) (int, error) {
+	if p == nil {
+		return len(p), nil
+	}
+
 	w.Lock()
 	defer w.Unlock()
 	err := w.s.Send(&types.Log{

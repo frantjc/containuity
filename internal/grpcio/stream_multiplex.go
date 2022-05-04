@@ -21,10 +21,10 @@ func DemultiplexLogStream(stream LogStreamClient, stdout, stderr io.Writer) erro
 		case err != nil:
 			return err
 		case l != nil:
-			if len(l.Out) > 0 {
+			if l.Out != nil && len(l.Out) > 0 {
 				stdout.Write([]byte(l.Out))
 			}
-			if len(l.Err) > 0 {
+			if l.Err != nil && len(l.Err) > 0 {
 				stderr.Write([]byte(l.Err))
 			}
 		}
