@@ -32,7 +32,7 @@ func (w *logOutStreamWriter) Write(p []byte) (int, error) {
 	w.Lock()
 	defer w.Unlock()
 	err := w.s.Send(&types.Log{
-		Out: string(p),
+		Out: p,
 	})
 	if err != nil {
 		return 0, err
@@ -50,7 +50,7 @@ func (w *logErrStreamWriter) Write(p []byte) (int, error) {
 	w.Lock()
 	defer w.Unlock()
 	err := w.s.Send(&types.Log{
-		Err: string(p),
+		Err: p,
 	})
 	if err != nil {
 		return 0, err

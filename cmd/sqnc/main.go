@@ -3,16 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
-	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/conf"
-	"github.com/frantjc/sequence/conf/flags"
-	"github.com/frantjc/sequence/log"
+	"github.com/frantjc/sequence/internal/conf"
+	"github.com/frantjc/sequence/internal/conf/flags"
+	"github.com/frantjc/sequence/internal/log"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +17,6 @@ var rootCmd = &cobra.Command{
 	Use:               "sqnc",
 	Version:           fmt.Sprintf("sqnc%s %s", sequence.Semver(), runtime.Version()),
 	PersistentPreRunE: persistentPreRun,
-	RunE:              run,
 }
 
 func init() {
@@ -47,37 +43,6 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 	}
 	log.SetVerbose(c.Verbose)
 	return nil
-}
-
-func run(cmd *cobra.Command, args []string) error {
-	var (
-		ctx    = cmd.Context()
-		c, err = conf.NewFromFlags()
-	)
-	if err != nil {
-		return err
-	}
-
-	addr := strings.TrimPrefix(c.Address(), "unix://")
-	os.MkdirAll(c.RootDir, 0777)
-	os.MkdirAll(c.StateDir, 0777)
-	if c.Port == 0 {
-		os.MkdirAll(filepath.Dir(addr), 0777)
-	}
-	os.Remove(addr)
-	defer os.Remove(addr)
-
-	l, err := net.Listen(c.Network(), addr)
-	if err != nil {
-		return err
-	}
-
-	s, err := sequence.NewServer(ctx, sequence.WithRuntimeName(c.Runtime.Name))
-	if err != nil {
-		return err
-	}
-
-	return s.Serve(l)
 }
 
 func main() {

@@ -1,0 +1,6 @@
+run: |
+  for i in $(seq 4); do
+    sleep $i
+    echo $i..
+  done
+  echo done

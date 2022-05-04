@@ -5,6 +5,7 @@ package sequence.v1.container;
 import "api/types/container.proto";
 import "api/types/log.proto";
 import "api/types/spec.proto";
+import "api/types/empty.proto";
 
 option go_package = "github.com/frantjc/sequence/api/v1/container";
 
@@ -12,6 +13,12 @@ service Container {
     rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
     rpc GetContainer(GetContainerRequest) returns (GetContainerResponse);
     rpc ExecContainer(ExecContainerRequest) returns (stream sequence.types.Log);
+    rpc StartContainer(StartContainerRequest) returns (sequence.types.Empty);
+    rpc AttachContainer(AttachContainerRequest) returns (stream sequence.types.Log);
+    rpc RemoveContainer(RemoveContainerRequest) returns (sequence.types.Empty);
+    rpc PruneContainers(sequence.types.Empty) returns (sequence.types.Empty);
+    rpc CopyToContainer(CopyToContainerRequest) returns (sequence.types.Empty);
+    rpc CopyFromContainer(CopyFromContainerRequest) returns (CopyFromContainerResponse);
 }
 
 message CreateContainerRequest {
@@ -32,4 +39,35 @@ message GetContainerResponse {
 
 message ExecContainerRequest {
     string id = 1;
+}
+
+message StartContainerRequest {
+    string id = 1;
+}
+
+message StartContainerResponse {
+    sequence.types.Container container = 1;
+}
+
+message AttachContainerRequest {
+    string id = 1;
+}
+
+message RemoveContainerRequest {
+    string id = 1;
+}
+
+message CopyToContainerRequest {
+    string id = 1;
+    string destination = 2;
+    bytes content = 3;
+}
+
+message CopyFromContainerRequest {
+    string id = 1;
+    string source = 2;
+}
+
+message CopyFromContainerResponse {
+    bytes content = 1;
 }

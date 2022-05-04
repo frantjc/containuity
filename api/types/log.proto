@@ -5,6 +5,6 @@ package sequence.types;
 option go_package = "github.com/frantjc/sequence/api/types";
 
 message Log {
-	string out = 1;
-	string err = 2;
+	bytes out = 1;
+	bytes err = 2;
 }

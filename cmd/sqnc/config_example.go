@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/frantjc/sequence/conf"
+	"github.com/frantjc/sequence/internal/conf"
 	"github.com/spf13/cobra"
 )
 

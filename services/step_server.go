@@ -1,29 +1,44 @@
-package job
+package services
 
 import (
-	"context"
-
-	api "github.com/frantjc/sequence/api/v1/job"
-	"github.com/frantjc/sequence/conf"
+	api "github.com/frantjc/sequence/api/v1/step"
+	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
-	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"
 )
 
-type jobClient struct {
-	runtime runtime.Runtime
+func NewStepService(opts ...Opt) (StepService, error) {
+	svc := &stepServer{
+		svc: &service{},
+	}
+	for _, opt := range opts {
+		if err := opt(svc.svc); err != nil {
+			return nil, err
+		}
+	}
+	return svc, nil
 }
 
-var _ api.JobClient = &jobClient{}
+type stepServer struct {
+	api.UnimplementedStepServer
+	svc *service
+}
 
-func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc.CallOption) (api.Job_RunJobClient, error) {
+type StepService interface {
+	api.StepServer
+	Service
+}
+
+var _ StepService = &stepServer{}
+
+func (s *stepServer) RunStep(in *api.RunStepRequest, stream api.Step_RunStepServer) error {
 	var (
+		ctx       = stream.Context()
 		conf, err = conf.NewFromFlagsWithRepository(in.Repository)
-		stream    = grpcio.NewLogStream(ctx)
 		opts      = []workflow.ExecOpt{
-			workflow.WithRuntime(c.runtime),
+			workflow.WithRuntime(s.svc.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRepository(in.Repository),
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
@@ -31,8 +46,9 @@ func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc
 		}
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
+
 	if in.Verbose || conf.Verbose {
 		opts = append(opts, workflow.WithVerbose)
 	}
@@ -49,17 +65,14 @@ func (c *jobClient) RunJob(ctx context.Context, in *api.RunJobRequest, _ ...grpc
 		))
 	}
 
-	executor, err := workflow.NewJobExecutor(convert.ProtoJobToJob(in.Job), opts...)
+	executor, err := workflow.NewStepExecutor(convert.ProtoStepToStep(in.Step), opts...)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	go func() {
-		defer stream.CloseSend()
-		if err = executor.Start(ctx); err != nil {
-			stream.SendErr(err)
-		}
-	}()
+	return executor.Start(ctx)
+}
 
-	return stream, nil
+func (s *stepServer) Register(r grpc.ServiceRegistrar) {
+	api.RegisterStepServer(r, s)
 }

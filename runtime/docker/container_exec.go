@@ -10,16 +10,16 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-func (c *dockerContainer) Exec(ctx context.Context, e *runtime.Exec) error {
+func (c *dockerContainer) Exec(ctx context.Context, streams *runtime.Streams) error {
 	attachResp, err := c.client.ContainerAttach(ctx, c.id, types.ContainerAttachOptions{
 		Stream: true,
-		Stdout: e.Stdout != nil,
-		Stderr: e.Stderr != nil,
+		Stdout: streams.Stdout != nil,
+		Stderr: streams.Stderr != nil,
 	})
 	if err != nil {
 		return err
 	}
-	go stdcopy.StdCopy(e.Stdout, e.Stderr, attachResp.Reader)
+	go stdcopy.StdCopy(streams.Stdout, streams.Stderr, attachResp.Reader)
 
 	err = c.client.ContainerStart(ctx, c.id, types.ContainerStartOptions{})
 	if err != nil {
@@ -33,9 +33,6 @@ func (c *dockerContainer) Exec(ctx context.Context, e *runtime.Exec) error {
 			return err
 		}
 	case <-ctx.Done():
-		defer c.client.ContainerRemove(ctx, c.id, types.ContainerRemoveOptions{
-			Force: true,
-		})
 		return ctx.Err()
 	case status := <-statusC:
 		if status.StatusCode != 0 {

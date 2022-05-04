@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence/github/actions"
-	"github.com/frantjc/sequence/log"
+	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/runtime"
 	"golang.org/x/net/context"
 )
@@ -224,7 +224,7 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 
 	return container.Exec(
 		ctx,
-		runtime.ExecStreams(
+		runtime.NewStreams(
 			os.Stdin,
 			actions.NewCommandWriter(commandWriterCallback, ex.stdout),
 			actions.NewCommandWriter(commandWriterCallback, ex.stderr),

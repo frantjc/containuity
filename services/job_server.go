@@ -1,29 +1,44 @@
-package step
+package services
 
 import (
-	"context"
-
-	api "github.com/frantjc/sequence/api/v1/step"
-	"github.com/frantjc/sequence/conf"
+	api "github.com/frantjc/sequence/api/v1/job"
+	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
-	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"
 )
 
-type stepClient struct {
-	runtime runtime.Runtime
+func NewJobService(opts ...Opt) (JobService, error) {
+	svc := &jobServer{
+		svc: &service{},
+	}
+	for _, opt := range opts {
+		if err := opt(svc.svc); err != nil {
+			return nil, err
+		}
+	}
+	return svc, nil
 }
 
-var _ api.StepClient = &stepClient{}
+type jobServer struct {
+	api.UnimplementedJobServer
+	svc *service
+}
 
-func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...grpc.CallOption) (api.Step_RunStepClient, error) {
+type JobService interface {
+	api.JobServer
+	Service
+}
+
+var _ JobService = &jobServer{}
+
+func (s *jobServer) RunJob(in *api.RunJobRequest, stream api.Job_RunJobServer) error {
 	var (
+		ctx       = stream.Context()
 		conf, err = conf.NewFromFlagsWithRepository(in.Repository)
-		stream    = grpcio.NewLogStream(ctx)
 		opts      = []workflow.ExecOpt{
-			workflow.WithRuntime(c.runtime),
+			workflow.WithRuntime(s.svc.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRepository(in.Repository),
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
@@ -31,9 +46,8 @@ func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...g
 		}
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
 	if in.Verbose || conf.Verbose {
 		opts = append(opts, workflow.WithVerbose)
 	}
@@ -50,17 +64,14 @@ func (c *stepClient) RunStep(ctx context.Context, in *api.RunStepRequest, _ ...g
 		))
 	}
 
-	executor, err := workflow.NewStepExecutor(convert.ProtoStepToStep(in.Step), opts...)
+	executor, err := workflow.NewJobExecutor(convert.ProtoJobToJob(in.Job), opts...)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	go func() {
-		defer stream.CloseSend()
-		if err = executor.Start(ctx); err != nil {
-			stream.SendErr(err)
-		}
-	}()
+	return executor.Start(ctx)
+}
 
-	return stream, nil
+func (s *jobServer) Register(r grpc.ServiceRegistrar) {
+	api.RegisterJobServer(r, s)
 }

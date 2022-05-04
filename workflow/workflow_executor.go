@@ -3,7 +3,7 @@ package workflow
 import (
 	"context"
 
-	"github.com/frantjc/sequence/log"
+	"github.com/frantjc/sequence/internal/log"
 )
 
 func NewWorkflowExecutor(w *Workflow, opts ...ExecOpt) (Executor, error) {

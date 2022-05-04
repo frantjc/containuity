@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/github/actions"
-	"github.com/frantjc/sequence/log"
+	"github.com/frantjc/sequence/internal/conf"
+	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )

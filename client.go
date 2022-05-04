@@ -8,9 +8,13 @@ import (
 	imageapi "github.com/frantjc/sequence/api/v1/image"
 	jobapi "github.com/frantjc/sequence/api/v1/job"
 	stepapi "github.com/frantjc/sequence/api/v1/step"
+	volumeapi "github.com/frantjc/sequence/api/v1/volume"
 	workflowapi "github.com/frantjc/sequence/api/v1/workflow"
+	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
+	"github.com/frantjc/sequence/runtime"
+	"github.com/frantjc/sequence/runtime/sqnc"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -23,6 +27,7 @@ type Client struct {
 	workflowClient  workflowapi.WorkflowClient
 	containerClient containerapi.ContainerClient
 	imageClient     imageapi.ImageClient
+	volumeClient    volumeapi.VolumeClient
 }
 
 // New is an alias to NewClient
@@ -36,9 +41,12 @@ func NewClient(ctx context.Context, addr string, opts ...ClientOpt) (*Client, er
 	}
 
 	client := &Client{
-		jobClient:      jobapi.NewJobClient(cc),
-		stepClient:     stepapi.NewStepClient(cc),
-		workflowClient: workflowapi.NewWorkflowClient(cc),
+		jobClient:       jobapi.NewJobClient(cc),
+		stepClient:      stepapi.NewStepClient(cc),
+		workflowClient:  workflowapi.NewWorkflowClient(cc),
+		containerClient: containerapi.NewContainerClient(cc),
+		imageClient:     imageapi.NewImageClient(cc),
+		volumeClient:    volumeapi.NewVolumeClient(cc),
 	}
 	return client, nil
 }
@@ -58,20 +66,25 @@ func (c *Client) WorkflowClient() workflowapi.WorkflowClient {
 	return c.workflowClient
 }
 
-// ContainerClient returns the client's underlying gRPC WorkflowClient
+// ContainerClient returns the client's underlying gRPC ContainerClient
 func (c *Client) ContainerClient() containerapi.ContainerClient {
 	return c.containerClient
 }
 
-// ImageClient returns the client's underlying gRPC WorkflowClient
+// ImageClient returns the client's underlying gRPC ImageClient
 func (c *Client) ImageClient() imageapi.ImageClient {
 	return c.imageClient
 }
 
+// VolumeClient returns the client's underlying gRPC VolumeClient
+func (c *Client) VolumeClient() volumeapi.VolumeClient {
+	return c.volumeClient
+}
+
 // Runtime returns a runtime.Runtime implementation using the underlying clients
-// func (c *Client) Runtime() runtime.Runtime {
-// 	return NewGRPCRuntime(c.ImageClient(), c.ContainerClient())
-// }
+func (c *Client) Runtime() runtime.Runtime {
+	return sqnc.NewRuntime(c.ImageClient(), c.ContainerClient(), c.VolumeClient())
+}
 
 // RunStep calls the underlying gRPC StepClient's RunStep and
 // writes its logs to the given io.Writer
@@ -84,19 +97,56 @@ func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer, 
 		}
 	}
 
-	stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
-		Step:        convert.StepToProtoStep(step),
-		Job:         convert.JobToProtoJob(ro.job),
-		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
-		Repository:  ro.repository,
-		RunnerImage: ro.runnerImage,
-		Verbose:     ro.verbose,
-	})
+	var (
+		conf, err    = conf.NewFromFlagsWithRepository(ro.repository)
+		workflowOpts = []workflow.ExecOpt{
+			workflow.WithRuntime(c.Runtime()),
+			workflow.WithGitHubToken(conf.GitHub.Token),
+			workflow.WithRepository(ro.repository),
+			workflow.WithStdout(w),
+			workflow.WithStderr(w),
+		}
+	)
 	if err != nil {
 		return err
 	}
 
-	return grpcio.DemultiplexLogStream(stream, w, w)
+	if ro.verbose || conf.Verbose {
+		workflowOpts = append(workflowOpts, workflow.WithVerbose)
+	}
+
+	if ro.runnerImage != "" {
+		workflowOpts = append(workflowOpts, workflow.WithRunnerImage(ro.runnerImage))
+	} else {
+		workflowOpts = append(workflowOpts, workflow.WithRunnerImage(ro.runnerImage))
+	}
+
+	if ro.job != nil {
+		workflowOpts = append(workflowOpts, workflow.WithJob(
+			ro.job,
+		))
+	}
+
+	executor, err := workflow.NewStepExecutor(step, workflowOpts...)
+	if err != nil {
+		return err
+	}
+
+	return executor.Start(ctx)
+
+	// stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
+	// 	Step:        convert.StepToProtoStep(step),
+	// 	Job:         convert.JobToProtoJob(ro.job),
+	// 	Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
+	// 	Repository:  ro.repository,
+	// 	RunnerImage: ro.runnerImage,
+	// 	Verbose:     ro.verbose,
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return grpcio.DemultiplexLogStream(stream, w, w)
 }
 
 // RunJob calls the underlying gRPC JobClient's RunJob and

@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/frantjc/sequence/conf"
+	"github.com/frantjc/sequence/internal/conf"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )

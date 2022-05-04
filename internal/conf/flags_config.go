@@ -3,7 +3,7 @@ package conf
 import (
 	"os"
 
-	"github.com/frantjc/sequence/conf/flags"
+	"github.com/frantjc/sequence/internal/conf/flags"
 )
 
 func NewFromFlagsWithRepository(repository string, opts ...ConfigOpt) (*Config, error) {

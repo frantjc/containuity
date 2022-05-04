@@ -3,8 +3,8 @@ package workflow
 import (
 	"os"
 
-	"github.com/frantjc/sequence/conf"
 	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/internal/conf"
 )
 
 func NewStepExecutor(s *Step, opts ...ExecOpt) (Executor, error) {

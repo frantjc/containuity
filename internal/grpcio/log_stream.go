@@ -11,7 +11,6 @@ import (
 type LogStream interface {
 	LogStreamClient
 	LogStreamServer
-	SendErr(error)
 }
 
 func NewLogStream(ctx context.Context) LogStream {
@@ -50,10 +49,6 @@ func (s *logStream) Send(l *types.Log) error {
 		return nil
 	}
 	return ErrStreamClosed
-}
-
-func (s *logStream) SendErr(err error) {
-	s.errC <- err
 }
 
 func (s *logStream) Context() context.Context {

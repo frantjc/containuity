@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/conf"
-	"github.com/frantjc/sequence/conf/flags"
-	"github.com/frantjc/sequence/log"
+	"github.com/frantjc/sequence/internal/conf"
+	"github.com/frantjc/sequence/internal/conf/flags"
+	"github.com/frantjc/sequence/internal/log"
 	"github.com/spf13/cobra"
 )
 

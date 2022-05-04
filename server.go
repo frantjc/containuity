@@ -6,12 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/frantjc/sequence/log"
-	"github.com/frantjc/sequence/services/container"
-	"github.com/frantjc/sequence/services/image"
-	"github.com/frantjc/sequence/services/job"
-	"github.com/frantjc/sequence/services/step"
-	"github.com/frantjc/sequence/services/workflow"
+	"github.com/frantjc/sequence/internal/log"
+	"github.com/frantjc/sequence/services"
 	"google.golang.org/grpc"
 )
 
@@ -47,36 +43,44 @@ func NewServer(ctx context.Context, opts ...ServerOpt) (*Server, error) {
 	var (
 		grpcServer = grpc.NewServer()
 		runtime    = so.runtime
+		svcOpts    = []services.Opt{services.WithRuntime(runtime)}
 	)
-	imageService, err := image.NewService(image.WithRuntime(runtime))
+	imageService, err := services.NewImageService(svcOpts...)
 	if err != nil {
 		return nil, err
 	}
 	imageService.Register(grpcServer)
 	log.Info("registered image service")
 
-	containerService, err := container.NewService(container.WithRuntime(runtime))
+	containerService, err := services.NewContainerService(svcOpts...)
 	if err != nil {
 		return nil, err
 	}
 	containerService.Register(grpcServer)
 	log.Info("registered container service")
 
-	stepService, err := step.NewService(step.WithRuntime(runtime))
+	volumeService, err := services.NewVolumeService(svcOpts...)
+	if err != nil {
+		return nil, err
+	}
+	volumeService.Register(grpcServer)
+	log.Info("registered volume service")
+
+	stepService, err := services.NewStepService(svcOpts...)
 	if err != nil {
 		return nil, err
 	}
 	stepService.Register(grpcServer)
 	log.Info("registered step service")
 
-	jobService, err := job.NewService(job.WithRuntime(runtime))
+	jobService, err := services.NewJobService(svcOpts...)
 	if err != nil {
 		return nil, err
 	}
 	jobService.Register(grpcServer)
 	log.Info("registered job service")
 
-	workflowService, err := workflow.NewService(workflow.WithRuntime(runtime))
+	workflowService, err := services.NewWorkflowService(svcOpts...)
 	if err != nil {
 		return nil, err
 	}

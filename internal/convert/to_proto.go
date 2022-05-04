@@ -92,6 +92,12 @@ func RuntimeImageToProtoImage(image runtime.Image) *types.Image {
 	}
 }
 
+func RuntimeVolumeToProtoVolume(volume runtime.Volume) *types.Volume {
+	return &types.Volume{
+		Source: volume.Source(),
+	}
+}
+
 func RuntimeSpecToProtoSpec(s *runtime.Spec) *types.Spec {
 	if s == nil {
 		return nil
