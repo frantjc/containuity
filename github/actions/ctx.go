@@ -270,6 +270,7 @@ func EmptyContext() *GlobalContext {
 			RunAttempt: 1,
 			RunID:      uuid.NewString(),
 			Action:     "__run",
+			Actor: u.Name,
 		},
 		EnvContext:   map[string]string{},
 		JobContext:   &JobContext{},
@@ -323,7 +324,16 @@ func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*Glob
 	}
 
 	if conf, err := r.Config(); err == nil {
-		c.GitHubContext.Actor = conf.Author.Name
+		c.GitHubContext.Actor = coalesce(
+			conf.User.Name,
+			conf.Author.Name,
+			conf.Committer.Name,
+			conf.User.Email,
+			conf.Author.Email,
+			conf.Committer.Email,
+			c.GitHubContext.Actor,
+		)
+
 		for _, remote := range conf.Remotes {
 			for _, rurl := range remote.URLs {
 				prurl, err := url.Parse(rurl)
@@ -341,7 +351,6 @@ func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*Glob
 
 	if branch, err := r.Branch(currentBranch); err == nil {
 		currentRemote = branch.Remote
-
 		c.GitHubContext.RefName = branch.Name
 		c.GitHubContext.Ref = fmt.Sprintf("refs/heads/%s", branch.Name)
 		c.GitHubContext.RefType = RefTypeBranch
