@@ -18,17 +18,19 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:               "sqncd",
-	Version:           fmt.Sprintf("sqncd%s %s", sequence.Semver(), runtime.Version()),
+	Version:           sequence.Semver(),
 	PersistentPreRunE: persistentPreRun,
 	RunE:              run,
 }
 
 func init() {
-	rootCmd.SetVersionTemplate("{{ .Version }}\n")
+	rootCmd.SetVersionTemplate(
+		fmt.Sprintf("{{ .Name }}{{ .Version }} %s\n", runtime.Version()),
+	)
 	rootCmd.PersistentFlags().StringVar(&flags.FlagConfigFilePath, "config", "", "config file")
 	rootCmd.PersistentFlags().BoolVar(&flags.FlagVerbose, "verbose", false, "verbose")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagSocket, "sock", "", "unix socket")
-	rootCmd.PersistentFlags().IntVar(&flags.FlagPort, "port", 0, "port")
+	rootCmd.PersistentFlags().Int64Var(&flags.FlagPort, "port", 0, "port")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagRootDir, "root-dir", "", "root dir")
 	rootCmd.PersistentFlags().StringVar(&flags.FlagStateDir, "state-dir", "", "state dir")
 	wd, _ := os.Getwd()

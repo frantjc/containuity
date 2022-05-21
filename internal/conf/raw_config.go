@@ -4,7 +4,7 @@ import "net/url"
 
 type RawConfigFile struct {
 	Verbose      bool                        `toml:"verbose,omitempty"`
-	Port         int                         `toml:"port,omitempty"`
+	Port         int64                       `toml:"port,omitempty"`
 	Socket       string                      `toml:"socket,omitempty"`
 	RootDir      string                      `toml:"root_dir,omitempty"`
 	StateDir     string                      `toml:"state_dir,omitempty"`

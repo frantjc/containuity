@@ -270,7 +270,7 @@ func EmptyContext() *GlobalContext {
 			RunAttempt: 1,
 			RunID:      uuid.NewString(),
 			Action:     "__run",
-			Actor: u.Name,
+			Actor:      u.Name,
 		},
 		EnvContext:   map[string]string{},
 		JobContext:   &JobContext{},

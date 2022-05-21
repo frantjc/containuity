@@ -23,7 +23,7 @@ func New(opts ...ConfigOpt) (*Config, error) {
 
 type ConfigFile struct {
 	Verbose      bool
-	Port         int
+	Port         int64
 	Socket       string
 	RootDir      string
 	StateDir     string
@@ -88,7 +88,7 @@ func (c *ConfigFile) Address() string {
 
 type Config struct {
 	Verbose  bool
-	Port     int
+	Port     int64
 	Socket   string
 	RootDir  string
 	StateDir string
@@ -219,7 +219,7 @@ const (
 	unix = "unix"
 )
 
-func network(port int, socket string) string {
+func network(port int64, socket string) string {
 	if port < 65535 && port > 0 {
 		return tcp
 	}
@@ -227,7 +227,7 @@ func network(port int, socket string) string {
 	return unix
 }
 
-func addr(port int, socket string) string {
+func addr(port int64, socket string) string {
 	if port < 65535 && port > 0 {
 		return fmt.Sprintf(":%d", port)
 	}

@@ -9,6 +9,6 @@ images:
     arch: "aarch64"
 portForwards:
   - guestSocket: "/run/user/{{ .UID }}/containerd-rootless/api.sock"
-    hostSocket: "{{ .Home }}/.sqnc/containerd.sock"
+    hostSocket: "{{ .Home }}/.sqnc/run/containerd.sock"
 message: |
-  forwarded containerd socket to {{ .Home }}/.sqnc/containerd.sock
+  forwarded containerd socket to {{ .Home }}/.sqnc/run/containerd.sock

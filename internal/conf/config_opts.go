@@ -66,10 +66,11 @@ func WithConfigFromEnv() (*Config, error) {
 	}
 
 	if rawPort := os.Getenv(EnvVarPort); rawPort != "" {
-		c.Port, err = strconv.Atoi(rawPort)
+		port, err := strconv.Atoi(rawPort)
 		if err != nil {
 			return nil, err
 		}
+		c.Port = int64(port)
 	}
 
 	if rawGitHubURL := os.Getenv(EnvVarGitHubURL); rawGitHubURL != "" {

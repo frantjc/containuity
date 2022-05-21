@@ -9,7 +9,6 @@ state_dir = "/var/run/sqnc"
 [runtime]
     name = "docker"
     runner_image = "docker.io/library/node:12"
-    action_image = "docker.io/library/node:16"
 
 [github]
     base_url = "https://github.com/"
@@ -18,6 +17,6 @@ state_dir = "/var/run/sqnc"
 #     FOO = "BAR"
 
 # [repository]
-#     [repository."https://github.com/frantjc/sequence.git"]
-#         [repository."https://github.com/frantjc/sequence.git".runtime]
-#             runner_image = "docker.io/library/node:16"
+# [repository."https://github.com/frantjc/sequence.git"]
+# [repository."https://github.com/frantjc/sequence.git".runtime]
+#     runner_image = "docker.io/library/node:16"

@@ -23,6 +23,6 @@ make vet
 make sqnc
 # run gRPC server
 sqnc
-# run workflows (usually requires github.token in ~/.sqnc/config.toml)
+# run workflows (usually requires github.token in ~/.sqnc/config)
 sqnc run testdata/workflows/checkout_test_build_workflow.yml
 ```

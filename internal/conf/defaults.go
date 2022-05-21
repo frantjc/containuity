@@ -12,13 +12,15 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-//go:embed config.toml
-var ExampleRawConfigFileBytes []byte
-var ExampleRawConfigFile = &RawConfigFile{}
+var (
+	//go:embed config
+	ExampleRawConfigFileBytes []byte
+	ExampleRawConfigFile      = &RawConfigFile{}
+)
 
 func init() {
 	if err := toml.NewDecoder(bytes.NewReader(ExampleRawConfigFileBytes)).Decode(ExampleRawConfigFile); err != nil {
-		panic(fmt.Sprintf("conf.ExampleConfigFile is not a valid config file"))
+		panic("github.com/frantjc/sequence/internal/conf.ExampleConfigFile is not a valid config file")
 	}
 }
 
@@ -27,12 +29,12 @@ var DefaultGitHubURL = github.DefaultURL
 const (
 	DefaultRuntimeName    = runtime.DefaultRuntimeName
 	DefaultRunnerImage    = "docker.io/library/node:12"
-	DefaultConfigFileName = "config.toml"
+	DefaultConfigFileName = "config"
 )
 
 var (
-	home = os.Getenv("HOME")
-	name = "sqnc"
+	home, _ = os.UserHomeDir()
+	name    = "sqnc"
 )
 
 var (
@@ -48,6 +50,6 @@ var (
 var (
 	DefaultSystemSocket         = fmt.Sprintf("unix://%s", filepath.Join(DefaultSystemStateDir, fmt.Sprintf("%s.sock", name)))
 	DefaultSystemConfigFilePath = filepath.Join(DefaultSystemConfigDir, DefaultConfigFileName)
-	DefaultUserConfigFilePath   = filepath.Join(DefaultUserDir, DefaultConfigFileName)
 	DefaultUserSocket           = fmt.Sprintf("unix://%s", filepath.Join(DefaultUserStateDir, fmt.Sprintf("%s.sock", name)))
+	DefaultUserConfigFilePath   = filepath.Join(DefaultUserDir, DefaultConfigFileName)
 )
