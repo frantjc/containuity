@@ -5,6 +5,9 @@ GIT ?= git
 DOCKER ?= docker
 PROTOC ?= protoc
 
+VERSION ?= 0.0.0
+PRERELEASE ?= alpha0
+
 BRANCH ?= $(shell $(GIT) rev-parse --abbrev-ref HEAD 2>/dev/null)
 COMMIT ?= $(shell $(GIT) rev-parse HEAD 2>/dev/null)
 SHORT_SHA ?= $(shell $(GIT) rev-parse --short $(COMMIT))
@@ -15,7 +18,7 @@ MODULE ?= github.com/$(REPOSITORY)
 TAG ?= latest
 IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
-BUILD_ARGS ?= --build-arg repository=$(REPOSITORY) --build-arg tag=$(TAG) --build-arg commit=$(SHORT_SHA)
+BUILD_ARGS ?= --build-arg version=$(VERSION) --build-arg prerelease=$(PRERELEASE)
 
 PROTOS ?= $(shell find . -type f -name *.proto)
 PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
@@ -29,13 +32,13 @@ bin: sqnc
 bins binaries: sqnc sqncd
 
 sqnc sqncd: shims
-	@$(GO) build -ldflags "-s -w -X github.com/frantjc/sequence.Build=$(SHORT_SHA) -X github.com/frantjc/sequence.Tag=$(TAG)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+	@$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 	@$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
 shims:
-	@GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim
+	@GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim
 	@mv $(CURDIR)/bin/sqncshim $(CURDIR)/workflow/sqncshim
-	@GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim-uses
+	@GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim-uses
 	@mv $(CURDIR)/bin/sqncshim-uses $(CURDIR)/workflow/sqncshim-uses
 
 placeholders:
