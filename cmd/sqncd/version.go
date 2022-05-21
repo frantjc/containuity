@@ -18,7 +18,7 @@ var versionCmd = &cobra.Command{
 }
 
 func runVersion(cmd *cobra.Command, args []string) error {
-	return write(os.Stdout, fmt.Sprintf("sqnc%s %s", sequence.Semver(), runtime.Version()))
+	return write(os.Stdout, fmt.Sprintf("sqncd%s %s", sequence.Semver(), runtime.Version()))
 }
 
 func write(w io.Writer, i interface{}) error {
