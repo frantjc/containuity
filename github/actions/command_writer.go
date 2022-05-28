@@ -13,7 +13,7 @@ type commandWriter struct {
 var _ io.Writer = &commandWriter{}
 
 func (w *commandWriter) Write(p []byte) (int, error) {
-	if p == nil || len(p) == 0 {
+	if len(p) == 0 {
 		return 0, nil
 	}
 

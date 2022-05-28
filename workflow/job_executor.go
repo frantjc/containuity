@@ -221,14 +221,6 @@ func (e *jobExecutor) github() string {
 	return strings.Join([]string{e.id(), "github"}, "-")
 }
 
-func (e *jobExecutor) githubPath() string {
-	return strings.Join([]string{e.github(), "path"}, "-")
-}
-
-func (e *jobExecutor) githubEnv() string {
-	return strings.Join([]string{e.github(), "env"}, "-")
-}
-
 func (e *jobExecutor) workspace() string {
 	return strings.Join([]string{e.id(), "workspace"}, "-")
 }
@@ -274,7 +266,7 @@ var (
 	containerGitHubPathDir   = containerGitHubDir
 	containerGitHubEnv       = filepath.Join(containerGitHubEnvDir, "env")
 	containerGitHubPath      = filepath.Join(containerGitHubPathDir, "path")
-	containerShimDir         = filepath.Join(containerRoot)
+	containerShimDir         = containerRoot
 	containerShim            = filepath.Join(containerShimDir, shimName)
 )
 

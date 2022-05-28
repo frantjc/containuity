@@ -74,7 +74,9 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 		if mount.Type == runtime.MountTypeVolume {
 			vol, err := ex.runtime.CreateVolume(ctx, mount.Source)
 			if err != nil {
-				vol, _ = ex.runtime.GetVolume(ctx, mount.Source)
+				if vol, err = ex.runtime.GetVolume(ctx, mount.Source); err != nil {
+					return err
+				}
 			}
 			mount.Source = vol.Source()
 		}
@@ -187,9 +189,11 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 			ex.pre = append(ex.pre, regularStep)
 		}
 
-		if mainStep, err := NewMainStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
+		mainStep, err := NewMainStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath)
+		switch {
+		case err != nil:
 			return err
-		} else if mainStep != nil {
+		case mainStep != nil:
 			regularStep := &regularStep{
 				ID:    e.ID,
 				Name:  e.Name,
@@ -221,7 +225,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 			}
 
 			ex.main = append(ex.main, regularStep)
-		} else {
+		default:
 			// every non-composite action must have a main step
 			return actions.ErrNotAnAction
 		}
@@ -253,11 +257,12 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				regularStep.Env[k] = v
 			}
 
-			if e.ID != "" {
+			switch {
+			case e.ID != "":
 				regularStep.ID = fmt.Sprintf("Post %s", e.ID)
-			} else if e.Name != "" {
+			case e.Name != "":
 				regularStep.Name = fmt.Sprintf("Post %s", e.Name)
-			} else {
+			default:
 				regularStep.Name = fmt.Sprintf("Post %s", e.Uses)
 			}
 

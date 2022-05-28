@@ -174,7 +174,7 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 			return fmt.Errorf("unsupported shell '%s'", expanded.Shell)
 		}
 	} else {
-		spec.Cmd = append(expanded.Entrypoint, expanded.Cmd...)
+		spec.Cmd = append(expanded.Entrypoint, expanded.Cmd...) //nolint:gocritic
 	}
 
 	logout.Infof("[%sSQNC%s] pulling image '%s'", log.ColorInfo, log.ColorNone, spec.Image)

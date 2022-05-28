@@ -24,9 +24,9 @@ func DemultiplexLogStream(stream LogStreamClient, stdout, stderr io.Writer) erro
 		case l != nil:
 			switch l.Stream {
 			case 0:
-				stdout.Write([]byte(l.Data))
+				stdout.Write(l.Data)
 			case 1:
-				stderr.Write([]byte(l.Data))
+				stderr.Write(l.Data)
 			default:
 				return fmt.Errorf("unknown stream '%d', must be '0' or '1' for stdout or stderr, respectively", l.Stream)
 			}

@@ -333,11 +333,13 @@ func NewStepsFromMetadata(a *actions.Metadata, path string) ([]*Step, error) {
 			steps = append(steps, preStep)
 		}
 
-		if mainStep, err := NewMainStepFromMetadata(a, path); err != nil {
+		mainStep, err := NewMainStepFromMetadata(a, path)
+		switch {
+		case err != nil:
 			return nil, err
-		} else if mainStep != nil {
+		case mainStep != nil:
 			steps = append(steps, mainStep)
-		} else {
+		default:
 			// every non-composite action must have a main step
 			return nil, actions.ErrNotAnAction
 		}

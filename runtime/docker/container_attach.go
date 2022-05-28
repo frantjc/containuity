@@ -19,7 +19,7 @@ func (c *dockerContainer) Attach(ctx context.Context, streams *runtime.Streams) 
 	if err != nil {
 		return err
 	}
-	go stdcopy.StdCopy(streams.Stdout, streams.Stderr, attachResp.Reader)
+	go stdcopy.StdCopy(streams.Stdout, streams.Stderr, attachResp.Reader) //nolint:errcheck
 
 	statusC, errC := c.client.ContainerWait(ctx, c.id, container.WaitConditionNotRunning)
 	select {

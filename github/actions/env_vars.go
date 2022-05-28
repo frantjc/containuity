@@ -34,7 +34,7 @@ const (
 	EnvVarEnv  = "GITHUB_ENV"
 	EnvVarPath = "GITHUB_PATH"
 
-	EnvVarToken = "GITHUB_TOKEN"
+	EnvVarToken = "GITHUB_TOKEN" //nolint:gosec
 
 	EnvVarRepositoryOwner  = "GITHUB_REPOSITORY_OWNER"
 	EnvVarRetentionDays    = "GITHUB_RETENTION_DAYS"

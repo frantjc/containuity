@@ -28,7 +28,7 @@ func mainE() error {
 	}
 
 	var (
-		command        = exec.CommandContext(ctx, args[1], args[2:]...)
+		command        = exec.CommandContext(ctx, args[1], args[2:]...) //nolint:gosec
 		githubEnvFile  = os.Getenv(actions.EnvVarEnv)
 		githubPathFile = os.Getenv(actions.EnvVarPath)
 	)
@@ -41,7 +41,9 @@ func mainE() error {
 	if githubEnv, err := env.ArrFromFile(githubEnvFile); err == nil {
 		command.Env = append(command.Env, githubEnv...)
 	} else {
-		os.Create(githubEnvFile)
+		if _, err = os.Create(githubEnvFile); err != nil {
+			return err
+		}
 	}
 
 	if githubPath, err := env.PathFromFile(githubPathFile); err == nil && githubPath != "" {
@@ -58,7 +60,9 @@ func mainE() error {
 			command.Env = append(command.Env, fmt.Sprintf("PATH=%s", githubPath))
 		}
 	} else {
-		os.Create(githubPathFile)
+		if _, err = os.Create(githubPathFile); err != nil {
+			return err
+		}
 	}
 
 	return command.Run()

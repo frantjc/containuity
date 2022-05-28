@@ -13,7 +13,10 @@ import (
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/conf/flags"
+	// I have no idea what 'File is not `goimports`-ed' means
 	"github.com/frantjc/sequence/internal/log"
+	// Init default runtime
+	_ "github.com/frantjc/sequence/runtime/docker"
 	"github.com/spf13/cobra"
 )
 
@@ -58,11 +61,21 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	addr := strings.TrimPrefix(c.Address(), "unix://")
-	os.MkdirAll(c.RootDir, 0777)
-	os.MkdirAll(c.StateDir, 0777)
-	if c.Port == 0 {
-		os.MkdirAll(filepath.Dir(addr), 0777)
+
+	if err = os.MkdirAll(c.RootDir, 0777); err != nil {
+		return err
 	}
+
+	if err = os.MkdirAll(c.StateDir, 0777); err != nil {
+		return err
+	}
+
+	if c.Port == 0 {
+		if err = os.MkdirAll(filepath.Dir(addr), 0777); err != nil {
+			return err
+		}
+	}
+
 	os.Remove(addr)
 	defer os.Remove(addr)
 

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/frantjc/sequence/runtime"
-	_ "github.com/frantjc/sequence/runtime/docker"
 	"github.com/frantjc/sequence/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v44/github"

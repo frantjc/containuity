@@ -22,7 +22,10 @@ func (r *dockerRuntime) PullImage(ctx context.Context, ref string) (runtime.Imag
 		return nil, err
 	}
 	defer o.Close()
-	jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(io.Discard), nil)
+
+	if err = jsonmessage.DisplayJSONMessagesToStream(o, streams.NewOut(io.Discard), nil); err != nil {
+		return nil, err
+	}
 
 	_, _, err = r.client.ImageInspectWithRaw(ctx, pref.String())
 	if err != nil {

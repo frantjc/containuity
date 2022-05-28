@@ -19,7 +19,7 @@ func (c *dockerContainer) Exec(ctx context.Context, streams *runtime.Streams) er
 	if err != nil {
 		return err
 	}
-	go stdcopy.StdCopy(streams.Stdout, streams.Stderr, attachResp.Reader)
+	go stdcopy.StdCopy(streams.Stdout, streams.Stderr, attachResp.Reader) //nolint:errcheck
 
 	err = c.client.ContainerStart(ctx, c.id, types.ContainerStartOptions{})
 	if err != nil {
