@@ -14,14 +14,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewContainerService(opts ...Opt) (ContainerService, error) {
+func NewContainerService(runtime runtime.Runtime) (ContainerService, error) {
 	svc := &containerServer{
-		svc: &service{},
-	}
-	for _, opt := range opts {
-		if err := opt(svc.svc); err != nil {
-			return nil, err
-		}
+		svc: &service{runtime},
 	}
 	return svc, nil
 }

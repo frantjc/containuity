@@ -12,23 +12,24 @@ type LogStreamServer interface {
 }
 
 func NewLogOutStreamWriter(s LogStreamServer) io.Writer {
-	return &logOutStreamWriter{sync.Mutex{}, s}
+	return &logStreamWriter{sync.Mutex{}, s, 0}
 }
 
 func NewLogErrStreamWriter(s LogStreamServer) io.Writer {
-	return &logErrStreamWriter{sync.Mutex{}, s}
+	return &logStreamWriter{sync.Mutex{}, s, 1}
 }
 
 func NewLogStreamMultiplexWriter(s LogStreamServer) (io.Writer, io.Writer) {
 	return NewLogOutStreamWriter(s), NewLogErrStreamWriter(s)
 }
 
-type logOutStreamWriter struct {
+type logStreamWriter struct {
 	sync.Mutex
-	s LogStreamServer
+	s      LogStreamServer
+	stream int32
 }
 
-func (w *logOutStreamWriter) Write(p []byte) (int, error) {
+func (w *logStreamWriter) Write(p []byte) (int, error) {
 	if p == nil {
 		return len(p), nil
 	}
@@ -36,7 +37,8 @@ func (w *logOutStreamWriter) Write(p []byte) (int, error) {
 	w.Lock()
 	defer w.Unlock()
 	err := w.s.Send(&types.Log{
-		Out: p,
+		Data:   p,
+		Stream: w.stream,
 	})
 	if err != nil {
 		return 0, err
@@ -45,29 +47,4 @@ func (w *logOutStreamWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-type logErrStreamWriter struct {
-	sync.Mutex
-	s LogStreamServer
-}
-
-func (w *logErrStreamWriter) Write(p []byte) (int, error) {
-	if p == nil {
-		return len(p), nil
-	}
-
-	w.Lock()
-	defer w.Unlock()
-	err := w.s.Send(&types.Log{
-		Err: p,
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	return len(p), nil
-}
-
-var (
-	_ io.Writer = &logOutStreamWriter{}
-	_ io.Writer = &logErrStreamWriter{}
-)
+var _ io.Writer = &logStreamWriter{}

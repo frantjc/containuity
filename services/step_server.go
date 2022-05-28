@@ -5,18 +5,14 @@ import (
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
+	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"
 )
 
-func NewStepService(opts ...Opt) (StepService, error) {
+func NewStepService(runtime runtime.Runtime) (StepService, error) {
 	svc := &stepServer{
-		svc: &service{},
-	}
-	for _, opt := range opts {
-		if err := opt(svc.svc); err != nil {
-			return nil, err
-		}
+		svc: &service{runtime},
 	}
 	return svc, nil
 }

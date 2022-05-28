@@ -5,18 +5,15 @@ import (
 
 	api "github.com/frantjc/sequence/api/v1/image"
 	"github.com/frantjc/sequence/internal/convert"
+	"github.com/frantjc/sequence/runtime"
 	"google.golang.org/grpc"
 )
 
-func NewImageService(opts ...Opt) (ImageService, error) {
+func NewImageService(runtime runtime.Runtime) (ImageService, error) {
 	svc := &imageServer{
-		svc: &service{},
+		svc: &service{runtime},
 	}
-	for _, opt := range opts {
-		if err := opt(svc.svc); err != nil {
-			return nil, err
-		}
-	}
+
 	return svc, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -69,13 +70,37 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer l.Close()
 
-	s, err := sequence.NewServer(ctx, sequence.WithRuntimeName(c.Runtime.Name))
+	hl, err := net.Listen("tcp", c.HTTPAddress())
+	if err != nil {
+		return err
+	}
+	defer hl.Close()
+
+	runtime, err := sequence.GetRuntime(c.Runtime.Name)
 	if err != nil {
 		return err
 	}
 
-	return s.Serve(l)
+	s, err := sequence.NewServer(ctx, runtime)
+	if err != nil {
+		return err
+	}
+
+	errC := make(chan error, 1)
+
+	go func() {
+		errC <- s.ServeGRPC(l)
+	}()
+	log.Infof("gRPC listening on '%s'", l.Addr().String())
+
+	go func() {
+		errC <- http.Serve(hl, s)
+	}()
+	log.Infof("http listening on '%s'", hl.Addr().String())
+
+	return <-errC
 }
 
 func main() {

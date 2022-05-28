@@ -1,6 +1,13 @@
 package services
 
-import "google.golang.org/grpc"
+import (
+	"github.com/frantjc/sequence/runtime"
+	"google.golang.org/grpc"
+)
+
+type service struct {
+	runtime runtime.Runtime
+}
 
 type Service interface {
 	Register(grpc.ServiceRegistrar)

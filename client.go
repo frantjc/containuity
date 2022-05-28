@@ -47,6 +47,7 @@ func NewClient(ctx context.Context, addr string, opts ...ClientOpt) (*Client, er
 		imageClient:     imageapi.NewImageClient(cc),
 		volumeClient:    volumeapi.NewVolumeClient(cc),
 	}
+
 	return client, nil
 }
 

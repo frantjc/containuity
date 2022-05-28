@@ -1,7 +1,8 @@
 verbose = false
 
-# port = 1331
-socket = "/var/run/sqnc/sqnc.sock"
+# port    = 1331
+socket    = "/var/run/sqnc/sqnc.sock"
+http_port = 8080
 
 root_dir = "/var/lib/sqnc"
 state_dir = "/var/run/sqnc"

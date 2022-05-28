@@ -14,6 +14,7 @@ type ConfigOpt func() (*Config, error)
 func WithDefaultSystemConfig() (*Config, error) {
 	return &Config{
 		Socket:   DefaultSystemSocket,
+		HTTPPort: DefaultHTTPPort,
 		RootDir:  DefaultSystemRootDir,
 		StateDir: DefaultSystemStateDir,
 		GitHub: &GitHubConfig{
@@ -29,6 +30,7 @@ func WithDefaultSystemConfig() (*Config, error) {
 func WithDefaultUserConfig() (*Config, error) {
 	return &Config{
 		Socket:   DefaultUserSocket,
+		HTTPPort: DefaultHTTPPort,
 		RootDir:  DefaultUserRootDir,
 		StateDir: DefaultUserStateDir,
 		GitHub: &GitHubConfig{

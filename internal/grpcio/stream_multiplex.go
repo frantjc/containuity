@@ -1,6 +1,7 @@
 package grpcio
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/frantjc/sequence/api/types"
@@ -21,11 +22,13 @@ func DemultiplexLogStream(stream LogStreamClient, stdout, stderr io.Writer) erro
 		case err != nil:
 			return err
 		case l != nil:
-			if l.Out != nil && len(l.Out) > 0 {
-				stdout.Write([]byte(l.Out))
-			}
-			if l.Err != nil && len(l.Err) > 0 {
-				stderr.Write([]byte(l.Err))
+			switch l.Stream {
+			case 0:
+				stdout.Write([]byte(l.Data))
+			case 1:
+				stderr.Write([]byte(l.Data))
+			default:
+				return fmt.Errorf("unknown stream '%d', must be '0' or '1' for stdout or stderr, respectively", l.Stream)
 			}
 		}
 	}

@@ -6,17 +6,13 @@ import (
 	"github.com/frantjc/sequence/api/types"
 	api "github.com/frantjc/sequence/api/v1/volume"
 	"github.com/frantjc/sequence/internal/convert"
+	"github.com/frantjc/sequence/runtime"
 	"google.golang.org/grpc"
 )
 
-func NewVolumeService(opts ...Opt) (VolumeService, error) {
+func NewVolumeService(runtime runtime.Runtime) (VolumeService, error) {
 	svc := &volumeServer{
-		svc: &service{},
-	}
-	for _, opt := range opts {
-		if err := opt(svc.svc); err != nil {
-			return nil, err
-		}
+		svc: &service{runtime},
 	}
 	return svc, nil
 }

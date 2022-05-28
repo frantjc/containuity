@@ -24,6 +24,7 @@ func New(opts ...ConfigOpt) (*Config, error) {
 type ConfigFile struct {
 	Verbose      bool
 	Port         int64
+	HTTPPort     int64
 	Socket       string
 	RootDir      string
 	StateDir     string
@@ -37,6 +38,7 @@ func (c *ConfigFile) ToConfig(repository string) *Config {
 	config := &Config{
 		Verbose:  c.Verbose,
 		Port:     c.Port,
+		HTTPPort: c.HTTPPort,
 		Socket:   c.Socket,
 		RootDir:  c.RootDir,
 		StateDir: c.StateDir,
@@ -58,6 +60,7 @@ func (c *ConfigFile) Raw() *RawConfigFile {
 	config := &RawConfigFile{
 		Verbose:      c.Verbose,
 		Port:         c.Port,
+		HTTPPort:     c.HTTPPort,
 		Socket:       c.Socket,
 		RootDir:      c.RootDir,
 		StateDir:     c.StateDir,
@@ -86,9 +89,14 @@ func (c *ConfigFile) Address() string {
 	return addr(c.Port, c.Socket)
 }
 
+func (c *ConfigFile) HTTPAddress() string {
+	return addr(c.HTTPPort, "")
+}
+
 type Config struct {
 	Verbose  bool
 	Port     int64
+	HTTPPort int64
 	Socket   string
 	RootDir  string
 	StateDir string
@@ -105,6 +113,10 @@ func (c *Config) Address() string {
 	return addr(c.Port, c.Socket)
 }
 
+func (c *Config) HTTPAddress() string {
+	return addr(c.HTTPPort, "")
+}
+
 func (c *Config) Merge(config *Config) *Config {
 	if !c.Verbose {
 		c.Verbose = config.Verbose
@@ -112,6 +124,10 @@ func (c *Config) Merge(config *Config) *Config {
 
 	if c.Port == 0 {
 		c.Port = config.Port
+	}
+
+	if c.HTTPPort == 0 {
+		c.HTTPPort = config.HTTPPort
 	}
 
 	if c.Socket == "" {
@@ -167,6 +183,7 @@ func (c *Config) ToConfigFile() *ConfigFile {
 	return &ConfigFile{
 		Verbose:  c.Verbose,
 		Port:     c.Port,
+		HTTPPort: c.HTTPPort,
 		Socket:   c.Socket,
 		RootDir:  c.RootDir,
 		StateDir: c.StateDir,

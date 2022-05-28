@@ -5,6 +5,7 @@ import "net/url"
 type RawConfigFile struct {
 	Verbose      bool                        `toml:"verbose,omitempty"`
 	Port         int64                       `toml:"port,omitempty"`
+	HTTPPort     int64                       `toml:"http_port,omitempty"`
 	Socket       string                      `toml:"socket,omitempty"`
 	RootDir      string                      `toml:"root_dir,omitempty"`
 	StateDir     string                      `toml:"state_dir,omitempty"`
@@ -32,6 +33,10 @@ func (r *RawConfigFile) Parse() (*ConfigFile, error) {
 	}
 
 	if r.Port > 65535 || r.Port < 0 {
+		return nil, ErrInvalidPort
+	}
+
+	if r.HTTPPort > 65535 || r.HTTPPort < 0 {
 		return nil, ErrInvalidPort
 	}
 

@@ -25,21 +25,21 @@ PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-gr
 
 INSTALL ?= sudo install
 
-.DEFAULT: bin
+.DEFAULT: install
 
-bin: sqnc
+install: binaries
+	@$(INSTALL) $(CURDIR)/bin/sqncd $(CURDIR)/bin/sqnc $(BIN)
 
 bins binaries: sqnc sqncd
 
 sqnc sqncd: shims
 	@$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
-	@$(INSTALL) $(CURDIR)/bin/$@ $(BIN)
 
 shims:
 	@GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim
-	@mv $(CURDIR)/bin/sqncshim $(CURDIR)/workflow/sqncshim
+	@cp $(CURDIR)/bin/sqncshim $(CURDIR)/workflow/sqncshim
 	@GOOS=linux GOARCH=amd64 $(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim-uses
-	@mv $(CURDIR)/bin/sqncshim-uses $(CURDIR)/workflow/sqncshim-uses
+	@cp $(CURDIR)/bin/sqncshim-uses $(CURDIR)/workflow/sqncshim-uses
 
 placeholders:
 	@cp $(CURDIR)/workflow/sqncshim.sh $(CURDIR)/workflow/sqncshim
@@ -48,21 +48,11 @@ placeholders:
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
 
-test: image
-	@$(DOCKER) build -t $(REGISTRY)/$(REPOSITORY):test $(BUILD_ARGS) --target=test .
+fmt vet test:
+	@$(GO) $@ ./...
 
-fmt lint pretty:
-	@$(GO) fmt ./...
-
-vet: fmt
-	@$(GO) vet ./...
-
-tidy: vet
-	@$(GO) mod tidy
-
-vendor: tidy
-	@$(GO) mod vendor
-	@$(GO) mod verify
+tidy vendor verify:
+	@$(GO) mod $@
 
 clean: tidy placeholders
 	@rm -rf bin/* vendor
@@ -74,4 +64,10 @@ protos:
 coverage:
 	@$(GO) test -v -cover -covermode=atomic -coverprofile=coverage.txt ./...
 
-.PHONY: bin bins binaries sqnc sqncd shims placeholders image img test fmt lint pretty vet tidy vendor clean protos coverage
+tools:
+	@$(GO) install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
+	@$(GO) install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+	@echo 'Update your PATH so that the protoc compiler can find the plugins:'
+	@echo '$$ export PATH=PATH:$(shell $(GO) env GOPATH)/bin"'
+
+.PHONY: install bins binaries sqnc sqncd shims placeholders image img fmt vet test tidy vendor verify clean protos coverage tools

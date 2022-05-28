@@ -5,19 +5,16 @@ import (
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
+	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"
 )
 
-func NewJobService(opts ...Opt) (JobService, error) {
+func NewJobService(runtime runtime.Runtime) (JobService, error) {
 	svc := &jobServer{
-		svc: &service{},
+		svc: &service{runtime},
 	}
-	for _, opt := range opts {
-		if err := opt(svc.svc); err != nil {
-			return nil, err
-		}
-	}
+
 	return svc, nil
 }
 

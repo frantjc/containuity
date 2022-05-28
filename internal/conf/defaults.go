@@ -53,3 +53,7 @@ var (
 	DefaultUserSocket           = fmt.Sprintf("unix://%s", filepath.Join(DefaultUserStateDir, fmt.Sprintf("%s.sock", name)))
 	DefaultUserConfigFilePath   = filepath.Join(DefaultUserDir, DefaultConfigFileName)
 )
+
+var (
+	DefaultHTTPPort int64 = 8080
+)
