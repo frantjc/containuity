@@ -1,4 +1,4 @@
-package services
+package svc
 
 import (
 	api "github.com/frantjc/sequence/api/v1/step"
@@ -11,15 +11,12 @@ import (
 )
 
 func NewStepService(runtime runtime.Runtime) (StepService, error) {
-	svc := &stepServer{
-		svc: &service{runtime},
-	}
-	return svc, nil
+	return &stepServer{runtime: runtime}, nil
 }
 
 type stepServer struct {
 	api.UnimplementedStepServer
-	svc *service
+	runtime runtime.Runtime
 }
 
 type StepService interface {
@@ -34,7 +31,7 @@ func (s *stepServer) RunStep(in *api.RunStepRequest, stream api.Step_RunStepServ
 		ctx       = stream.Context()
 		conf, err = conf.NewFromFlagsWithRepository(in.Repository)
 		opts      = []workflow.ExecOpt{
-			workflow.WithRuntime(s.svc.runtime),
+			workflow.WithRuntime(s.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRepository(in.Repository),
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),

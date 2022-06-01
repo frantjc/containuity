@@ -1,7 +1,7 @@
-package services
+package svc
 
 import (
-	api "github.com/frantjc/sequence/api/v1/job"
+	api "github.com/frantjc/sequence/api/v1/workflow"
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
@@ -10,32 +10,28 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewJobService(runtime runtime.Runtime) (JobService, error) {
-	svc := &jobServer{
-		svc: &service{runtime},
-	}
-
-	return svc, nil
+func NewWorkflowService(runtime runtime.Runtime) (WorkflowService, error) {
+	return &workflowServer{runtime: runtime}, nil
 }
 
-type jobServer struct {
-	api.UnimplementedJobServer
-	svc *service
+type workflowServer struct {
+	api.UnimplementedWorkflowServer
+	runtime runtime.Runtime
 }
 
-type JobService interface {
-	api.JobServer
+type WorkflowService interface {
+	api.WorkflowServer
 	Service
 }
 
-var _ JobService = &jobServer{}
+var _ WorkflowService = &workflowServer{}
 
-func (s *jobServer) RunJob(in *api.RunJobRequest, stream api.Job_RunJobServer) error {
+func (s *workflowServer) RunWorkflow(in *api.RunWorkflowRequest, stream api.Workflow_RunWorkflowServer) error {
 	var (
 		ctx       = stream.Context()
 		conf, err = conf.NewFromFlagsWithRepository(in.Repository)
 		opts      = []workflow.ExecOpt{
-			workflow.WithRuntime(s.svc.runtime),
+			workflow.WithRuntime(s.runtime),
 			workflow.WithGitHubToken(conf.GitHub.Token),
 			workflow.WithRepository(in.Repository),
 			workflow.WithStdout(grpcio.NewLogOutStreamWriter(stream)),
@@ -45,6 +41,7 @@ func (s *jobServer) RunJob(in *api.RunJobRequest, stream api.Job_RunJobServer) e
 	if err != nil {
 		return err
 	}
+
 	if in.Verbose || conf.Verbose {
 		opts = append(opts, workflow.WithVerbose)
 	}
@@ -55,13 +52,7 @@ func (s *jobServer) RunJob(in *api.RunJobRequest, stream api.Job_RunJobServer) e
 		in.RunnerImage = conf.Runtime.RunnerImage
 	}
 
-	if in.Job != nil {
-		opts = append(opts, workflow.WithJob(
-			convert.ProtoJobToJob(in.Job),
-		))
-	}
-
-	executor, err := workflow.NewJobExecutor(convert.ProtoJobToJob(in.Job), opts...)
+	executor, err := workflow.NewWorkflowExecutor(convert.ProtoWorkflowToWorkflow(in.Workflow), opts...)
 	if err != nil {
 		return err
 	}
@@ -69,6 +60,6 @@ func (s *jobServer) RunJob(in *api.RunJobRequest, stream api.Job_RunJobServer) e
 	return executor.Start(ctx)
 }
 
-func (s *jobServer) Register(r grpc.ServiceRegistrar) {
-	api.RegisterJobServer(r, s)
+func (s *workflowServer) Register(r grpc.ServiceRegistrar) {
+	api.RegisterWorkflowServer(r, s)
 }

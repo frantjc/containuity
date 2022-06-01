@@ -1,4 +1,4 @@
-package services
+package svc
 
 import (
 	"bytes"
@@ -15,15 +15,12 @@ import (
 )
 
 func NewContainerService(runtime runtime.Runtime) (ContainerService, error) {
-	svc := &containerServer{
-		svc: &service{runtime},
-	}
-	return svc, nil
+	return &containerServer{runtime: runtime}, nil
 }
 
 type containerServer struct {
 	api.UnimplementedContainerServer
-	svc *service
+	runtime runtime.Runtime
 }
 
 type ContainerService interface {
@@ -34,7 +31,7 @@ type ContainerService interface {
 var _ ContainerService = &containerServer{}
 
 func (s *containerServer) CreateContainer(ctx context.Context, in *api.CreateContainerRequest) (*api.CreateContainerResponse, error) {
-	container, err := s.svc.runtime.CreateContainer(ctx, convert.ProtoSpecToRuntimeSpec(in.Spec))
+	container, err := s.runtime.CreateContainer(ctx, convert.ProtoSpecToRuntimeSpec(in.Spec))
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +42,7 @@ func (s *containerServer) CreateContainer(ctx context.Context, in *api.CreateCon
 }
 
 func (s *containerServer) GetContainer(ctx context.Context, in *api.GetContainerRequest) (*api.GetContainerResponse, error) {
-	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
+	container, err := s.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +57,7 @@ func (s *containerServer) ExecContainer(in *api.ExecContainerRequest, stream api
 		ctx            = stream.Context()
 		stdout, stderr = grpcio.NewLogStreamMultiplexWriter(stream)
 	)
-	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
+	container, err := s.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return err
 	}
@@ -73,7 +70,7 @@ func (s *containerServer) ExecContainer(in *api.ExecContainerRequest, stream api
 }
 
 func (s *containerServer) StartContainer(ctx context.Context, in *api.StartContainerRequest) (*emptypb.Empty, error) {
-	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
+	container, err := s.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +83,7 @@ func (s *containerServer) AttachContainer(in *api.AttachContainerRequest, stream
 		ctx            = stream.Context()
 		stdout, stderr = grpcio.NewLogStreamMultiplexWriter(stream)
 	)
-	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
+	container, err := s.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return err
 	}
@@ -99,7 +96,7 @@ func (s *containerServer) AttachContainer(in *api.AttachContainerRequest, stream
 }
 
 func (s *containerServer) RemoveContainer(ctx context.Context, in *api.RemoveContainerRequest) (*emptypb.Empty, error) {
-	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
+	container, err := s.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +105,11 @@ func (s *containerServer) RemoveContainer(ctx context.Context, in *api.RemoveCon
 }
 
 func (s *containerServer) PruneContainers(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
-	return nil, s.svc.runtime.PruneContainers(ctx)
+	return nil, s.runtime.PruneContainers(ctx)
 }
 
 func (s *containerServer) CopyToContainer(ctx context.Context, in *api.CopyToContainerRequest) (*emptypb.Empty, error) {
-	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
+	container, err := s.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +118,7 @@ func (s *containerServer) CopyToContainer(ctx context.Context, in *api.CopyToCon
 }
 
 func (s *containerServer) CopyFromContainer(ctx context.Context, in *api.CopyFromContainerRequest) (*api.CopyFromContainerResponse, error) {
-	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
+	container, err := s.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}

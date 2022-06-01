@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/frantjc/sequence/runtime"
-	"github.com/frantjc/sequence/services"
+	"github.com/frantjc/sequence/svc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v44/github"
 	"google.golang.org/grpc"

@@ -1,4 +1,4 @@
-package services
+package svc
 
 import (
 	"context"
@@ -10,16 +10,12 @@ import (
 )
 
 func NewImageService(runtime runtime.Runtime) (ImageService, error) {
-	svc := &imageServer{
-		svc: &service{runtime},
-	}
-
-	return svc, nil
+	return &imageServer{runtime: runtime}, nil
 }
 
 type imageServer struct {
 	api.UnimplementedImageServer
-	svc *service
+	runtime runtime.Runtime
 }
 
 type ImageService interface {
@@ -30,7 +26,7 @@ type ImageService interface {
 var _ ImageService = &imageServer{}
 
 func (s *imageServer) PullImage(ctx context.Context, in *api.PullImageRequest) (*api.PullImageResponse, error) {
-	image, err := s.svc.runtime.PullImage(ctx, in.Ref)
+	image, err := s.runtime.PullImage(ctx, in.Ref)
 	if err != nil {
 		return nil, err
 	}
