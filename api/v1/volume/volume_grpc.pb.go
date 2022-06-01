@@ -4,10 +4,10 @@ package volume
 
 import (
 	context "context"
-	types "github.com/frantjc/sequence/api/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -21,8 +21,8 @@ const _ = grpc.SupportPackageIsVersion7
 type VolumeClient interface {
 	CreateVolume(ctx context.Context, in *CreateVolumeRequest, opts ...grpc.CallOption) (*CreateVolumeResponse, error)
 	GetVolume(ctx context.Context, in *GetVolumeRequest, opts ...grpc.CallOption) (*GetVolumeResponse, error)
-	RemoveVolume(ctx context.Context, in *RemoveVolumeRequest, opts ...grpc.CallOption) (*types.Empty, error)
-	PruneVolumes(ctx context.Context, in *types.Empty, opts ...grpc.CallOption) (*types.Empty, error)
+	RemoveVolume(ctx context.Context, in *RemoveVolumeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	PruneVolumes(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type volumeClient struct {
@@ -51,8 +51,8 @@ func (c *volumeClient) GetVolume(ctx context.Context, in *GetVolumeRequest, opts
 	return out, nil
 }
 
-func (c *volumeClient) RemoveVolume(ctx context.Context, in *RemoveVolumeRequest, opts ...grpc.CallOption) (*types.Empty, error) {
-	out := new(types.Empty)
+func (c *volumeClient) RemoveVolume(ctx context.Context, in *RemoveVolumeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/sequence.v1.volume.Volume/RemoveVolume", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -60,8 +60,8 @@ func (c *volumeClient) RemoveVolume(ctx context.Context, in *RemoveVolumeRequest
 	return out, nil
 }
 
-func (c *volumeClient) PruneVolumes(ctx context.Context, in *types.Empty, opts ...grpc.CallOption) (*types.Empty, error) {
-	out := new(types.Empty)
+func (c *volumeClient) PruneVolumes(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/sequence.v1.volume.Volume/PruneVolumes", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -75,8 +75,8 @@ func (c *volumeClient) PruneVolumes(ctx context.Context, in *types.Empty, opts .
 type VolumeServer interface {
 	CreateVolume(context.Context, *CreateVolumeRequest) (*CreateVolumeResponse, error)
 	GetVolume(context.Context, *GetVolumeRequest) (*GetVolumeResponse, error)
-	RemoveVolume(context.Context, *RemoveVolumeRequest) (*types.Empty, error)
-	PruneVolumes(context.Context, *types.Empty) (*types.Empty, error)
+	RemoveVolume(context.Context, *RemoveVolumeRequest) (*emptypb.Empty, error)
+	PruneVolumes(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedVolumeServer()
 }
 
@@ -90,10 +90,10 @@ func (UnimplementedVolumeServer) CreateVolume(context.Context, *CreateVolumeRequ
 func (UnimplementedVolumeServer) GetVolume(context.Context, *GetVolumeRequest) (*GetVolumeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVolume not implemented")
 }
-func (UnimplementedVolumeServer) RemoveVolume(context.Context, *RemoveVolumeRequest) (*types.Empty, error) {
+func (UnimplementedVolumeServer) RemoveVolume(context.Context, *RemoveVolumeRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveVolume not implemented")
 }
-func (UnimplementedVolumeServer) PruneVolumes(context.Context, *types.Empty) (*types.Empty, error) {
+func (UnimplementedVolumeServer) PruneVolumes(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PruneVolumes not implemented")
 }
 func (UnimplementedVolumeServer) mustEmbedUnimplementedVolumeServer() {}
@@ -164,7 +164,7 @@ func _Volume_RemoveVolume_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _Volume_PruneVolumes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(types.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func _Volume_PruneVolumes_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/sequence.v1.volume.Volume/PruneVolumes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolumeServer).PruneVolumes(ctx, req.(*types.Empty))
+		return srv.(VolumeServer).PruneVolumes(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -4,10 +4,10 @@ package image
 
 import (
 	context "context"
-	types "github.com/frantjc/sequence/api/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ImageClient interface {
 	PullImage(ctx context.Context, in *PullImageRequest, opts ...grpc.CallOption) (*PullImageResponse, error)
-	PruneImages(ctx context.Context, in *types.Empty, opts ...grpc.CallOption) (*types.Empty, error)
+	PruneImages(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type imageClient struct {
@@ -40,8 +40,8 @@ func (c *imageClient) PullImage(ctx context.Context, in *PullImageRequest, opts 
 	return out, nil
 }
 
-func (c *imageClient) PruneImages(ctx context.Context, in *types.Empty, opts ...grpc.CallOption) (*types.Empty, error) {
-	out := new(types.Empty)
+func (c *imageClient) PruneImages(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/sequence.v1.image.Image/PruneImages", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (c *imageClient) PruneImages(ctx context.Context, in *types.Empty, opts ...
 // for forward compatibility
 type ImageServer interface {
 	PullImage(context.Context, *PullImageRequest) (*PullImageResponse, error)
-	PruneImages(context.Context, *types.Empty) (*types.Empty, error)
+	PruneImages(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedImageServer()
 }
 
@@ -65,7 +65,7 @@ type UnimplementedImageServer struct {
 func (UnimplementedImageServer) PullImage(context.Context, *PullImageRequest) (*PullImageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PullImage not implemented")
 }
-func (UnimplementedImageServer) PruneImages(context.Context, *types.Empty) (*types.Empty, error) {
+func (UnimplementedImageServer) PruneImages(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PruneImages not implemented")
 }
 func (UnimplementedImageServer) mustEmbedUnimplementedImageServer() {}
@@ -100,7 +100,7 @@ func _Image_PullImage_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _Image_PruneImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(types.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func _Image_PruneImages_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/sequence.v1.image.Image/PruneImages",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ImageServer).PruneImages(ctx, req.(*types.Empty))
+		return srv.(ImageServer).PruneImages(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

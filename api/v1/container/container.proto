@@ -5,7 +5,7 @@ package sequence.v1.container;
 import "api/types/container.proto";
 import "api/types/log.proto";
 import "api/types/spec.proto";
-import "api/types/empty.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "github.com/frantjc/sequence/api/v1/container";
 
@@ -13,11 +13,11 @@ service Container {
     rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
     rpc GetContainer(GetContainerRequest) returns (GetContainerResponse);
     rpc ExecContainer(ExecContainerRequest) returns (stream sequence.types.Log);
-    rpc StartContainer(StartContainerRequest) returns (sequence.types.Empty);
+    rpc StartContainer(StartContainerRequest) returns (google.protobuf.Empty);
     rpc AttachContainer(AttachContainerRequest) returns (stream sequence.types.Log);
-    rpc RemoveContainer(RemoveContainerRequest) returns (sequence.types.Empty);
-    rpc PruneContainers(sequence.types.Empty) returns (sequence.types.Empty);
-    rpc CopyToContainer(CopyToContainerRequest) returns (sequence.types.Empty);
+    rpc RemoveContainer(RemoveContainerRequest) returns (google.protobuf.Empty);
+    rpc PruneContainers(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc CopyToContainer(CopyToContainerRequest) returns (google.protobuf.Empty);
     rpc CopyFromContainer(CopyFromContainerRequest) returns (CopyFromContainerResponse);
 }
 

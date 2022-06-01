@@ -6,12 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/frantjc/sequence/api/types"
 	api "github.com/frantjc/sequence/api/v1/container"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
 	"github.com/frantjc/sequence/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func NewContainerService(runtime runtime.Runtime) (ContainerService, error) {
@@ -72,13 +72,13 @@ func (s *containerServer) ExecContainer(in *api.ExecContainerRequest, stream api
 	))
 }
 
-func (s *containerServer) StartContainer(ctx context.Context, in *api.StartContainerRequest) (*types.Empty, error) {
+func (s *containerServer) StartContainer(ctx context.Context, in *api.StartContainerRequest) (*emptypb.Empty, error) {
 	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.Empty{}, container.Start(ctx)
+	return nil, container.Start(ctx)
 }
 
 func (s *containerServer) AttachContainer(in *api.AttachContainerRequest, stream api.Container_AttachContainerServer) error {
@@ -98,26 +98,26 @@ func (s *containerServer) AttachContainer(in *api.AttachContainerRequest, stream
 	))
 }
 
-func (s *containerServer) RemoveContainer(ctx context.Context, in *api.RemoveContainerRequest) (*types.Empty, error) {
+func (s *containerServer) RemoveContainer(ctx context.Context, in *api.RemoveContainerRequest) (*emptypb.Empty, error) {
 	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.Empty{}, container.Remove(ctx)
+	return nil, container.Remove(ctx)
 }
 
-func (s *containerServer) PruneContainers(ctx context.Context, in *types.Empty) (*types.Empty, error) {
-	return &types.Empty{}, s.svc.runtime.PruneContainers(ctx)
+func (s *containerServer) PruneContainers(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, s.svc.runtime.PruneContainers(ctx)
 }
 
-func (s *containerServer) CopyToContainer(ctx context.Context, in *api.CopyToContainerRequest) (*types.Empty, error) {
+func (s *containerServer) CopyToContainer(ctx context.Context, in *api.CopyToContainerRequest) (*emptypb.Empty, error) {
 	container, err := s.svc.runtime.GetContainer(ctx, in.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.Empty{}, container.CopyTo(ctx, bytes.NewReader(in.Content), in.Destination)
+	return nil, container.CopyTo(ctx, bytes.NewReader(in.Content), in.Destination)
 }
 
 func (s *containerServer) CopyFromContainer(ctx context.Context, in *api.CopyFromContainerRequest) (*api.CopyFromContainerResponse, error) {

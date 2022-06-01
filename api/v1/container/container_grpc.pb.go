@@ -8,6 +8,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -22,11 +23,11 @@ type ContainerClient interface {
 	CreateContainer(ctx context.Context, in *CreateContainerRequest, opts ...grpc.CallOption) (*CreateContainerResponse, error)
 	GetContainer(ctx context.Context, in *GetContainerRequest, opts ...grpc.CallOption) (*GetContainerResponse, error)
 	ExecContainer(ctx context.Context, in *ExecContainerRequest, opts ...grpc.CallOption) (Container_ExecContainerClient, error)
-	StartContainer(ctx context.Context, in *StartContainerRequest, opts ...grpc.CallOption) (*types.Empty, error)
+	StartContainer(ctx context.Context, in *StartContainerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AttachContainer(ctx context.Context, in *AttachContainerRequest, opts ...grpc.CallOption) (Container_AttachContainerClient, error)
-	RemoveContainer(ctx context.Context, in *RemoveContainerRequest, opts ...grpc.CallOption) (*types.Empty, error)
-	PruneContainers(ctx context.Context, in *types.Empty, opts ...grpc.CallOption) (*types.Empty, error)
-	CopyToContainer(ctx context.Context, in *CopyToContainerRequest, opts ...grpc.CallOption) (*types.Empty, error)
+	RemoveContainer(ctx context.Context, in *RemoveContainerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	PruneContainers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CopyToContainer(ctx context.Context, in *CopyToContainerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CopyFromContainer(ctx context.Context, in *CopyFromContainerRequest, opts ...grpc.CallOption) (*CopyFromContainerResponse, error)
 }
 
@@ -88,8 +89,8 @@ func (x *containerExecContainerClient) Recv() (*types.Log, error) {
 	return m, nil
 }
 
-func (c *containerClient) StartContainer(ctx context.Context, in *StartContainerRequest, opts ...grpc.CallOption) (*types.Empty, error) {
-	out := new(types.Empty)
+func (c *containerClient) StartContainer(ctx context.Context, in *StartContainerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/sequence.v1.container.Container/StartContainer", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -129,8 +130,8 @@ func (x *containerAttachContainerClient) Recv() (*types.Log, error) {
 	return m, nil
 }
 
-func (c *containerClient) RemoveContainer(ctx context.Context, in *RemoveContainerRequest, opts ...grpc.CallOption) (*types.Empty, error) {
-	out := new(types.Empty)
+func (c *containerClient) RemoveContainer(ctx context.Context, in *RemoveContainerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/sequence.v1.container.Container/RemoveContainer", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -138,8 +139,8 @@ func (c *containerClient) RemoveContainer(ctx context.Context, in *RemoveContain
 	return out, nil
 }
 
-func (c *containerClient) PruneContainers(ctx context.Context, in *types.Empty, opts ...grpc.CallOption) (*types.Empty, error) {
-	out := new(types.Empty)
+func (c *containerClient) PruneContainers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/sequence.v1.container.Container/PruneContainers", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -147,8 +148,8 @@ func (c *containerClient) PruneContainers(ctx context.Context, in *types.Empty, 
 	return out, nil
 }
 
-func (c *containerClient) CopyToContainer(ctx context.Context, in *CopyToContainerRequest, opts ...grpc.CallOption) (*types.Empty, error) {
-	out := new(types.Empty)
+func (c *containerClient) CopyToContainer(ctx context.Context, in *CopyToContainerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/sequence.v1.container.Container/CopyToContainer", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -172,11 +173,11 @@ type ContainerServer interface {
 	CreateContainer(context.Context, *CreateContainerRequest) (*CreateContainerResponse, error)
 	GetContainer(context.Context, *GetContainerRequest) (*GetContainerResponse, error)
 	ExecContainer(*ExecContainerRequest, Container_ExecContainerServer) error
-	StartContainer(context.Context, *StartContainerRequest) (*types.Empty, error)
+	StartContainer(context.Context, *StartContainerRequest) (*emptypb.Empty, error)
 	AttachContainer(*AttachContainerRequest, Container_AttachContainerServer) error
-	RemoveContainer(context.Context, *RemoveContainerRequest) (*types.Empty, error)
-	PruneContainers(context.Context, *types.Empty) (*types.Empty, error)
-	CopyToContainer(context.Context, *CopyToContainerRequest) (*types.Empty, error)
+	RemoveContainer(context.Context, *RemoveContainerRequest) (*emptypb.Empty, error)
+	PruneContainers(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	CopyToContainer(context.Context, *CopyToContainerRequest) (*emptypb.Empty, error)
 	CopyFromContainer(context.Context, *CopyFromContainerRequest) (*CopyFromContainerResponse, error)
 	mustEmbedUnimplementedContainerServer()
 }
@@ -194,19 +195,19 @@ func (UnimplementedContainerServer) GetContainer(context.Context, *GetContainerR
 func (UnimplementedContainerServer) ExecContainer(*ExecContainerRequest, Container_ExecContainerServer) error {
 	return status.Errorf(codes.Unimplemented, "method ExecContainer not implemented")
 }
-func (UnimplementedContainerServer) StartContainer(context.Context, *StartContainerRequest) (*types.Empty, error) {
+func (UnimplementedContainerServer) StartContainer(context.Context, *StartContainerRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartContainer not implemented")
 }
 func (UnimplementedContainerServer) AttachContainer(*AttachContainerRequest, Container_AttachContainerServer) error {
 	return status.Errorf(codes.Unimplemented, "method AttachContainer not implemented")
 }
-func (UnimplementedContainerServer) RemoveContainer(context.Context, *RemoveContainerRequest) (*types.Empty, error) {
+func (UnimplementedContainerServer) RemoveContainer(context.Context, *RemoveContainerRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveContainer not implemented")
 }
-func (UnimplementedContainerServer) PruneContainers(context.Context, *types.Empty) (*types.Empty, error) {
+func (UnimplementedContainerServer) PruneContainers(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PruneContainers not implemented")
 }
-func (UnimplementedContainerServer) CopyToContainer(context.Context, *CopyToContainerRequest) (*types.Empty, error) {
+func (UnimplementedContainerServer) CopyToContainer(context.Context, *CopyToContainerRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CopyToContainer not implemented")
 }
 func (UnimplementedContainerServer) CopyFromContainer(context.Context, *CopyFromContainerRequest) (*CopyFromContainerResponse, error) {
@@ -340,7 +341,7 @@ func _Container_RemoveContainer_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _Container_PruneContainers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(types.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -352,7 +353,7 @@ func _Container_PruneContainers_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/sequence.v1.container.Container/PruneContainers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContainerServer).PruneContainers(ctx, req.(*types.Empty))
+		return srv.(ContainerServer).PruneContainers(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -3,13 +3,13 @@ syntax = "proto3";
 package sequence.v1.image;
 
 import "api/types/image.proto";
-import "api/types/empty.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "github.com/frantjc/sequence/api/v1/image";
 
 service Image {
     rpc PullImage(PullImageRequest) returns (PullImageResponse);
-    rpc PruneImages(sequence.types.Empty) returns (sequence.types.Empty);
+    rpc PruneImages(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message PullImageRequest {
