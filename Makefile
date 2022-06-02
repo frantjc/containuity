@@ -37,15 +37,19 @@ bins binaries: sqnc sqncd
 sqnc sqncd: shims
 	@$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 
-shims:
-	@$(GO_LINUX_AMD64) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim
-	@cp $(CURDIR)/bin/sqncshim $(CURDIR)/workflow/sqncshim
-	@$(GO_LINUX_AMD64) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/sqncshim-uses
-	@cp $(CURDIR)/bin/sqncshim-uses $(CURDIR)/workflow/sqncshim-uses
+shims: shimuses shimsource
+
+shimuses: uses
+
+shimsource: source
+
+uses source:
+	@$(GO_LINUX_AMD64) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/internal/cmd/shim/$@
+	@cp $(CURDIR)/bin/$@ $(CURDIR)/workflow/shim/$@
 
 placeholders:
-	@cp $(CURDIR)/workflow/sqncshim.sh $(CURDIR)/workflow/sqncshim
-	@cp $(CURDIR)/workflow/sqncshim.sh $(CURDIR)/workflow/sqncshim-uses
+	@cp $(CURDIR)/workflow/shim/shim.sh $(CURDIR)/workflow/shim/source
+	@cp $(CURDIR)/workflow/shim/shim.sh $(CURDIR)/workflow/shim/uses
 
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
@@ -63,9 +67,6 @@ clean: tidy placeholders
 protos:
 	@$(PROTOC) $(PROTOC_ARGS) $(PROTOS)
 
-coverage:
-	@$(GO) test -v -cover -covermode=atomic -coverprofile=coverage.txt ./...
-
 lint:
 	@$(GOLANGCI-LINT) run
 
@@ -73,6 +74,14 @@ tools:
 	@$(GO) install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 	@$(GO) install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
 	@echo 'Update your PATH so that the protoc compiler can find the plugins:'
-	@echo '$$ export PATH=PATH:$(shell $(GO) env GOPATH)/bin"'
+	@echo '$$ export PATH=$$PATH:$(shell $(GO) env GOPATH)/bin"'
 
-.PHONY: install bins binaries sqnc sqncd shims placeholders image img fmt vet test tidy vendor verify clean protos coverage lint tools
+.PHONY: \
+	install bins binaries sqnc sqncd \
+	shims shimuses shimsource uses source placeholders \
+	image img \
+	fmt vet test \
+	tidy vendor verify \
+	clean \
+	protos \
+	lint tools

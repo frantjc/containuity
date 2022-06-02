@@ -3,7 +3,7 @@ package sqnc
 import (
 	"context"
 
-	imageapi "github.com/frantjc/sequence/api/v1/image"
+	imageapi "github.com/frantjc/sequence/pb/v1/image"
 
 	"github.com/frantjc/sequence/runtime"
 )

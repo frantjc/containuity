@@ -1,9 +1,9 @@
 package sqnc
 
 import (
-	containerapi "github.com/frantjc/sequence/api/v1/container"
-	imageapi "github.com/frantjc/sequence/api/v1/image"
-	volumeapi "github.com/frantjc/sequence/api/v1/volume"
+	containerapi "github.com/frantjc/sequence/pb/v1/container"
+	imageapi "github.com/frantjc/sequence/pb/v1/image"
+	volumeapi "github.com/frantjc/sequence/pb/v1/volume"
 
 	"github.com/frantjc/sequence/runtime"
 )

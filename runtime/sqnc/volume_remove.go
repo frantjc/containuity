@@ -3,7 +3,7 @@ package sqnc
 import (
 	"context"
 
-	volumeapi "github.com/frantjc/sequence/api/v1/volume"
+	volumeapi "github.com/frantjc/sequence/pb/v1/volume"
 )
 
 func (v *sqncVolume) Remove(ctx context.Context) error {

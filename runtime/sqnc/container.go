@@ -1,6 +1,6 @@
 package sqnc
 
-import containerapi "github.com/frantjc/sequence/api/v1/container"
+import containerapi "github.com/frantjc/sequence/pb/v1/container"
 
 type sqncContainer struct {
 	id     string

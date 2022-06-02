@@ -1,7 +1,7 @@
 package convert
 
 import (
-	"github.com/frantjc/sequence/api/types"
+	"github.com/frantjc/sequence/pb/types"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"github.com/opencontainers/runtime-spec/specs-go"

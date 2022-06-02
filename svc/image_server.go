@@ -3,8 +3,8 @@ package svc
 import (
 	"context"
 
-	api "github.com/frantjc/sequence/api/v1/image"
 	"github.com/frantjc/sequence/internal/convert"
+	api "github.com/frantjc/sequence/pb/v1/image"
 	"github.com/frantjc/sequence/runtime"
 	"google.golang.org/grpc"
 )

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,6 +12,8 @@ import (
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/conf/flags"
+	"github.com/frantjc/sequence/svc"
+
 	// I have no idea what 'File is not `goimports`-ed' means
 	"github.com/frantjc/sequence/internal/log"
 	// Init default runtime
@@ -52,10 +53,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	var (
-		ctx    = cmd.Context()
-		c, err = conf.NewFromFlags()
-	)
+	c, err := conf.NewFromFlags()
 	if err != nil {
 		return err
 	}
@@ -85,35 +83,17 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer l.Close()
 
-	hl, err := net.Listen("tcp", c.HTTPAddress())
-	if err != nil {
-		return err
-	}
-	defer hl.Close()
-
 	runtime, err := sequence.GetRuntime(c.Runtime.Name)
 	if err != nil {
 		return err
 	}
 
-	s, err := sequence.NewServer(ctx, runtime)
+	s, err := svc.NewRuntimeServer(runtime)
 	if err != nil {
 		return err
 	}
 
-	errC := make(chan error, 1)
-
-	go func() {
-		errC <- s.ServeGRPC(l)
-	}()
-	log.Infof("gRPC listening on '%s'", l.Addr().String())
-
-	go func() {
-		errC <- http.Serve(hl, s)
-	}()
-	log.Infof("http listening on '%s'", hl.Addr().String())
-
-	return <-errC
+	return s.Serve(l)
 }
 
 func main() {

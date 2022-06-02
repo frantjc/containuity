@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	containerapi "github.com/frantjc/sequence/api/v1/container"
 	"github.com/frantjc/sequence/internal/grpcio"
+	containerapi "github.com/frantjc/sequence/pb/v1/container"
 	"github.com/frantjc/sequence/runtime"
 )
 

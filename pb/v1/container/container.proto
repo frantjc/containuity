@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package sequence.v1.container;
+
+import "pb/types/container.proto";
+import "pb/types/log.proto";
+import "pb/types/spec.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/frantjc/sequence/pb/v1/container";
+
+service Container {
+    rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
+    rpc GetContainer(GetContainerRequest) returns (GetContainerResponse);
+    rpc ExecContainer(ExecContainerRequest) returns (stream sequence.types.Log);
+    rpc StartContainer(StartContainerRequest) returns (google.protobuf.Empty);
+    rpc AttachContainer(AttachContainerRequest) returns (stream sequence.types.Log);
+    rpc RemoveContainer(RemoveContainerRequest) returns (google.protobuf.Empty);
+    rpc PruneContainers(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc CopyToContainer(CopyToContainerRequest) returns (google.protobuf.Empty);
+    rpc CopyFromContainer(CopyFromContainerRequest) returns (CopyFromContainerResponse);
+}
+
+message CreateContainerRequest {
+    sequence.types.Spec spec = 1;
+}
+
+message CreateContainerResponse {
+    sequence.types.Container container = 1;
+}
+
+message GetContainerRequest {
+    string id = 1;
+}
+
+message GetContainerResponse {
+    sequence.types.Container container = 1;
+}
+
+message ExecContainerRequest {
+    string id = 1;
+}
+
+message StartContainerRequest {
+    string id = 1;
+}
+
+message StartContainerResponse {
+    sequence.types.Container container = 1;
+}
+
+message AttachContainerRequest {
+    string id = 1;
+}
+
+message RemoveContainerRequest {
+    string id = 1;
+}
+
+message CopyToContainerRequest {
+    string id = 1;
+    string destination = 2;
+    bytes content = 3;
+}
+
+message CopyFromContainerRequest {
+    string id = 1;
+    string source = 2;
+}
+
+message CopyFromContainerResponse {
+    bytes content = 1;
+}

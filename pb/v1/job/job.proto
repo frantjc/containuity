@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package sequence.v1.job;
+
+import "pb/types/job.proto";
+import "pb/types/log.proto";
+import "pb/types/workflow.proto";
+
+option go_package = "github.com/frantjc/sequence/pb/v1/job";
+
+service Job {
+    rpc RunJob(RunJobRequest) returns (stream sequence.types.Log);
+}
+
+message RunJobRequest {
+    sequence.types.Job job = 1;
+    sequence.types.Workflow workflow = 2;
+    string repository = 4;
+    string runner_image = 5;
+    bool verbose = 6;
+}

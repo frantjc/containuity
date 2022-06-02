@@ -1,10 +1,10 @@
 package svc
 
 import (
-	api "github.com/frantjc/sequence/api/v1/job"
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
+	api "github.com/frantjc/sequence/pb/v1/job"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/workflow"
 	"google.golang.org/grpc"

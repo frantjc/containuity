@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	containerapi "github.com/frantjc/sequence/api/v1/container"
+	containerapi "github.com/frantjc/sequence/pb/v1/container"
 )
 
 func (c *sqncContainer) CopyTo(ctx context.Context, content io.Reader, destination string) error {

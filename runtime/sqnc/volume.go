@@ -1,6 +1,6 @@
 package sqnc
 
-import volumeapi "github.com/frantjc/sequence/api/v1/volume"
+import volumeapi "github.com/frantjc/sequence/pb/v1/volume"
 
 type sqncVolume struct {
 	source string

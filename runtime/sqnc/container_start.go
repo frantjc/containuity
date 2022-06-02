@@ -3,7 +3,7 @@ package sqnc
 import (
 	"context"
 
-	containerapi "github.com/frantjc/sequence/api/v1/container"
+	containerapi "github.com/frantjc/sequence/pb/v1/container"
 )
 
 func (c *sqncContainer) Start(ctx context.Context) error {

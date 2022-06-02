@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/frantjc/sequence/api/types"
+	"github.com/frantjc/sequence/pb/types"
 	"google.golang.org/grpc/metadata"
 )
 

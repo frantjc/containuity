@@ -4,7 +4,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/frantjc/sequence/api/types"
+	"github.com/frantjc/sequence/pb/types"
 )
 
 type LogStreamServer interface {

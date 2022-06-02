@@ -10,14 +10,14 @@ import (
 )
 
 var (
-	//go:embed sqncshim
-	shim []byte
-	//go:embed sqncshim-uses
+	//go:embed shim/source
+	shimSource []byte
+	//go:embed shim/uses
 	shimUses []byte
-	shimName = "sqncshim"
+	shimName = "shim"
 )
 
-func shimTarArchive() (io.Reader, error) {
+func shimSourceTarArchive() (io.Reader, error) {
 	tarball := new(bytes.Buffer)
 
 	gzipWriter := gzip.NewWriter(tarball)
@@ -28,14 +28,14 @@ func shimTarArchive() (io.Reader, error) {
 
 	if err := tarWriter.WriteHeader(&tar.Header{
 		Name:    shimName,
-		Size:    int64(len(shim)),
+		Size:    int64(len(shimSource)),
 		Mode:    0777,
 		ModTime: time.Now(),
 	}); err != nil {
 		return nil, err
 	}
 
-	if _, err := io.Copy(tarWriter, bytes.NewBuffer(shim)); err != nil {
+	if _, err := io.Copy(tarWriter, bytes.NewBuffer(shimSource)); err != nil {
 		return nil, err
 	}
 

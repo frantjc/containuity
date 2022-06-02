@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	api "github.com/frantjc/sequence/api/v1/container"
 	"github.com/frantjc/sequence/internal/convert"
 	"github.com/frantjc/sequence/internal/grpcio"
+	api "github.com/frantjc/sequence/pb/v1/container"
 	"github.com/frantjc/sequence/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"

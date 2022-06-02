@@ -13,24 +13,15 @@ FROM build_image AS build
 COPY . .
 ARG version=0.0.0
 ARG prerelease=
-RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease}" -o /usr/local/bin ./cmd/sqncshim
-RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease}" -o /usr/local/bin ./cmd/sqncshim-uses
-RUN cp /usr/local/bin/sqncshim ./workflow
-RUN cp /usr/local/bin/sqncshim-uses ./workflow
+RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/shim/source
+RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/shim/uses
+RUN cp /usr/local/bin/source ./workflow
+RUN cp /usr/local/bin/uses ./workflow
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease}" -o /usr/local/bin ./cmd/sqnc
 RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease}" -o /usr/local/bin ./cmd/sqncd
-RUN set -e; for pkg in $(go list ./...); do \
-		go test -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease}" -o /usr/local/test/bin/$(basename $pkg).test -c $pkg; \
-	done
 
 FROM base_image AS sequence
 COPY --from=build /usr/local/bin /usr/local/bin
 ENTRYPOINT ["sqncd"]
-
-FROM sequence AS test
-COPY --from=build /usr/local/test/bin /usr/local/test/bin
-RUN set -e; for test in /usr/local/test/bin/*.test; do \
-		$test; \
-	done
 
 FROM sequence

@@ -213,7 +213,7 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 	}
 
 	logout.Debugf("[%sSQNC:DBG%s] copying shim to container", log.ColorDebug, log.ColorNone)
-	sqncshim, err := shimTarArchive()
+	sqncshim, err := shimSourceTarArchive()
 	if err != nil {
 		return err
 	}
