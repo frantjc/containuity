@@ -11,16 +11,16 @@ type LogStreamServer interface {
 	Send(*types.Log) error
 }
 
-func NewLogOutStreamWriter(s LogStreamServer) io.Writer {
-	return &logStreamWriter{sync.Mutex{}, s, 0}
+func NewLogOutStreamWriter(stream LogStreamServer) io.Writer {
+	return &logStreamWriter{sync.Mutex{}, stream, 0}
 }
 
-func NewLogErrStreamWriter(s LogStreamServer) io.Writer {
-	return &logStreamWriter{sync.Mutex{}, s, 1}
+func NewLogErrStreamWriter(stream LogStreamServer) io.Writer {
+	return &logStreamWriter{sync.Mutex{}, stream, 1}
 }
 
-func NewLogStreamMultiplexWriter(s LogStreamServer) (io.Writer, io.Writer) {
-	return NewLogOutStreamWriter(s), NewLogErrStreamWriter(s)
+func NewLogStreamMultiplexWriter(stream LogStreamServer) (io.Writer, io.Writer) {
+	return NewLogOutStreamWriter(stream), NewLogErrStreamWriter(stream)
 }
 
 type logStreamWriter struct {
