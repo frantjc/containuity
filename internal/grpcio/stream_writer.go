@@ -36,11 +36,10 @@ func (w *logStreamWriter) Write(p []byte) (int, error) {
 
 	w.Lock()
 	defer w.Unlock()
-	err := w.s.Send(&types.Log{
+	if err := w.s.Send(&types.Log{
 		Data:   p,
 		Stream: w.stream,
-	})
-	if err != nil {
+	}); err != nil {
 		return 0, err
 	}
 
