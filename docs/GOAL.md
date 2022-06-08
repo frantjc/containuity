@@ -58,7 +58,7 @@ sequence should be able to run as a daemon--an rpc client/server combination--fo
 
 ### `sqncd`
 
-run the sequence gRPC server
+run the sequence rpc server
 
 ### `sqnc run`
 
