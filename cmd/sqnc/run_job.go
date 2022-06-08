@@ -8,7 +8,7 @@ import (
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/conf/flags"
 	"github.com/frantjc/sequence/internal/log"
-	"github.com/frantjc/sequence/workflow"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -25,8 +25,8 @@ func init() {
 func runJob(cmd *cobra.Command, args []string) error {
 	var (
 		ctx  = cmd.Context()
-		j    *workflow.Job
-		w    *workflow.Workflow
+		j    *workflowv1.Job
+		w    *workflowv1.Workflow
 		path = args[0]
 		r    io.Reader
 		err  error
@@ -41,7 +41,7 @@ func runJob(cmd *cobra.Command, args []string) error {
 	}
 
 	if jobName != "" {
-		w, err := workflow.NewWorkflowFromReader(r)
+		w, err := workflowv1.NewWorkflowFromReader(r)
 		if err != nil {
 			return err
 		}
@@ -51,7 +51,7 @@ func runJob(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		j, err = workflow.NewJobFromReader(r)
+		j, err = workflowv1.NewJobFromReader(r)
 		if err != nil {
 			return err
 		}

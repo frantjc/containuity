@@ -11,9 +11,10 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/frantjc/sequence/runtime"
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
-func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (runtime.Container, error) {
+func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtimev1.Spec) (runtime.Container, error) {
 	pref, err := reference.Parse(s.Image)
 	if err != nil {
 		return nil, err
@@ -39,7 +40,7 @@ func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (r
 		hconf.Mounts = append(hconf.Mounts, mount.Mount{
 			Source: sock,
 			Target: "/var/run/docker.sock",
-			Type:   runtime.MountTypeBind,
+			Type:   runtimev1.MountTypeBind,
 		})
 	}
 
@@ -48,7 +49,7 @@ func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (r
 			hconf.Mounts = append(hconf.Mounts, mount.Mount{
 				Source: docker,
 				Target: "/usr/local/bin/docker",
-				Type:   runtime.MountTypeBind,
+				Type:   runtimev1.MountTypeBind,
 			})
 		}
 	}
@@ -72,7 +73,7 @@ func (r *dockerRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (r
 		}
 
 		for _, opt := range m.Options {
-			if opt == runtime.MountOptReadOnly {
+			if opt == runtimev1.MountOptReadOnly {
 				dm.ReadOnly = true
 			}
 		}

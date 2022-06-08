@@ -8,7 +8,7 @@ import (
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/conf/flags"
 	"github.com/frantjc/sequence/internal/log"
-	"github.com/frantjc/sequence/workflow"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,7 @@ func runWorkflow(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	w, err := workflow.NewWorkflowFromReader(r)
+	w, err := workflowv1.NewWorkflowFromReader(r)
 	if err != nil {
 		return err
 	}

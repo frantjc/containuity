@@ -16,6 +16,7 @@ func Semver() string {
 	if Prerelease != "" {
 		version = fmt.Sprintf("%s-%s", version, Prerelease)
 	}
+
 	if buildInfo, ok := debug.ReadBuildInfo(); ok {
 		var (
 			revision string
@@ -29,6 +30,7 @@ func Semver() string {
 				modified = setting.Value == "true"
 			}
 		}
+
 		if revision != "" {
 			i := len(revision)
 			if i > 7 {
@@ -36,9 +38,11 @@ func Semver() string {
 			}
 			version = fmt.Sprintf("%s+%s", version, revision[:i])
 		}
+
 		if modified {
 			version = fmt.Sprintf("%s*", version)
 		}
 	}
+
 	return version
 }

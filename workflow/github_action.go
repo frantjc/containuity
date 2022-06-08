@@ -10,8 +10,9 @@ import (
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/runtime"
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 	"github.com/google/uuid"
-	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 type githubActionStep struct {
@@ -47,17 +48,17 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 	}
 
 	logout.Infof("[%sSQNC%s] setting up action '%s'", log.ColorInfo, log.ColorNone, action.String())
-	spec := &runtime.Spec{
+	spec := &runtimev1.Spec{
 		Image:      ex.runnerImage,
 		Entrypoint: []string{containerShim, action.String(), ex.globalContext.GitHubContext.ActionPath},
 		Cmd:        []string{},
-		Mounts: []specs.Mount{
+		Mounts: []*runtimev1.Mount{
 			{
 				// actions are global because each step that uses
 				// actions/checkout@v2 expects it to function the same
 				Source:      ex.actionPath(action),
 				Destination: ex.globalContext.GitHubContext.ActionPath,
-				Type:        runtime.MountTypeVolume,
+				Type:        runtimev1.MountTypeVolume,
 			},
 		},
 	}
@@ -67,18 +68,18 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 	if err != nil {
 		return err
 	}
-	logout.Debugf("[%sSQNC:DBG%s] finished pulling image '%s'", log.ColorDebug, log.ColorNone, image.Ref())
+	logout.Debugf("[%sSQNC:DBG%s] finished pulling image '%s'", log.ColorDebug, log.ColorNone, image.GetRef())
 
 	logout.Debugf("[%sSQNC:DBG%s] getting or creating volumes", log.ColorDebug, log.ColorNone)
 	for _, mount := range spec.Mounts {
-		if mount.Type == runtime.MountTypeVolume {
+		if mount.Type == runtimev1.MountTypeVolume {
 			vol, err := ex.runtime.CreateVolume(ctx, mount.Source)
 			if err != nil {
 				if vol, err = ex.runtime.GetVolume(ctx, mount.Source); err != nil {
 					return err
 				}
 			}
-			mount.Source = vol.Source()
+			mount.Source = vol.GetSource()
 		}
 	}
 	logout.Debugf("[%sSQNC:DBG%s] finished setting up volumes", log.ColorDebug, log.ColorNone)
@@ -104,7 +105,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 		return err
 	}
 
-	resp := &StepOut{}
+	resp := &workflowv1.Step_Out{}
 	if err = json.NewDecoder(outbuf).Decode(resp); err != nil {
 		return err
 	}
@@ -117,7 +118,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 		}
 
 		if actionMetadata.IsComposite() {
-			steps, err := NewStepsFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath)
+			steps, err := workflowv1.NewStepsFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath)
 			if err != nil {
 				return err
 			}
@@ -125,7 +126,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 			for _, step := range steps {
 				if step.IsGitHubAction() {
 					githubAction := &githubActionStep{
-						ID:         step.ID,
+						ID:         step.Id,
 						Name:       step.Name,
 						Env:        step.Env,
 						Uses:       step.Uses,
@@ -147,10 +148,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 		// see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#sending-values-to-the-pre-and-post-actions
 		stateKey := uuid.NewString()
 		ex.states[stateKey] = map[string]string{}
-		specOpts := []runtime.SpecOpt{
-			runtime.WithMounts(spec.Mounts...),
-		}
-		if preStep, err := NewPreStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
+		if preStep, err := workflowv1.NewPreStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
 			return err
 		} else if preStep != nil {
 			regularStep := &regularStep{
@@ -166,7 +164,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				Privileged: preStep.Privileged,
 
 				stateKey: stateKey,
-				specOpts: specOpts,
+				mounts:   spec.Mounts,
 			}
 
 			for k, v := range e.With {
@@ -189,7 +187,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 			ex.pre = append(ex.pre, regularStep)
 		}
 
-		mainStep, err := NewMainStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath)
+		mainStep, err := workflowv1.NewMainStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath)
 		switch {
 		case err != nil:
 			return err
@@ -209,7 +207,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				Privileged: mainStep.Privileged,
 
 				stateKey: stateKey,
-				specOpts: specOpts,
+				mounts:   spec.Mounts,
 			}
 
 			if e.Name == "" {
@@ -230,7 +228,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 			return actions.ErrNotAnAction
 		}
 
-		if postStep, err := NewPostStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
+		if postStep, err := workflowv1.NewPostStepFromMetadata(actionMetadata, ex.globalContext.GitHubContext.ActionPath); err != nil {
 			return err
 		} else if postStep != nil {
 			regularStep := &regularStep{
@@ -246,7 +244,7 @@ func (e *githubActionStep) execute(ctx context.Context, ex *jobExecutor) error {
 				Privileged: postStep.Privileged,
 
 				stateKey: stateKey,
-				specOpts: specOpts,
+				mounts:   spec.Mounts,
 			}
 
 			for k, v := range e.With {

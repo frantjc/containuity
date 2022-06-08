@@ -3,12 +3,13 @@ package sqnc
 import (
 	"context"
 
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
+	"github.com/bufbuild/connect-go"
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
 func (c *sqncContainer) Start(ctx context.Context) error {
-	_, err := c.client.StartContainer(ctx, &containerapi.StartContainerRequest{
+	_, err := c.client.StartContainer(ctx, connect.NewRequest(&runtimev1.StartContainerRequest{
 		Id: c.id,
-	})
+	}))
 	return err
 }

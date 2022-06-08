@@ -12,6 +12,6 @@ type dockerVolume struct {
 
 var _ runtime.Volume = &dockerVolume{}
 
-func (v *dockerVolume) Source() string {
+func (v *dockerVolume) GetSource() string {
 	return v.name
 }

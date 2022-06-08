@@ -4,9 +4,10 @@ import (
 	"context"
 	"io"
 
-	"github.com/frantjc/sequence/internal/grpcio"
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
+	"github.com/bufbuild/connect-go"
+	"github.com/frantjc/sequence/internal/protobufio"
 	"github.com/frantjc/sequence/runtime"
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
 func (c *sqncContainer) Exec(ctx context.Context, streams *runtime.Streams) error {
@@ -21,12 +22,12 @@ func (c *sqncContainer) Exec(ctx context.Context, streams *runtime.Streams) erro
 		stderr = streams.Stderr
 	}
 
-	stream, err := c.client.ExecContainer(ctx, &containerapi.ExecContainerRequest{
-		Id: c.ID(),
-	})
+	stream, err := c.client.ExecContainer(ctx, connect.NewRequest(&runtimev1.ExecContainerRequest{
+		Id: c.GetID(),
+	}))
 	if err != nil {
 		return err
 	}
 
-	return grpcio.DemultiplexLogStream(stream, stdout, stderr)
+	return protobufio.DemultiplexLogStream[*runtimev1.ExecContainerResponse](stream, stdout, stderr)
 }

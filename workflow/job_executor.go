@@ -13,10 +13,11 @@ import (
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/opencontainers/runtime-spec/specs-go"
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 )
 
-func NewJobExecutor(j *Job, opts ...ExecOpt) (Executor, error) {
+func NewJobExecutor(j *workflowv1.Job, opts ...ExecOpt) (Executor, error) {
 	ex := &jobExecutor{
 		stdout: os.Stdout,
 		stderr: os.Stderr,
@@ -83,7 +84,7 @@ type jobExecutor struct {
 
 	runnerImage string
 
-	steps []*Step
+	steps []*workflowv1.Step
 
 	pre  []executable
 	main []executable
@@ -110,7 +111,7 @@ func (e *jobExecutor) Start(ctx context.Context) error {
 	for _, step := range e.steps {
 		if step.IsGitHubAction() {
 			githubAction := &githubActionStep{
-				ID:         step.ID,
+				ID:         step.Id,
 				Name:       step.Name,
 				Env:        step.Env,
 				Uses:       step.Uses,
@@ -126,7 +127,7 @@ func (e *jobExecutor) Start(ctx context.Context) error {
 			e.main = append(
 				e.main,
 				&regularStep{
-					ID:    step.ID,
+					ID:    step.Id,
 					Name:  step.Name,
 					Env:   step.Env,
 					Shell: step.Shell,
@@ -246,7 +247,7 @@ func (e *jobExecutor) actionPath(action actions.Reference) string {
 }
 
 var (
-	readOnly = []string{runtime.MountOptReadOnly}
+	readOnly = []string{runtimev1.MountOptReadOnly}
 )
 
 const (
@@ -277,27 +278,27 @@ func (e *jobExecutor) env() []string {
 	}
 }
 
-func (e *jobExecutor) mounts() []specs.Mount {
-	return []specs.Mount{
+func (e *jobExecutor) mounts() []*runtimev1.Mount {
+	return []*runtimev1.Mount{
 		{
 			Source:      e.workspace(),
 			Destination: e.globalContext.GitHubContext.Workspace,
-			Type:        runtime.MountTypeVolume,
+			Type:        runtimev1.MountTypeVolume,
 		},
 		{
 			Source:      e.runnerTemp(),
 			Destination: e.globalContext.RunnerContext.Temp,
-			Type:        runtime.MountTypeVolume,
+			Type:        runtimev1.MountTypeVolume,
 		},
 		{
 			Source:      e.runnerToolCache(),
 			Destination: e.globalContext.RunnerContext.ToolCache,
-			Type:        runtime.MountTypeVolume,
+			Type:        runtimev1.MountTypeVolume,
 		},
 		{
 			Source:      e.github(),
 			Destination: containerGitHubDir,
-			Type:        runtime.MountTypeVolume,
+			Type:        runtimev1.MountTypeVolume,
 		},
 		// {
 		// 	Destination: containerShimDir,
@@ -307,19 +308,19 @@ func (e *jobExecutor) mounts() []specs.Mount {
 		{
 			Source:      crtsDir,
 			Destination: crtsDir,
-			Type:        runtime.MountTypeBind,
+			Type:        runtimev1.MountTypeBind,
 			Options:     readOnly,
 		},
 		{
 			Source:      hostsFile,
 			Destination: hostsFile,
-			Type:        runtime.MountTypeBind,
+			Type:        runtimev1.MountTypeBind,
 			Options:     readOnly,
 		},
 		{
 			Source:      resolveConf,
 			Destination: resolveConf,
-			Type:        runtime.MountTypeBind,
+			Type:        runtimev1.MountTypeBind,
 			Options:     readOnly,
 		},
 	}

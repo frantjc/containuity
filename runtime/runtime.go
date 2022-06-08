@@ -3,6 +3,8 @@ package runtime
 import (
 	"context"
 	"sync"
+
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
 const (
@@ -13,7 +15,7 @@ const (
 
 type Runtime interface {
 	PullImage(context.Context, string) (Image, error)
-	CreateContainer(context.Context, *Spec) (Container, error)
+	CreateContainer(context.Context, *runtimev1.Spec) (Container, error)
 	GetContainer(context.Context, string) (Container, error)
 	CreateVolume(context.Context, string) (Volume, error)
 	GetVolume(context.Context, string) (Volume, error)

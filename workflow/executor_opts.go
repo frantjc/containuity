@@ -6,6 +6,7 @@ import (
 
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/runtime"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 )
 
 type ExecOpt func(*jobExecutor) error
@@ -71,11 +72,9 @@ func WithSecrets(secrets map[string]string) ExecOpt {
 	}
 }
 
-func WithJob(j *Job) ExecOpt {
+func WithJob(j *workflowv1.Job) ExecOpt {
 	return func(e *jobExecutor) error {
-		if jobImage, ok := j.Container.(string); ok {
-			e.runnerImage = jobImage
-		}
+		e.runnerImage = j.Container.GetImage()
 
 		if j.Name != "" {
 			e.globalContext.GitHubContext.Job = j.Name
@@ -94,7 +93,7 @@ func WithJobName(jobName string) ExecOpt {
 	}
 }
 
-func WithWorkflow(w *Workflow) ExecOpt {
+func WithWorkflow(w *workflowv1.Workflow) ExecOpt {
 	return func(e *jobExecutor) error {
 		if w.Name != "" {
 			e.globalContext.GitHubContext.Workflow = w.Name

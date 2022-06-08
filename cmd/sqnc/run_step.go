@@ -8,7 +8,7 @@ import (
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/conf/flags"
 	"github.com/frantjc/sequence/internal/log"
-	"github.com/frantjc/sequence/workflow"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -26,9 +26,9 @@ func init() {
 func runStep(cmd *cobra.Command, args []string) error {
 	var (
 		ctx  = cmd.Context()
-		s    *workflow.Step
-		j    *workflow.Job
-		w    *workflow.Workflow
+		s    *workflowv1.Step
+		j    *workflowv1.Job
+		w    *workflowv1.Workflow
 		path = args[0]
 		r    io.Reader
 		err  error
@@ -44,7 +44,7 @@ func runStep(cmd *cobra.Command, args []string) error {
 
 	if stepID != "" {
 		if jobName != "" {
-			w, err := workflow.NewWorkflowFromReader(r)
+			w, err := workflowv1.NewWorkflowFromReader(r)
 			if err != nil {
 				return err
 			}
@@ -54,7 +54,7 @@ func runStep(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		} else {
-			j, err = workflow.NewJobFromReader(r)
+			j, err = workflowv1.NewJobFromReader(r)
 			if err != nil {
 				return err
 			}
@@ -65,7 +65,7 @@ func runStep(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		s, err = workflow.NewStepFromReader(r)
+		s, err = workflowv1.NewStepFromReader(r)
 		if err != nil {
 			return err
 		}

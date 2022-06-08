@@ -3,13 +3,13 @@ package sequence
 import (
 	"os"
 
-	"github.com/frantjc/sequence/workflow"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 )
 
 type runOpts struct {
-	job         *workflow.Job
+	job         *workflowv1.Job
 	jobName     string
-	workflow    *workflow.Workflow
+	workflow    *workflowv1.Workflow
 	runnerImage string
 	verbose     bool
 	repository  string
@@ -24,23 +24,21 @@ func defaultRunOpts() *runOpts {
 
 type RunOpt func(*runOpts) error
 
-func WithJob(j *workflow.Job) RunOpt {
+func WithJob(j *workflowv1.Job) RunOpt {
 	return func(ro *runOpts) error {
 		ro.job = j
 
+		ro.runnerImage = j.Container.GetImage()
+
 		if j.Name != "" {
 			ro.jobName = j.Name
-		}
-
-		if jobImage, ok := j.Container.(string); ok {
-			ro.runnerImage = jobImage
 		}
 
 		return nil
 	}
 }
 
-func WithWorkflow(w *workflow.Workflow) RunOpt {
+func WithWorkflow(w *workflowv1.Workflow) RunOpt {
 	return func(ro *runOpts) error {
 		ro.workflow = w
 		return nil

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package workflow.v1;
+
+import "internal/protobufio/v1/log.proto";
+import "workflow/v1/job.proto";
+import "workflow/v1/step.proto";
+
+option go_package = "github.com/frantjc/sequence/workflow/v1;workflowv1";
+
+message Workflow {
+  string name = 1;
+  map<string, workflow.v1.Job> jobs = 2;
+}
+
+service WorkflowService {
+  rpc RunWorkflow(RunWorkflowRequest) returns (stream RunWorkflowResponse);
+  rpc RunJob(RunJobRequest) returns (stream RunJobResponse);
+  rpc RunStep(RunStepRequest) returns (stream RunStepResponse);
+}
+
+message RunStepRequest {
+  workflow.v1.Step step = 1;
+  workflow.v1.Job job = 2;
+  workflow.v1.Workflow workflow = 3;
+  string repository = 4;
+  string runner_image = 5;
+  bool verbose = 6;
+}
+
+message RunStepResponse {
+  internal.protobufio.v1.Log log = 1;
+}
+
+message RunJobRequest {
+  workflow.v1.Job job = 1;
+  workflow.v1.Workflow workflow = 2;
+  string repository = 4;
+  string runner_image = 5;
+  bool verbose = 6;
+}
+
+message RunJobResponse {
+  internal.protobufio.v1.Log log = 1;
+}
+
+message RunWorkflowRequest {
+  workflow.v1.Workflow workflow = 1;
+  string repository = 4;
+  string runner_image = 5;
+  bool verbose = 6;
+}
+
+message RunWorkflowResponse {
+  internal.protobufio.v1.Log log = 1;
+}

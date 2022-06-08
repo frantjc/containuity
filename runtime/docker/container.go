@@ -12,6 +12,6 @@ type dockerContainer struct {
 
 var _ runtime.Container = &dockerContainer{}
 
-func (c *dockerContainer) ID() string {
+func (c *dockerContainer) GetID() string {
 	return c.id
 }

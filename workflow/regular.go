@@ -7,6 +7,7 @@ import (
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/runtime"
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 	"golang.org/x/net/context"
 )
 
@@ -25,7 +26,7 @@ type regularStep struct {
 	Privileged bool
 
 	stateKey string
-	specOpts []runtime.SpecOpt
+	mounts   []*runtimev1.Mount
 }
 
 var _ executable = &regularStep{}
@@ -46,7 +47,7 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 			Name: ex.expandString(e.Name),
 			With: ex.expandStringMap(e.With),
 		}
-		spec = &runtime.Spec{
+		spec = &runtimev1.Spec{
 			Image:      ex.runnerImage,
 			Entrypoint: []string{containerShim},
 			Cwd:        ex.globalContext.GitHubContext.Workspace,
@@ -182,26 +183,20 @@ func (e *regularStep) execute(ctx context.Context, ex *jobExecutor) error {
 	if err != nil {
 		return err
 	}
-	logout.Debugf("[%sSQNC:DBG%s] finished pulling image '%s'", log.ColorDebug, log.ColorNone, image.Ref())
+	logout.Debugf("[%sSQNC:DBG%s] finished pulling image '%s'", log.ColorDebug, log.ColorNone, image.GetRef())
 
-	if e.specOpts != nil {
-		for _, opt := range e.specOpts {
-			if err = opt(spec); err != nil {
-				return err
-			}
-		}
-	}
+	spec.Mounts = append(spec.Mounts, e.mounts...)
 
 	logout.Debugf("[%sSQNC:DBG%s] getting or creating volumes", log.ColorDebug, log.ColorNone)
 	for _, mount := range spec.Mounts {
-		if mount.Type == runtime.MountTypeVolume {
+		if mount.Type == runtimev1.MountTypeVolume {
 			vol, err := ex.runtime.CreateVolume(ctx, mount.Source)
 			if err != nil {
 				if vol, err = ex.runtime.GetVolume(ctx, mount.Source); err != nil {
 					return err
 				}
 			}
-			mount.Source = vol.Source()
+			mount.Source = vol.GetSource()
 		}
 	}
 	logout.Debugf("[%sSQNC:DBG%s] finished setting up volumes", log.ColorDebug, log.ColorNone)

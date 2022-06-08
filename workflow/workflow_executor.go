@@ -4,14 +4,15 @@ import (
 	"context"
 
 	"github.com/frantjc/sequence/internal/log"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 )
 
-func NewWorkflowExecutor(w *Workflow, opts ...ExecOpt) (Executor, error) {
+func NewWorkflowExecutor(w *workflowv1.Workflow, opts ...ExecOpt) (Executor, error) {
 	return &workflowExecutor{w, append(opts, WithWorkflow(w))}, nil
 }
 
 type workflowExecutor struct {
-	workflow *Workflow
+	workflow *workflowv1.Workflow
 	opts     []ExecOpt
 }
 

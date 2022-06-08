@@ -6,6 +6,7 @@ GIT ?= git
 DOCKER ?= docker
 PROTOC ?= protoc
 GOLANGCI-LINT ?= golangci-lint
+BUF ?= buf
 
 VERSION ?= 0.0.0
 PRERELEASE ?= alpha0
@@ -21,9 +22,6 @@ TAG ?= latest
 IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
 BUILD_ARGS ?= --build-arg version=$(VERSION) --build-arg prerelease=$(PRERELEASE)
-
-PROTOS ?= $(shell find . -type f -name *.proto)
-PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
 
 INSTALL ?= sudo install
 
@@ -54,7 +52,10 @@ placeholders:
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
 
-fmt vet test:
+format: fmt
+	@$(BUF) format -w
+
+generate fmt vet test:
 	@$(GO) $@ ./...
 
 tidy vendor verify:
@@ -64,15 +65,16 @@ clean: tidy placeholders
 	@rm -rf bin/* vendor
 	@$(DOCKER) system prune --volumes -a --filter label=sequence=true
 
-protos:
-	@$(PROTOC) $(PROTOC_ARGS) $(PROTOS)
+protos pb:
+	@$(BUF) generate .
 
 lint:
 	@$(GOLANGCI-LINT) run
+	@$(BUF) lint
 
 tools:
 	@$(GO) install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
-	@$(GO) install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+	@$(GO) install github.com/bufbuild/connect-go/cmd/protoc-gen-connect-go@v1.1
 	@echo 'Update your PATH so that the protoc compiler can find the plugins:'
 	@echo '$$ export PATH=$$PATH:$(shell $(GO) env GOPATH)/bin"'
 
@@ -80,7 +82,7 @@ tools:
 	install bins binaries sqnc sqncd \
 	shims shimuses shimsource uses source placeholders \
 	image img \
-	fmt vet test \
+	format fmt vet test \
 	tidy vendor verify \
 	clean \
 	protos \

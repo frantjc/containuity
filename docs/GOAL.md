@@ -52,7 +52,7 @@ some older, "core" github actions maintained by github (e.g. [actions/checkout@v
 
 ## daemon
 
-sequence should be able to run as a daemon--a gRPC client/server combination--for speed purposes. additionally, sequence should be able to run daemonless--just making calls the the daemon(s) of the container runtime of choice.
+sequence should be able to run as a daemon--an rpc client/server combination--for speed purposes. additionally, sequence should be able to run daemonless--just making calls the the daemon(s) of the container runtime of choice.
 
 ## cli
 
@@ -104,10 +104,10 @@ sqncshim plugin [FLAGS...] PLUGIN
 
 ## build
 
-a single binary that's able to run as a gRPC daemon, daemonless-ly, and with interchangable container runtime backends sounds pretty big. it might make sense to build sequence into several different binaries with different combinations of functionality. first thought:
+a single binary that's able to run as an rpc daemon, daemonless-ly, and with interchangable container runtime backends sounds pretty big. it might make sense to build sequence into several different binaries with different combinations of functionality. first thought:
 
 * `sqncshim` -- sequence shim, contains plugins
 
-* `sqncd` -- gRPC server itself
+* `sqncd` -- rpc server itself
 
-* `sqnctl` -- cli to interact with gRPC server
+* `sqnctl` -- cli to interact with rpc server

@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence/github/actions"
-	"github.com/frantjc/sequence/workflow"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 )
 
 func main() {
@@ -50,9 +50,9 @@ func mainE() error {
 		return err
 	}
 
-	return json.NewEncoder(os.Stdout).Encode(&workflow.StepOut{
+	return json.NewEncoder(os.Stdout).Encode(&workflowv1.Step_Out{
 		Metadata: map[string]string{
-			workflow.ActionMetadataKey: string(s),
+			workflowv1.ActionMetadataKey: string(s),
 		},
 	})
 }

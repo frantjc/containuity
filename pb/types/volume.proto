@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package sequence.types;
-
-option go_package = "github.com/frantjc/sequence/pb/types";
-
-message Volume {
-    string source = 1;
-}

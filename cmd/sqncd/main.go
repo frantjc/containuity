@@ -12,7 +12,6 @@ import (
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/internal/conf"
 	"github.com/frantjc/sequence/internal/conf/flags"
-	"github.com/frantjc/sequence/svc"
 
 	// I have no idea what 'File is not `goimports`-ed' means
 	"github.com/frantjc/sequence/internal/log"
@@ -83,17 +82,12 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer l.Close()
 
-	runtime, err := sequence.GetRuntime(c.Runtime.Name)
+	_, err = sequence.GetRuntime(c.Runtime.Name)
 	if err != nil {
 		return err
 	}
 
-	s, err := svc.NewRuntimeServer(runtime)
-	if err != nil {
-		return err
-	}
-
-	return s.Serve(l)
+	return fmt.Errorf("%s unimplemented", cmd.Name())
 }
 
 func main() {

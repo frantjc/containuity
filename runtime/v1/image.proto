@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package runtime.v1;
+
+option go_package = "github.com/frantjc/sequence/runtime/v1;runtimev1";
+
+message Image {
+  string ref = 1;
+}
+
+service ImageService {
+  rpc PullImage(PullImageRequest) returns (PullImageResponse);
+  rpc PruneImages(PruneImagesRequest) returns (PruneImagesResponse);
+}
+
+message PullImageRequest {
+  string ref = 1;
+}
+
+message PullImageResponse {
+  runtime.v1.Image image = 1;
+}
+
+message PruneImagesRequest {}
+
+message PruneImagesResponse {}

@@ -5,9 +5,10 @@ import (
 
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/conf"
+	workflowv1 "github.com/frantjc/sequence/workflow/v1"
 )
 
-func NewStepExecutor(s *Step, opts ...ExecOpt) (Executor, error) {
+func NewStepExecutor(s *workflowv1.Step, opts ...ExecOpt) (Executor, error) {
 	ex := &jobExecutor{
 		stdout: os.Stdout,
 		stderr: os.Stderr,
@@ -16,7 +17,7 @@ func NewStepExecutor(s *Step, opts ...ExecOpt) (Executor, error) {
 
 		runnerImage: conf.DefaultRunnerImage,
 
-		steps: []*Step{s},
+		steps: []*workflowv1.Step{s},
 
 		ctxOpts: []actions.CtxOpt{
 			actions.WithEnv(s.Env),

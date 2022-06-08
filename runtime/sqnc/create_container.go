@@ -3,22 +3,21 @@ package sqnc
 import (
 	"context"
 
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
-
-	"github.com/frantjc/sequence/internal/convert"
+	"github.com/bufbuild/connect-go"
 	"github.com/frantjc/sequence/runtime"
+	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
-func (r *sqncRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (runtime.Container, error) {
-	res, err := r.containerClient.CreateContainer(ctx, &containerapi.CreateContainerRequest{
-		Spec: convert.RuntimeSpecToProtoSpec(s),
-	})
+func (r *sqncRuntime) CreateContainer(ctx context.Context, s *runtimev1.Spec) (runtime.Container, error) {
+	res, err := r.containerClient.CreateContainer(ctx, connect.NewRequest(&runtimev1.CreateContainerRequest{
+		Spec: s,
+	}))
 	if err != nil {
 		return nil, err
 	}
 
 	return &sqncContainer{
-		id:     res.Container.Id,
+		id:     res.Msg.GetContainer().GetId(),
 		client: r.containerClient,
 	}, nil
 }
