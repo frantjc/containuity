@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 
 	"github.com/bufbuild/connect-go"
-	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
 func (c *sqncContainer) CopyTo(ctx context.Context, content io.Reader, destination string) error {
@@ -16,7 +15,7 @@ func (c *sqncContainer) CopyTo(ctx context.Context, content io.Reader, destinati
 		return err
 	}
 
-	_, err = c.client.CopyToContainer(ctx, connect.NewRequest(&runtimev1.CopyToContainerRequest{
+	_, err = c.client.CopyToContainer(ctx, connect.NewRequest(&CopyToContainerRequest{
 		Id:          c.id,
 		Content:     b,
 		Destination: destination,
@@ -26,7 +25,7 @@ func (c *sqncContainer) CopyTo(ctx context.Context, content io.Reader, destinati
 }
 
 func (c *sqncContainer) CopyFrom(ctx context.Context, source string) (io.ReadCloser, error) {
-	res, err := c.client.CopyFromContainer(ctx, connect.NewRequest(&runtimev1.CopyFromContainerRequest{
+	res, err := c.client.CopyFromContainer(ctx, connect.NewRequest(&CopyFromContainerRequest{
 		Id: c.id,
 	}))
 

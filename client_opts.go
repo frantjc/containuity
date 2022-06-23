@@ -1,11 +1,14 @@
 package sequence
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
-type ClientOpt func(*Client) error
+type Opt func(context.Context, *Client) error
 
-func WithHTTPClient(httpClient *http.Client) ClientOpt {
-	return func(c *Client) error {
+func WithHTTPClient(httpClient *http.Client) Opt {
+	return func(ctx context.Context, c *Client) error {
 		c.httpClient = httpClient
 		return nil
 	}

@@ -3,6 +3,6 @@ plugins:
   - name: go
     out: .
     opt: paths=source_relative
-  - name: connect-go
+  - name: sqnc
     out: .
     opt: paths=source_relative

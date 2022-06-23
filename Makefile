@@ -6,7 +6,6 @@ GIT ?= git
 DOCKER ?= docker
 PROTOC ?= protoc
 GOLANGCI-LINT ?= golangci-lint
-BUF ?= buf
 
 VERSION ?= 0.0.0
 PRERELEASE ?= alpha0
@@ -43,17 +42,14 @@ shimsource: source
 
 uses source:
 	@$(GO_LINUX_AMD64) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/internal/cmd/shim/$@
-	@cp $(CURDIR)/bin/$@ $(CURDIR)/workflow/shim/$@
+	@cp $(CURDIR)/bin/$@ $(CURDIR)/shim/$@
 
 placeholders:
-	@cp $(CURDIR)/workflow/shim/shim.sh $(CURDIR)/workflow/shim/source
-	@cp $(CURDIR)/workflow/shim/shim.sh $(CURDIR)/workflow/shim/uses
+	@cp $(CURDIR)/shim/shim.sh $(CURDIR)/shim/shim-source
+	@cp $(CURDIR)/shim/shim.sh $(CURDIR)/shim/shim-uses
 
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
-
-format: fmt
-	@$(BUF) format -w
 
 generate fmt vet test:
 	@$(GO) $@ ./...
@@ -65,16 +61,12 @@ clean: tidy placeholders
 	@rm -rf bin/* vendor
 	@$(DOCKER) system prune --volumes -a --filter label=sequence=true
 
-protos pb:
-	@$(BUF) generate .
-
 lint:
 	@$(GOLANGCI-LINT) run
-	@$(BUF) lint
 
 tools:
 	@$(GO) install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
-	@$(GO) install github.com/bufbuild/connect-go/cmd/protoc-gen-connect-go@v1.1
+	@$(GO) install ./internal/cmd/protoc-gen-sqnc
 	@echo 'Update your PATH so that the protoc compiler can find the plugins:'
 	@echo '$$ export PATH=$$PATH:$(shell $(GO) env GOPATH)/bin"'
 

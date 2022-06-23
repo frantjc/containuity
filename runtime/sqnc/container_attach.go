@@ -2,12 +2,11 @@ package sqnc
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/frantjc/sequence/internal/protobufio"
 	"github.com/frantjc/sequence/runtime"
-	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
 func (c *sqncContainer) Attach(ctx context.Context, streams *runtime.Streams) error {
@@ -22,12 +21,14 @@ func (c *sqncContainer) Attach(ctx context.Context, streams *runtime.Streams) er
 		stderr = streams.Stderr
 	}
 
-	stream, err := c.client.AttachContainer(ctx, connect.NewRequest(&runtimev1.AttachContainerRequest{
+	_, err := c.client.AttachContainer(ctx, connect.NewRequest(&AttachContainerRequest{
 		Id: c.GetID(),
 	}))
 	if err != nil {
 		return err
 	}
 
-	return protobufio.DemultiplexLogStream[*runtimev1.AttachContainerResponse](stream, stdout, stderr)
+	var _ = stderr
+
+	return fmt.Errorf("unimplemented")
 }

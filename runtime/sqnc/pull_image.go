@@ -5,11 +5,10 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/frantjc/sequence/runtime"
-	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
 func (r *sqncRuntime) PullImage(ctx context.Context, ref string) (runtime.Image, error) {
-	res, err := r.imageClient.PullImage(ctx, connect.NewRequest(&runtimev1.PullImageRequest{
+	res, err := r.runtimeClient.PullImage(ctx, connect.NewRequest(&PullImageRequest{
 		Ref: ref,
 	}))
 	if err != nil {

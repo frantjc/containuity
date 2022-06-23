@@ -5,11 +5,10 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/frantjc/sequence/runtime"
-	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
 func (r *sqncRuntime) GetVolume(ctx context.Context, name string) (runtime.Volume, error) {
-	res, err := r.volumeClient.GetVolume(ctx, connect.NewRequest(&runtimev1.GetVolumeRequest{
+	res, err := r.runtimeClient.GetVolume(ctx, connect.NewRequest(&GetVolumeRequest{
 		Name: name,
 	}))
 	if err != nil {
@@ -18,6 +17,6 @@ func (r *sqncRuntime) GetVolume(ctx context.Context, name string) (runtime.Volum
 
 	return &sqncVolume{
 		source: res.Msg.GetVolume().GetSource(),
-		client: r.volumeClient,
+		client: r.runtimeClient,
 	}, nil
 }

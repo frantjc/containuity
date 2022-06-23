@@ -2,6 +2,7 @@ package sqlite3
 
 import (
 	"database/sql"
+	"os"
 
 	"github.com/frantjc/sequence/datastore"
 )
@@ -9,16 +10,17 @@ import (
 const Driver = "sqlite3"
 
 func NewDatastore(addr string) (datastore.Datastore, error) {
-	db, err := sql.Open(Driver, addr)
+	f, err := os.Create(addr)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = db.Ping(); err != nil {
+	db, err := sql.Open(Driver, f.Name())
+	if err != nil {
 		return nil, err
 	}
 
-	return &sqlite3Datastore{db}, nil
+	return &sqlite3Datastore{db}, db.Ping()
 }
 
 type sqlite3Datastore struct {

@@ -1,10 +1,8 @@
 package sqnc
 
-import "github.com/frantjc/sequence/runtime/v1/runtimev1connect"
-
 type sqncContainer struct {
 	id     string
-	client runtimev1connect.ContainerServiceClient
+	client RuntimeServiceClient
 }
 
 func (c *sqncContainer) GetID() string {

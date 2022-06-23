@@ -5,11 +5,10 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/frantjc/sequence/runtime"
-	runtimev1 "github.com/frantjc/sequence/runtime/v1"
 )
 
-func (r *sqncRuntime) CreateContainer(ctx context.Context, s *runtimev1.Spec) (runtime.Container, error) {
-	res, err := r.containerClient.CreateContainer(ctx, connect.NewRequest(&runtimev1.CreateContainerRequest{
+func (r *sqncRuntime) CreateContainer(ctx context.Context, s *runtime.Spec) (runtime.Container, error) {
+	res, err := r.runtimeClient.CreateContainer(ctx, connect.NewRequest(&CreateContainerRequest{
 		Spec: s,
 	}))
 	if err != nil {
@@ -18,6 +17,6 @@ func (r *sqncRuntime) CreateContainer(ctx context.Context, s *runtimev1.Spec) (r
 
 	return &sqncContainer{
 		id:     res.Msg.GetContainer().GetId(),
-		client: r.containerClient,
+		client: r.runtimeClient,
 	}, nil
 }

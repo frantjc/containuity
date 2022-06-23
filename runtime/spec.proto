@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package sequence.runtime;
+
+import "runtime/mount.proto";
+
+option go_package = "github.com/frantjc/sequence/runtime";
+
+message Spec {
+  string image = 1;
+  repeated string entrypoint = 2;
+  repeated string cmd = 3;
+  string cwd = 4;
+  repeated string env = 5;
+  repeated sequence.runtime.Mount mounts = 6;
+  bool privileged = 7;
+}

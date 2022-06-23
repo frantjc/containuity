@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package sequence.runtime.sqnc;
+
+option go_package = "github.com/frantjc/sequence/runtime/sqnc";
+
+message Volume {
+  string source = 1;
+}
