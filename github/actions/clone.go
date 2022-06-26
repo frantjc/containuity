@@ -10,11 +10,11 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-func Clone(r Reference, opts ...CloneOpt) (*Metadata, error) {
+func Clone(r *Reference, opts ...CloneOpt) (*Metadata, error) {
 	return CloneContext(context.Background(), r, opts...)
 }
 
-func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Metadata, error) {
+func CloneContext(ctx context.Context, r *Reference, opts ...CloneOpt) (*Metadata, error) {
 	var (
 		copts = defaultCloneOpts()
 	)
@@ -29,7 +29,7 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Metadata
 	cloneURL.Path = fullRepository(r)
 	clopts := &git.CloneOptions{
 		URL:               cloneURL.String(),
-		ReferenceName:     plumbing.NewTagReferenceName(r.Version()),
+		ReferenceName:     plumbing.NewTagReferenceName(r.Version),
 		SingleBranch:      true,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 		InsecureSkipTLS:   copts.insecure,
@@ -42,7 +42,7 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Metadata
 			return nil, err
 		}
 	} else if err != nil {
-		clopts.ReferenceName = plumbing.NewBranchReferenceName(r.Version())
+		clopts.ReferenceName = plumbing.NewBranchReferenceName(r.Version)
 		repo, err = git.PlainCloneContext(ctx, copts.path, false, clopts)
 		if err != nil {
 			return nil, err
@@ -60,9 +60,9 @@ func CloneContext(ctx context.Context, r Reference, opts ...CloneOpt) (*Metadata
 	}
 
 	var f *object.File
-	f, err = commit.File(filepath.Join(r.Path(), "action.yml"))
+	f, err = commit.File(filepath.Join(r.Path, "action.yml"))
 	if errors.Is(err, object.ErrFileNotFound) {
-		f, err = commit.File(filepath.Join(r.Path(), "action.yaml"))
+		f, err = commit.File(filepath.Join(r.Path, "action.yaml"))
 		if err != nil {
 			return nil, ErrNotAnAction
 		}

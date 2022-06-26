@@ -3,8 +3,10 @@ package sequence
 import (
 	"context"
 	"io"
+	"path"
 
 	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/internal/shim"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/runtimeutil"
@@ -50,12 +52,12 @@ func (e Executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams 
 	}
 	e.OnContainerCreate.Hook(container)
 
-	tarArchive, err := runtimeutil.NewSingleFileTarArchiveReader(shimName, shim.Bytes)
+	tarArchive, err := runtimeutil.NewSingleFileTarArchiveReader(shim.Name, shim.Bytes)
 	if err != nil {
 		return err
 	}
 
-	if err = container.CopyTo(ctx, tarArchive, shimDir); err != nil {
+	if err = container.CopyTo(ctx, tarArchive, path.Dir(paths.Shim)); err != nil {
 		return err
 	}
 

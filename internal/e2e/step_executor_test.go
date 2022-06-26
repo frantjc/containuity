@@ -7,9 +7,10 @@ import (
 	"path"
 	"testing"
 
+	"github.com/frantjc/go-js"
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/github/actions"
-	"github.com/frantjc/sequence/internal/log"
+	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/docker"
 	"github.com/frantjc/sequence/testdata"
@@ -45,11 +46,19 @@ func TestStepExecutorCheckout(t *testing.T) {
 	assert.NotNil(t, se)
 
 	err = se.Execute(ctx)
-	log.Info(err.Error())
 	assert.Nil(t, err)
 	assert.Greater(t, len(imagesPulled), 0)
+	assert.True(t, js.Some(imagesPulled, func(i runtime.Image, _ int, _ []runtime.Image) bool {
+		return i.GetRef() == sequence.ImageNode12.GetRef()
+	}))
 	assert.Greater(t, len(containersCreated), 0)
 	assert.Greater(t, len(volumesCreated), 0)
+
+	action, err := actions.ParseReference(step.Uses)
+	assert.Nil(t, err)
+	assert.True(t, js.Some(volumesCreated, func(v runtime.Volume, _ int, _ []runtime.Volume) bool {
+		return volumes.GetActionSource(action) == v.GetSource()
+	}))
 }
 
 func NewTestStepsExecutor(t *testing.T, steps []*sequence.Step, opts ...sequence.ExecutorOpt) (*sequence.StepsExecutor, error) {
@@ -60,8 +69,8 @@ func NewTestStepsExecutor(t *testing.T, steps []*sequence.Step, opts ...sequence
 	)
 	assert.Nil(t, err)
 
-	// $GOPATH/go/src/github.com/frantjc/sequence/internal/e2e
-	// => $GOPATH/go/src/github.com/frantjc/sequence
+	// $GOPATH/src/github.com/frantjc/sequence/internal/e2e
+	// => $GOPATH/src/github.com/frantjc/sequence
 	rp := path.Dir(path.Dir(wd))
 	rt, err := docker.NewRuntime(ctx)
 	assert.Nil(t, err)

@@ -67,6 +67,7 @@ func NewStepsFromNonCompositeMetadata(a *actions.Metadata, path string, parentSt
 			preCmd = []string{filepath.Join(path, a.Runs.Pre)}
 		}
 
+		// every non-composite action has a main
 		mainEntrypoint = []string{"node"}
 		mainCmd = []string{filepath.Join(path, a.Runs.Main)}
 

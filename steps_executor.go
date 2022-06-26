@@ -6,6 +6,8 @@ import (
 
 	"github.com/frantjc/go-js"
 	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/internal/paths"
+	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -19,7 +21,7 @@ type StepsExecutor struct {
 
 func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (*StepsExecutor, error) {
 	var (
-		gc, err = actions.NewContext(defaultGlobalContextOpts()...)
+		gc, err = actions.NewContext(paths.GlobalContextOpts()...)
 		e       = &StepsExecutor{
 			Executor: Executor{
 				Stdin:         os.Stdin,
@@ -58,7 +60,7 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 			}
 
 			if actionMetadata.IsComposite() {
-				steps, err := NewStepsFromCompositeActionMetadata(actionMetadata, actionPath)
+				steps, err := NewStepsFromCompositeActionMetadata(actionMetadata, paths.Action)
 				if err != nil {
 					return err
 				}
@@ -76,7 +78,7 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 				e.mainStepWrappers = append(e.mainStepWrappers, re.mainStepWrappers...)
 				e.postStepWrappers = append(js.Reverse(re.postStepWrappers), e.postStepWrappers...)
 			} else {
-				preStep, mainStep, postStep, err := NewStepsFromNonCompositeMetadata(actionMetadata, actionPath, step)
+				preStep, mainStep, postStep, err := NewStepsFromNonCompositeMetadata(actionMetadata, paths.Action, step)
 				if err != nil {
 					return err
 				}
@@ -84,7 +86,7 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 				var (
 					extraMounts = []*runtime.Mount{
 						{
-							Source:      GetActionVolumeName(action),
+							Source:      volumes.GetActionSource(action),
 							Destination: e.GlobalContext.GitHubContext.ActionPath,
 							Type:        runtime.MountTypeVolume,
 						},

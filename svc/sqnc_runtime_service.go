@@ -12,7 +12,7 @@ type SqncRuntimeServiceHandler struct {
 	sqnc.UnimplementedRuntimeServiceHandler
 }
 
-func (*SqncRuntimeServiceHandler) CreateContainer(context.Context, *connect.Request[sqnc.CreateContainerRequest]) (*connect.Response[sqnc.CreateContainerRequest], error) {
+func (*SqncRuntimeServiceHandler) CreateContainer(context.Context, *connect.Request[sqnc.CreateContainerRequest]) (*connect.Response[sqnc.CreateContainerResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.CreateContainer is not implemented"))
 }
 

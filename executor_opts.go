@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -43,7 +44,7 @@ func WithRunnerImage(image runtime.Image) ExecutorOpt {
 func WithGlobalContext(gc *actions.GlobalContext) ExecutorOpt {
 	return func(e *Executor) error {
 		e.GlobalContext = gc
-		for _, opt := range defaultGlobalContextOpts() {
+		for _, opt := range paths.GlobalContextOpts() {
 			if err := opt(e.GlobalContext); err != nil {
 				return err
 			}

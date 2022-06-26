@@ -48,7 +48,7 @@ image img:
 generate fmt vet test:
 	@$(GO) $@ ./...
 
-tidy vendor verify:
+tidy vendor verify download:
 	@$(GO) mod $@
 
 clean: tidy placeholders

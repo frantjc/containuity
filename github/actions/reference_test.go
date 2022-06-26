@@ -18,10 +18,10 @@ func TestParseAction(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
-	assert.Equal(t, expectedOwner, actual.Owner())
-	assert.Equal(t, expectedRepository, actual.Repository())
-	assert.Equal(t, expectedPath, actual.Path())
-	assert.Equal(t, expectedVersion, actual.Version())
+	assert.Equal(t, expectedOwner, actual.Owner)
+	assert.Equal(t, expectedRepository, actual.Repository)
+	assert.Equal(t, expectedPath, actual.Path)
+	assert.Equal(t, expectedVersion, actual.Version)
 	assert.Equal(t, actionRef, actual.String())
 }
 
@@ -36,9 +36,9 @@ func TestParseActionWithPath(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
-	assert.Equal(t, expectedOwner, actual.Owner())
-	assert.Equal(t, expectedRepository, actual.Repository())
-	assert.Equal(t, expectedPath, actual.Path())
-	assert.Equal(t, expectedVersion, actual.Version())
+	assert.Equal(t, expectedOwner, actual.Owner)
+	assert.Equal(t, expectedRepository, actual.Repository)
+	assert.Equal(t, expectedPath, actual.Path)
+	assert.Equal(t, expectedVersion, actual.Version)
 	assert.Equal(t, actionRef, actual.String())
 }

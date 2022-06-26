@@ -6,6 +6,7 @@ import (
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/runtime"
+	"github.com/frantjc/sequence/runtime/sqnc"
 	"github.com/frantjc/sequence/svc"
 	"github.com/gorilla/mux"
 )
@@ -38,6 +39,9 @@ func NewServer(ctx context.Context, opts ...Opt) (*Server, error) {
 	for _, f := range []NewPathHandlerFunc{
 		func() (string, http.Handler) {
 			return sequence.NewWorkflowServiceHandler(&svc.WorkflowServiceHandler{})
+		},
+		func() (string, http.Handler) {
+			return sqnc.NewRuntimeServiceHandler(&svc.SqncRuntimeServiceHandler{})
 		},
 	} {
 		path, handler := f()

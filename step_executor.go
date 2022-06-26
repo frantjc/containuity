@@ -8,6 +8,7 @@ import (
 	"github.com/frantjc/sequence/github/actions"
 
 	"github.com/frantjc/sequence/internal/log"
+	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/internal/shim"
 	"github.com/frantjc/sequence/runtime"
 )
@@ -117,7 +118,7 @@ func (e *StepExecutor) ExecuteStep(ctx context.Context) error {
 
 	spec := &runtime.Spec{
 		Image:      js.Coalesce(expandedStep.Image, e.RunnerImage.GetRef()),
-		Entrypoint: []string{shimPath},
+		Entrypoint: []string{paths.Shim},
 		Cwd:        e.GlobalContext.GitHubContext.Workspace,
 		Env: append(
 			[]string{
