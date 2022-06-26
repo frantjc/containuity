@@ -13,14 +13,14 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type StepExecutor struct {
-	Executor
+type stepExecutor struct {
+	executor
 	StepWrapper        *StepWrapper
 	Echo               bool
 	StopCommandsTokens map[string]bool
 }
 
-func (e *StepExecutor) WorkflowCommandWriterCallback(wc *actions.WorkflowCommand) []byte {
+func (e *stepExecutor) WorkflowCommandWriterCallback(wc *actions.WorkflowCommand) []byte {
 	e.OnWorkflowCommand.Hook(wc)
 
 	if _, ok := e.StopCommandsTokens[wc.Command]; ok {
@@ -77,7 +77,7 @@ func (e *StepExecutor) WorkflowCommandWriterCallback(wc *actions.WorkflowCommand
 	return make([]byte, 0)
 }
 
-func (e *StepExecutor) ExecuteStep(ctx context.Context) error {
+func (e *stepExecutor) ExecuteStep(ctx context.Context) error {
 	var (
 		// logStdout    = log.New(e.stdout).SetVerbose(e.verbose)
 		// logStderr    = log.New(e.stderr).SetVerbose(e.verbose)

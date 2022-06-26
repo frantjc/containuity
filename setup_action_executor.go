@@ -12,7 +12,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-func (e *Executor) SetupAction(ctx context.Context, action *actions.Reference) (*actions.Metadata, error) {
+func (e executor) SetupAction(ctx context.Context, action *actions.Reference) (*actions.Metadata, error) {
 	if action == nil {
 		return nil, fmt.Errorf("action must not be nil")
 	}

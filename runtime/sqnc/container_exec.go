@@ -28,7 +28,11 @@ func (c *sqncContainer) Exec(ctx context.Context, streams *runtime.Streams) erro
 		return err
 	}
 
-	var _ = stderr
+	var (
+		_ = stdout
+		_ = stderr
+	)
 
+	// TODO
 	return fmt.Errorf("unimplemented")
 }

@@ -12,7 +12,7 @@ import (
 )
 
 type StepsExecutor struct {
-	Executor
+	executor
 	Steps            []*Step
 	preStepWrappers  []*StepWrapper
 	mainStepWrappers []*StepWrapper
@@ -23,7 +23,7 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 	var (
 		gc, err = actions.NewContext(paths.GlobalContextOpts()...)
 		e       = &StepsExecutor{
-			Executor: Executor{
+			executor: executor{
 				Stdin:         os.Stdin,
 				Stdout:        os.Stdout,
 				Stderr:        os.Stderr,
@@ -38,7 +38,7 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 	}
 
 	for _, opt := range opts {
-		if err := opt(&e.Executor); err != nil {
+		if err := opt(&e.executor); err != nil {
 			return nil, err
 		}
 	}
@@ -66,7 +66,7 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 				}
 
 				re := &StepsExecutor{
-					Executor: e.Executor,
+					executor: e.executor,
 					Steps:    steps,
 				}
 
@@ -131,8 +131,8 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 		append(e.preStepWrappers, e.mainStepWrappers...),
 		e.postStepWrappers...,
 	) {
-		se := &StepExecutor{
-			Executor:    e.Executor,
+		se := &stepExecutor{
+			executor:    e.executor,
 			StepWrapper: stepWrapper,
 		}
 

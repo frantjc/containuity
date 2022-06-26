@@ -12,7 +12,7 @@ import (
 	"github.com/frantjc/sequence/runtime/runtimeutil"
 )
 
-type Executor struct {
+type executor struct {
 	RunnerImage       runtime.Image
 	Runtime           runtime.Runtime
 	Stdout, Stderr    io.Writer
@@ -25,7 +25,7 @@ type Executor struct {
 	OnWorkflowCommand Hooks[*actions.WorkflowCommand]
 }
 
-func (e Executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams *runtime.Streams) error {
+func (e executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams *runtime.Streams) error {
 	image, err := e.Runtime.PullImage(ctx, spec.Image)
 	if err != nil {
 		return err
