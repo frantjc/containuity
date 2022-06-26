@@ -13,5 +13,3 @@ func NewRuntime(c RuntimeServiceClient) runtime.Runtime {
 type sqncRuntime struct {
 	runtimeClient RuntimeServiceClient
 }
-
-var _ runtime.Runtime = &sqncRuntime{}

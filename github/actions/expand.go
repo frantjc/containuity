@@ -4,11 +4,29 @@ import (
 	"strings"
 )
 
-func Expand(s string, mapping func(string) string) string {
+type ExpandFunc func(string) string
+
+type Expander struct {
+	ExpandFunc ExpandFunc
+}
+
+func NewExpander(f ExpandFunc) *Expander {
+	return &Expander{f}
+}
+
+func (e *Expander) Expand(s string) string {
+	return Expand(s, e.ExpandFunc)
+}
+
+func (e *Expander) ExpandBytes(b []byte) []byte {
+	return ExpandBytes(b, e.ExpandFunc)
+}
+
+func Expand(s string, mapping ExpandFunc) string {
 	return string(ExpandBytes([]byte(s), mapping))
 }
 
-func ExpandBytes(b []byte, mapping func(string) string) (p []byte) {
+func ExpandBytes(b []byte, mapping ExpandFunc) (p []byte) {
 	i := 0
 	for j := 0; j < len(b); j++ {
 		if b[j] == '$' {

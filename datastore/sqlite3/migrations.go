@@ -42,8 +42,6 @@ func NewMigrations(addr string) (datastore.Migrations, error) {
 	return &sqlite3Migrations{m}, nil
 }
 
-var _ datastore.Migrations = &sqlite3Migrations{}
-
 func (m *sqlite3Migrations) Up() error {
 	return m.migrate.Up()
 }

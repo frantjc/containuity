@@ -2,27 +2,39 @@ package runtimes
 
 import (
 	"context"
+	"os"
 	"sync"
 
+	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/docker"
 )
 
 const (
-	EnvVarRuntime      = "SQNC_RUNTIME"
+	EnvVarRuntimeName  = "SQNC_RUNTIME"
 	DefaultRuntimeName = docker.RuntimeName
 )
+
+var (
+	RuntimeName = DefaultRuntimeName
+)
+
+func init() {
+	if runtimeName, ok := os.LookupEnv(EnvVarRuntimeName); ok {
+		RuntimeName = runtimeName
+	}
+}
 
 type NewRuntimeFunc func(context.Context) (runtime.Runtime, error)
 
 var (
-	registeredRuntimes = struct {
+	RegisteredRuntimes = struct {
 		sync.RWMutex
 		r map[string]NewRuntimeFunc
 	}{
 		r: map[string]NewRuntimeFunc{},
 	}
-	initializedRuntimes = struct {
+	InitializedRuntimes = struct {
 		sync.RWMutex
 		r map[string]runtime.Runtime
 	}{
@@ -31,39 +43,41 @@ var (
 )
 
 func RegisterRuntime(name string, f NewRuntimeFunc) {
-	registeredRuntimes.Lock()
-	defer registeredRuntimes.Unlock()
-	registeredRuntimes.r[name] = f
+	RegisteredRuntimes.Lock()
+	defer RegisteredRuntimes.Unlock()
+	RegisteredRuntimes.r[name] = f
 }
 
 func GetRuntime(ctx context.Context, names ...string) (runtime.Runtime, error) {
-	registeredRuntimes.Lock()
-	defer registeredRuntimes.Unlock()
+	RegisteredRuntimes.Lock()
+	defer RegisteredRuntimes.Unlock()
 
-	initializedRuntimes.Lock()
-	defer initializedRuntimes.Unlock()
+	InitializedRuntimes.Lock()
+	defer InitializedRuntimes.Unlock()
+
+	log.Infof("%s, %s", names, RegisteredRuntimes.r)
 
 	if len(names) == 0 {
-		for _, r := range initializedRuntimes.r {
+		for _, r := range InitializedRuntimes.r {
 			return r, nil
 		}
 
-		for _, f := range registeredRuntimes.r {
+		for _, f := range RegisteredRuntimes.r {
 			return f(ctx)
 		}
 	}
 
 	for _, name := range names {
-		if r, ok := initializedRuntimes.r[name]; ok {
+		if r, ok := InitializedRuntimes.r[name]; ok {
 			return r, nil
 		}
 
-		if f, ok := registeredRuntimes.r[name]; ok {
+		if f, ok := RegisteredRuntimes.r[name]; ok {
 			r, err := f(ctx)
 			if err != nil {
 				return nil, err
 			}
-			initializedRuntimes.r[name] = r
+			InitializedRuntimes.r[name] = r
 
 			return r, nil
 		}
@@ -73,7 +87,7 @@ func GetRuntime(ctx context.Context, names ...string) (runtime.Runtime, error) {
 }
 
 func GetDefaultRuntime(ctx context.Context) (runtime.Runtime, error) {
-	return GetRuntime(ctx, DefaultRuntimeName)
+	return GetRuntime(ctx, RuntimeName)
 }
 
 func GetAnyRuntime(ctx context.Context) (runtime.Runtime, error) {

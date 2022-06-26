@@ -19,8 +19,6 @@ type ServerStreamWriter[T any] struct {
 	Convert      func([]byte) *T
 }
 
-var _ io.Writer = &ServerStreamWriter[any]{}
-
 func (w *ServerStreamWriter[T]) Write(p []byte) (int, error) {
 	err := w.ServerStream.Send(w.Convert(p))
 	switch {

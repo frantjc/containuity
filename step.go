@@ -8,17 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	imagePrefix = "docker://"
-	node12      = "docker.io/library/node:12"
-	node16      = "docker.io/library/node:16"
-
-	// ActionMetadataKey is the key in a Step's StepOut.Metadata
-	// map that holds the json encoding of the action that
-	// the step cloned
-	ActionMetadataKey = "_sqnc_action"
-)
-
 // GetID returns the functional ID of the step
 func (s *Step) GetID() string {
 	if s.Id != "" {
@@ -143,8 +132,4 @@ func NewStepFromReader(r io.Reader) (*Step, error) {
 	s := &Step{}
 	d := yaml.NewDecoder(r)
 	return s, d.Decode(s)
-}
-
-func (o *Step_Out) GetActionMetadata() string {
-	return o.Metadata[ActionMetadataKey]
 }

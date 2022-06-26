@@ -21,5 +21,3 @@ const RuntimeName = "docker"
 type dockerRuntime struct {
 	client *dclient.Client
 }
-
-var _ runtime.Runtime = &dockerRuntime{}

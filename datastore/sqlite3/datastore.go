@@ -27,8 +27,6 @@ type sqlite3Datastore struct {
 	db *sql.DB
 }
 
-var _ datastore.Datastore = &sqlite3Datastore{}
-
 func (d *sqlite3Datastore) Ping() error {
 	return d.db.Ping()
 }

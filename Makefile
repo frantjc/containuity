@@ -4,11 +4,10 @@ GO ?= go
 GO_LINUX_AMD64 ?= GOOS=linux GOARCH=amd64 $(GO)
 GIT ?= git
 DOCKER ?= docker
-PROTOC ?= protoc
 GOLANGCI-LINT ?= golangci-lint
 
 VERSION ?= 0.0.0
-PRERELEASE ?= alpha0
+PRERELEASE ?= dev0
 
 BRANCH ?= $(shell $(GIT) rev-parse --abbrev-ref HEAD 2>/dev/null)
 COMMIT ?= $(shell $(GIT) rev-parse HEAD 2>/dev/null)
@@ -34,19 +33,14 @@ bins binaries: sqnc sqncd
 sqnc sqncd: shims
 	@$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 
-shims: shimuses shimsource
+shim: sqnc-shim
 
-shimuses: uses
-
-shimsource: source
-
-uses source:
-	@$(GO_LINUX_AMD64) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/internal/cmd/shim/$@
-	@cp $(CURDIR)/bin/$@ $(CURDIR)/shim/$@
+sqnc-shim:
+	@$(GO_LINUX_AMD64) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/internal/cmd/$@
+	@cp $(CURDIR)/bin/$@ $(CURDIR)/internal/shim/$@
 
 placeholders:
-	@cp $(CURDIR)/shim/shim.sh $(CURDIR)/shim/shim-source
-	@cp $(CURDIR)/shim/shim.sh $(CURDIR)/shim/shim-uses
+	@cp $(CURDIR)/internal/shim/shim.sh $(CURDIR)/internal/shim/sqnc-shim
 
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
@@ -72,7 +66,7 @@ tools:
 
 .PHONY: \
 	install bins binaries sqnc sqncd \
-	shims shimuses shimsource uses source placeholders \
+	shim sqnc-shim placeholders \
 	image img \
 	format fmt vet test \
 	tidy vendor verify \

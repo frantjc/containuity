@@ -20,7 +20,7 @@ type Client struct {
 var New = NewClient
 
 // NewClient returns a new Client
-func NewClient(ctx context.Context, addr *url.URL, opts ...Opt) (*Client, error) {
+func NewClient(ctx context.Context, addr *url.URL, opts ...ClientOpt) (*Client, error) {
 	client := &Client{
 		httpClient: http.DefaultClient,
 	}

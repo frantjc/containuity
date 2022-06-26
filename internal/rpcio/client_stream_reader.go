@@ -27,8 +27,6 @@ type ClientStreamReadCloser[T any] struct {
 	Convert      func(*T) []byte
 }
 
-var _ io.ReadCloser = &ClientStreamReadCloser[any]{}
-
 func (r *ClientStreamReadCloser[T]) Read(p []byte) (int, error) {
 	var (
 		pLen = len(p)

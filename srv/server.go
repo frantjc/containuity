@@ -15,8 +15,6 @@ type Server struct {
 	runtime runtime.Runtime
 }
 
-var _ http.Handler = &Server{}
-
 func NewServer(ctx context.Context, opts ...Opt) (*Server, error) {
 	var (
 		router = mux.NewRouter()

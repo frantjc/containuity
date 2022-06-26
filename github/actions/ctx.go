@@ -261,7 +261,18 @@ func (c *RunnerContext) Get(key string) string {
 	return ""
 }
 
-func EmptyContext() *GlobalContext {
+func (c *GlobalContext) AddEnv(env map[string]string) {
+	if len(c.EnvContext) == 0 {
+		c.EnvContext = env
+		return
+	}
+
+	for k, v := range env {
+		c.EnvContext[k] = v
+	}
+}
+
+func EmptyContext(opts ...CtxOpt) *GlobalContext {
 	u, _ := user.Current()
 	return &GlobalContext{
 		GitHubContext: &GitHubContext{
@@ -282,6 +293,18 @@ func EmptyContext() *GlobalContext {
 		},
 		InputsContext: map[string]string{},
 	}
+}
+
+func NewContext(opts ...CtxOpt) (*GlobalContext, error) {
+	c := EmptyContext()
+
+	for _, opt := range opts {
+		if err := opt(c); err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
 }
 
 func NewContextFromPath(ctx context.Context, path string, opts ...CtxOpt) (*GlobalContext, error) {

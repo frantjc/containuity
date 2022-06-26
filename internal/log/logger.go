@@ -22,8 +22,6 @@ type logger struct {
 	zerolog zerolog.Logger
 }
 
-var _ Logger = &logger{}
-
 func (l *logger) Write(p []byte) (int, error) {
 	return l.zerolog.Write(p)
 }

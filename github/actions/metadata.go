@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	RunsUsingDocker    = "docker"
-	RunsUsingNode12    = "node12"
-	RunsUsingNode16    = "node16"
-	RunsUsingComposite = "composite"
+	RunsUsingDockerImagePrefix = "docker://"
+	RunsUsingDocker            = "docker"
+	RunsUsingNode12            = "node12"
+	RunsUsingNode16            = "node16"
+	RunsUsingComposite         = "composite"
 )
 
 func NewMetadataFromReader(r io.Reader) (*Metadata, error) {
