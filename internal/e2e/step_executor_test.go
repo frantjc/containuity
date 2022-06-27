@@ -64,17 +64,19 @@ func TestStepExecutorCheckout(t *testing.T) {
 func NewTestStepsExecutor(t *testing.T, steps []*sequence.Step, opts ...sequence.ExecutorOpt) (*sequence.StepsExecutor, error) {
 	var (
 		ctx         = context.TODO()
-		githubToken = os.Getenv("GITHUB_TOKEN")
+		githubToken = os.Getenv("SQNC_GITHUB_TOKEN")
 		wd, err     = os.Getwd()
 	)
 	assert.Nil(t, err)
+	assert.NotEmpty(t, githubToken)
+
+	rt, err := docker.NewRuntime(ctx)
+	assert.Nil(t, err)
+	assert.NotNil(t, rt)
 
 	// $GOPATH/src/github.com/frantjc/sequence/internal/e2e
 	// => $GOPATH/src/github.com/frantjc/sequence
 	rp := path.Dir(path.Dir(wd))
-	rt, err := docker.NewRuntime(ctx)
-	assert.Nil(t, err)
-	assert.NotNil(t, rt)
 
 	gc, err := actions.NewContextFromPath(ctx, rp, actions.WithToken(githubToken))
 	assert.Nil(t, err)

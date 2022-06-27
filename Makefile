@@ -1,4 +1,5 @@
 BIN ?= /usr/local/bin
+DOTENV ?= .env
 
 GO ?= go
 GO_LINUX_AMD64 ?= GOOS=linux GOARCH=amd64 $(GO)
@@ -20,6 +21,8 @@ TAG ?= latest
 IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
 BUILD_ARGS ?= --build-arg version=$(VERSION) --build-arg prerelease=$(PRERELEASE)
+
+SQNC_GITHUB_TOKEN ?= $(shell source .env && echo $$SQNC_GITHUB_TOKEN)
 
 INSTALL ?= sudo install
 
@@ -46,7 +49,7 @@ image img:
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
 
 generate fmt vet test:
-	@$(GO) $@ ./...
+	@SQNC_GITHUB_TOKEN=$(SQNC_GITHUB_TOKEN) $(GO) $@ ./...
 
 tidy vendor verify download:
 	@$(GO) mod $@
