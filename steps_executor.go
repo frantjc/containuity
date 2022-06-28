@@ -11,18 +11,18 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-type StepsExecutor struct {
+type stepsExecutor struct {
 	executor
-	Steps            []*Step
-	preStepWrappers  []*StepWrapper
-	mainStepWrappers []*StepWrapper
-	postStepWrappers []*StepWrapper
+	steps            []*Step
+	preStepWrappers  []*stepWrapper
+	mainStepWrappers []*stepWrapper
+	postStepWrappers []*stepWrapper
 }
 
-func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (*StepsExecutor, error) {
+func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (Executor, error) {
 	var (
 		gc, err = actions.NewContext(paths.GlobalContextOpts()...)
-		e       = &StepsExecutor{
+		e       = &stepsExecutor{
 			executor: executor{
 				Stdin:         os.Stdin,
 				Stdout:        os.Stdout,
@@ -30,7 +30,7 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 				RunnerImage:   DefaultRunnerImage,
 				GlobalContext: gc,
 			},
-			Steps: steps,
+			steps: steps,
 		}
 	)
 	if err != nil {
@@ -46,8 +46,8 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 	return e, nil
 }
 
-func (e *StepsExecutor) Execute(ctx context.Context) error {
-	for _, step := range e.Steps {
+func (e *stepsExecutor) Execute(ctx context.Context) error {
+	for _, step := range e.steps {
 		if step.IsGitHubAction() {
 			action, err := actions.ParseReference(step.Uses)
 			if err != nil {
@@ -65,9 +65,9 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 					return err
 				}
 
-				re := &StepsExecutor{
+				re := &stepsExecutor{
 					executor: e.executor,
-					Steps:    steps,
+					steps:    steps,
 				}
 
 				if err := re.Execute(ctx); err != nil {
@@ -95,34 +95,37 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 				)
 
 				if preStep != nil {
-					e.preStepWrappers = append(e.preStepWrappers, &StepWrapper{
-						Step:        preStep,
-						ExtraMounts: extraMounts,
-						State:       state,
+					e.preStepWrappers = append(e.preStepWrappers, &stepWrapper{
+						step:        preStep,
+						extraMounts: extraMounts,
+						state:       state,
+						id:          e.ID,
 					})
 				}
 
 				if mainStep != nil {
-					e.mainStepWrappers = append(e.mainStepWrappers, &StepWrapper{
-						Step:        mainStep,
-						ExtraMounts: extraMounts,
-						State:       state,
+					e.mainStepWrappers = append(e.mainStepWrappers, &stepWrapper{
+						step:        mainStep,
+						extraMounts: extraMounts,
+						state:       state,
+						id:          e.ID,
 					})
 				}
 
 				if postStep != nil {
-					e.postStepWrappers = append([]*StepWrapper{
+					e.postStepWrappers = append([]*stepWrapper{
 						{
-							Step:        postStep,
-							ExtraMounts: extraMounts,
-							State:       state,
+							step:        postStep,
+							extraMounts: extraMounts,
+							state:       state,
+							id:          e.ID,
 						},
 					}, e.postStepWrappers...)
 				}
 			}
 		} else {
-			e.mainStepWrappers = append(e.mainStepWrappers, &StepWrapper{
-				Step: step,
+			e.mainStepWrappers = append(e.mainStepWrappers, &stepWrapper{
+				step: step,
 			})
 		}
 	}
@@ -131,12 +134,12 @@ func (e *StepsExecutor) Execute(ctx context.Context) error {
 		append(e.preStepWrappers, e.mainStepWrappers...),
 		e.postStepWrappers...,
 	) {
-		se := &stepExecutor{
+		swe := &stepWrapperExecutor{
 			executor:    e.executor,
-			StepWrapper: stepWrapper,
+			stepWrapper: stepWrapper,
 		}
 
-		if err := se.ExecuteStep(ctx); err != nil {
+		if err := swe.ExecuteStep(ctx); err != nil {
 			return err
 		}
 	}

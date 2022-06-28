@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package sequence;
 
-import "internal/rpcio/log.proto";
 import "job.proto";
+import "rpcio/log.proto";
 import "step.proto";
 
 option go_package = "github.com/frantjc/sequence";
@@ -29,7 +29,7 @@ message RunStepRequest {
 }
 
 message RunStepResponse {
-  internal.rpcio.Log log = 1;
+  rpcio.Log log = 1;
 }
 
 message RunJobRequest {
@@ -41,7 +41,7 @@ message RunJobRequest {
 }
 
 message RunJobResponse {
-  internal.rpcio.Log log = 1;
+  rpcio.Log log = 1;
 }
 
 message RunWorkflowRequest {
@@ -52,5 +52,5 @@ message RunWorkflowRequest {
 }
 
 message RunWorkflowResponse {
-  internal.rpcio.Log log = 1;
+  rpcio.Log log = 1;
 }

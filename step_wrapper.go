@@ -2,8 +2,10 @@ package sequence
 
 import "github.com/frantjc/sequence/runtime"
 
-type StepWrapper struct {
-	*Step
-	ExtraMounts []*runtime.Mount
-	State       map[string]string
+type stepWrapper struct {
+	step        *Step
+	id          string
+	extraMounts []*runtime.Mount
+	extraEnv    map[string]string
+	state       map[string]string
 }

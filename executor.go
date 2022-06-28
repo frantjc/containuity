@@ -12,7 +12,12 @@ import (
 	"github.com/frantjc/sequence/runtime/runtimeutil"
 )
 
+type Executor interface {
+	Execute(context.Context) error
+}
+
 type executor struct {
+	ID                string
 	RunnerImage       runtime.Image
 	Runtime           runtime.Runtime
 	Stdout, Stderr    io.Writer

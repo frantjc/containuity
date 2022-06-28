@@ -11,6 +11,13 @@ import (
 
 type ExecutorOpt func(*executor) error
 
+func WithID(id string) ExecutorOpt {
+	return func(e *executor) error {
+		e.ID = id
+		return nil
+	}
+}
+
 func WithVerbose(e *executor) error {
 	e.Verbose = true
 	return nil

@@ -136,12 +136,14 @@ func NewStepsFromNonCompositeMetadata(a *actions.Metadata, path string, parentSt
 	for _, childStep := range []*Step{
 		preStep, mainStep, postStep,
 	} {
-		for k, v := range parentStep.With {
-			childStep.With[k] = v
-		}
+		if childStep != nil {
+			for k, v := range parentStep.With {
+				childStep.With[k] = v
+			}
 
-		for k, v := range parentStep.Env {
-			childStep.Env[k] = v
+			for k, v := range parentStep.Env {
+				childStep.Env[k] = v
+			}
 		}
 	}
 

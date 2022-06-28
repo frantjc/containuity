@@ -26,7 +26,8 @@ message Step {
   string uses = 11;
   map<string, string> with = 12;
 
-  string get = 13;
-  string put = 14;
-  map<string, google.protobuf.Any> params = 15;
+// TODO Concourse resources
+// string get = 13;
+// string put = 14;
+// map<string, google.protobuf.Any> params = 15;
 }

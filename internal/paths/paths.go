@@ -16,4 +16,6 @@ var (
 	Workspace       = path.Join(Root, "workspace")
 	RunnerTemp      = path.Join(Root, "runner/tmp")
 	RunnerToolCache = path.Join(Root, "runner/toolcache")
+	GitHubPath      = path.Join(Root, "github/path")
+	GitHubEnv       = path.Join(Root, "github/env")
 )

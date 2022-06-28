@@ -25,7 +25,7 @@ func NewJobFromReader(r io.Reader) (*Job, error) {
 
 func (j *Job) GetStep(id string) (*Step, error) {
 	for _, step := range j.Steps {
-		if step.GetID() == id {
+		if step.Id == id {
 			return step, nil
 		}
 	}

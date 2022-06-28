@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github/actions"
-	"github.com/frantjc/sequence/internal/env"
 	"github.com/frantjc/sequence/internal/shim"
 )
 
@@ -25,6 +25,10 @@ func mainE() error {
 		ctx  = context.Background()
 		args = os.Args
 	)
+
+	if runnerToolCache := os.Getenv(actions.EnvVarRunnerToolCache); runnerToolCache != "" {
+		os.Setenv("PATH", fmt.Sprintf("%s:%s", runnerToolCache, os.Getenv("PATH")))
+	}
 
 	if len(args) == 1 {
 		return fmt.Errorf("shim requires at least 1 argument")
