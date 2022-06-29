@@ -29,7 +29,7 @@ Sequence aims to have tools built from this library to unify the development and
 - [`buf`](https://github.com/bufbuild/buf) is _required if_ modifying proto - version 1.4.x is tested
 - [`protoc`](https://grpc.io/docs/protoc-installation/) is _required if_ modifying proto - version 3.19.x is tested
   - [`protoc-gen-go`](https://developers.google.com/protocol-buffers/docs/reference/go-generated) - version 1.26.x is tested
-  - (hopefully) temporarily, [`protoc-gen-sqnc-go`](internal/cmd/protoc-gen-sqnc/)
+  - (hopefully) temporarily, [`protoc-gen-sqnc-go`](internal/cmd/protoc-gen-sqnc/main.go)
 
 The latter two of these can be installed by:
 
@@ -57,7 +57,7 @@ make lint   # golangci-lint run
 
 ### generate
 
-Generate `.go` from `.proto`
+Generate `.go` code from `.proto` code.
 
 ```sh
 make generate # buf generate .
