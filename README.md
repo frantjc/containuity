@@ -12,14 +12,14 @@ Run _sequential_ containerized workloads on the same volume using tools from eac
 
 Sequence is, first and foremost, a library for running _sequential_ containerized workloads on the same volume to produce some result. To achieve this, it builds upon some existing technologies:
 
-[x] Borrow [GitHub Action's Workflow syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) and expand upon it (e.g. by allowing each step to designate what image it should run inside). This should allow Sequence to utilize useful GitHub Actions, which are GitHub repositories which can be concisely referenced to execute complicated tasks (e.g. [downloading and installing Go](https://github.com/actions/setup-go))
-[x] Use a pluggable container [`Runtime`](runtime/runtime.go) whose default implementation is [Docker](https://docs.docker.com/get-started/) to run each containerized task.
-[] Take advantage of [Concourse Resources](https://concourse-ci.org/resources.html) to additionally expand the functionality of what a single step can do
+- [x] Borrow [GitHub Action's Workflow syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) and expand upon it (e.g. by allowing each step to designate what image it should run inside). This should allow Sequence to utilize useful GitHub Actions, which are GitHub repositories which can be concisely referenced to execute complicated tasks (e.g. [downloading and installing Go](https://github.com/actions/setup-go))
+- [x] Use a pluggable container [`Runtime`](runtime/runtime.go) whose default implementation is [Docker](https://docs.docker.com/get-started/) to run each containerized task.
+- [ ] Take advantage of [Concourse Resources](https://concourse-ci.org/resources.html) to additionally expand the functionality of what a single step can do
 
 Sequence aims to have tools built from this library to unify the development and continuous integration (CI) experiences:
 
-[] `sqnctl` CLI to run workflows against local changes before pushing them to be executed by CI
-[] `sqncd` RPC daemon that can be connected to remotely to run workloads
+- [ ] `sqnctl` CLI to run workflows against local changes before pushing them to be executed by CI
+- [ ] `sqncd` RPC daemon that can be connected to remotely to run workloads
 
 ## developing
 
