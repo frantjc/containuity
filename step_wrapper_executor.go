@@ -135,7 +135,7 @@ func (e *stepWrapperExecutor) ExecuteStep(ctx context.Context) error {
 			e.GlobalContext.EnvArr()...,
 		),
 		Mounts: append(
-			append([]*runtime.Mount{
+			[]*runtime.Mount{
 				{
 					Source:      volumes.GetWorkspace(e.stepWrapper.id),
 					Destination: e.GlobalContext.GitHubContext.Workspace,
@@ -158,7 +158,7 @@ func (e *stepWrapperExecutor) ExecuteStep(ctx context.Context) error {
 					Destination: path.Dir(paths.GitHubPath),
 					Type:        runtime.MountTypeVolume,
 				},
-			}, runtime.NetworkMounts...),
+			},
 			e.stepWrapper.extraMounts...,
 		),
 	}
