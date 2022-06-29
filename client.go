@@ -2,161 +2,52 @@ package sequence
 
 import (
 	"context"
-	"io"
+	"net/http"
+	"net/url"
 
-	"github.com/frantjc/sequence/internal/convert"
-	"github.com/frantjc/sequence/internal/grpcio"
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
-	imageapi "github.com/frantjc/sequence/pb/v1/image"
-	jobapi "github.com/frantjc/sequence/pb/v1/job"
-	stepapi "github.com/frantjc/sequence/pb/v1/step"
-	volumeapi "github.com/frantjc/sequence/pb/v1/volume"
-	workflowapi "github.com/frantjc/sequence/pb/v1/workflow"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/sqnc"
-	"github.com/frantjc/sequence/workflow"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Client is a wrapper around each of sequence's gRPC clients
+// Client is a wrapper around each of sequence's rpc clients
 type Client struct {
-	jobClient       jobapi.JobClient
-	stepClient      stepapi.StepClient
-	workflowClient  workflowapi.WorkflowClient
-	containerClient containerapi.ContainerClient
-	imageClient     imageapi.ImageClient
-	volumeClient    volumeapi.VolumeClient
+	httpClient      *http.Client
+	workflowsClient WorkflowServiceClient
+	runtimeClient   sqnc.RuntimeServiceClient
 }
 
 // New is an alias to NewClient
 var New = NewClient
 
 // NewClient returns a new Client
-func NewClient(ctx context.Context, addr string, opts ...ClientOpt) (*Client, error) {
-	cc, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
+func NewClient(ctx context.Context, addr *url.URL, opts ...ClientOpt) (*Client, error) {
+	client := &Client{
+		httpClient: http.DefaultClient,
 	}
 
-	client := &Client{
-		jobClient:       jobapi.NewJobClient(cc),
-		stepClient:      stepapi.NewStepClient(cc),
-		workflowClient:  workflowapi.NewWorkflowClient(cc),
-		containerClient: containerapi.NewContainerClient(cc),
-		imageClient:     imageapi.NewImageClient(cc),
-		volumeClient:    volumeapi.NewVolumeClient(cc),
+	for _, opt := range opts {
+		if err := opt(ctx, client); err != nil {
+			return nil, err
+		}
 	}
+
+	client.workflowsClient = NewWorkflowServiceClient(client.httpClient, addr.String())
+	client.runtimeClient = sqnc.NewRuntimeServiceClient(client.httpClient, addr.String())
 
 	return client, nil
 }
 
-// JobClient returns the client's underlying gRPC JobClient
-func (c *Client) JobClient() jobapi.JobClient {
-	return c.jobClient
+// WorkflowsClient returns the client's underlying rpc WorkflowClient
+func (c *Client) WorkflowsClient() WorkflowServiceClient {
+	return c.workflowsClient
 }
 
-// StepClient returns the client's underlying gRPC StepClient
-func (c *Client) StepClient() stepapi.StepClient {
-	return c.stepClient
-}
-
-// WorkflowClient returns the client's underlying gRPC WorkflowClient
-func (c *Client) WorkflowClient() workflowapi.WorkflowClient {
-	return c.workflowClient
-}
-
-// ContainerClient returns the client's underlying gRPC ContainerClient
-func (c *Client) ContainerClient() containerapi.ContainerClient {
-	return c.containerClient
-}
-
-// ImageClient returns the client's underlying gRPC ImageClient
-func (c *Client) ImageClient() imageapi.ImageClient {
-	return c.imageClient
-}
-
-// VolumeClient returns the client's underlying gRPC VolumeClient
-func (c *Client) VolumeClient() volumeapi.VolumeClient {
-	return c.volumeClient
+// RuntimeClient returns the client's underlying rpc RuntimeClient
+func (c *Client) RuntimeClient() sqnc.RuntimeServiceClient {
+	return c.runtimeClient
 }
 
 // Runtime returns a runtime.Runtime implementation using the underlying clients
 func (c *Client) Runtime() runtime.Runtime {
-	return sqnc.NewRuntime(c.ImageClient(), c.ContainerClient(), c.VolumeClient())
-}
-
-// RunStep calls the underlying gRPC StepClient's RunStep and
-// writes its logs to the given io.Writer
-func (c *Client) RunStep(ctx context.Context, step *workflow.Step, w io.Writer, opts ...RunOpt) error {
-	ro := defaultRunOpts()
-	for _, opt := range opts {
-		err := opt(ro)
-		if err != nil {
-			return err
-		}
-	}
-
-	stream, err := c.StepClient().RunStep(ctx, &stepapi.RunStepRequest{
-		Step:        convert.StepToProtoStep(step),
-		Job:         convert.JobToProtoJob(ro.job),
-		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
-		Repository:  ro.repository,
-		RunnerImage: ro.runnerImage,
-		Verbose:     ro.verbose,
-	})
-	if err != nil {
-		return err
-	}
-
-	return grpcio.DemultiplexLogStream(stream, w, w)
-}
-
-// RunJob calls the underlying gRPC JobClient's RunJob and
-// writes its logs to the given io.Writer
-func (c *Client) RunJob(ctx context.Context, job *workflow.Job, w io.Writer, opts ...RunOpt) error {
-	ro := defaultRunOpts()
-	for _, opt := range opts {
-		err := opt(ro)
-		if err != nil {
-			return err
-		}
-	}
-
-	stream, err := c.JobClient().RunJob(ctx, &jobapi.RunJobRequest{
-		Job:         convert.JobToProtoJob(job),
-		Workflow:    convert.WorkflowToProtoWorkflow(ro.workflow),
-		Repository:  ro.repository,
-		RunnerImage: ro.runnerImage,
-		Verbose:     ro.verbose,
-	})
-	if err != nil {
-		return err
-	}
-
-	return grpcio.DemultiplexLogStream(stream, w, w)
-}
-
-// RunWorkflow calls the underlying gRPC WorkflowClient's RunWorkflow and
-// writes its logs to the given io.Writer
-func (c *Client) RunWorkflow(ctx context.Context, workflow *workflow.Workflow, w io.Writer, opts ...RunOpt) error {
-	ro := defaultRunOpts()
-	for _, opt := range opts {
-		err := opt(ro)
-		if err != nil {
-			return err
-		}
-	}
-
-	stream, err := c.WorkflowClient().RunWorkflow(ctx, &workflowapi.RunWorkflowRequest{
-		Workflow:    convert.WorkflowToProtoWorkflow(workflow),
-		Repository:  ro.repository,
-		RunnerImage: ro.runnerImage,
-		Verbose:     ro.verbose,
-	})
-	if err != nil {
-		return err
-	}
-
-	return grpcio.DemultiplexLogStream(stream, w, w)
+	return sqnc.NewRuntime(c.RuntimeClient())
 }

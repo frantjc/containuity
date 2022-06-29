@@ -15,12 +15,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: get-tag
+        id: get-tag
+        run: |
+          echo "::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/})"
       - uses: docker/build-push-action@v2
         with:
           push: true
           build-args: |
-            commit=${{ github.sha }}
-          tags: ghcr.io/${{ github.repository }}
+            version=${{ steps.get-tag.outputs.tag }}
+          tags: |
+            ghcr.io/${{ github.repository }}
+            ghcr.io/${{ github.repository }}:${{ steps.get-tag.outputs.tag }}
   release-bin:
     runs-on: ubuntu-latest
     steps:

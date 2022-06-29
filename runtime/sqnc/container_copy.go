@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
+	"github.com/bufbuild/connect-go"
 )
 
 func (c *sqncContainer) CopyTo(ctx context.Context, content io.Reader, destination string) error {
@@ -15,19 +15,21 @@ func (c *sqncContainer) CopyTo(ctx context.Context, content io.Reader, destinati
 		return err
 	}
 
-	_, err = c.client.CopyToContainer(ctx, &containerapi.CopyToContainerRequest{
+	_, err = c.client.CopyToContainer(ctx, connect.NewRequest(&CopyToContainerRequest{
 		Id:          c.id,
 		Content:     b,
 		Destination: destination,
-	})
+	}))
+
 	return err
 }
 
 func (c *sqncContainer) CopyFrom(ctx context.Context, source string) (io.ReadCloser, error) {
-	res, err := c.client.CopyFromContainer(ctx, &containerapi.CopyFromContainerRequest{
+	res, err := c.client.CopyFromContainer(ctx, connect.NewRequest(&CopyFromContainerRequest{
 		Id: c.id,
-	})
+	}))
+
 	return io.NopCloser(
-		bytes.NewReader(res.Content),
+		bytes.NewReader(res.Msg.GetContent()),
 	), err
 }

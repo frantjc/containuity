@@ -2,10 +2,10 @@ package sqnc
 
 import (
 	"context"
+	"fmt"
 	"io"
 
-	"github.com/frantjc/sequence/internal/grpcio"
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
+	"github.com/bufbuild/connect-go"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -21,12 +21,18 @@ func (c *sqncContainer) Attach(ctx context.Context, streams *runtime.Streams) er
 		stderr = streams.Stderr
 	}
 
-	stream, err := c.client.AttachContainer(ctx, &containerapi.AttachContainerRequest{
-		Id: c.ID(),
-	})
+	_, err := c.client.AttachContainer(ctx, connect.NewRequest(&AttachContainerRequest{
+		Id: c.GetID(),
+	}))
 	if err != nil {
 		return err
 	}
 
-	return grpcio.DemultiplexLogStream(stream, stdout, stderr)
+	var (
+		_ = stdout
+		_ = stderr
+	)
+
+	// TODO
+	return fmt.Errorf("unimplemented")
 }

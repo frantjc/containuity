@@ -5,23 +5,22 @@ FROM ${base_image} AS base_image
 
 FROM ${build_image} AS build_image
 ENV CGO_ENABLED=0
+
+FROM build_image AS build
 WORKDIR $GOPATH/src/github.com/frantjc/sequence
 COPY go.mod go.sum ./
 RUN go mod download
-
-FROM build_image AS build
 COPY . .
 ARG version=0.0.0
 ARG prerelease=
-RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/shim/source
-RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/shim/uses
-RUN cp /usr/local/bin/source ./workflow
-RUN cp /usr/local/bin/uses ./workflow
-RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease}" -o /usr/local/bin ./cmd/sqnc
-RUN go build -ldflags "-s -w -X github.com/frantjc/sequence.Version=${version} -X github.com/frantjc/sequence.Prerelease=${prerelease}" -o /usr/local/bin ./cmd/sqncd
+RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/sqnc-shim
+RUN cp /usr/local/bin/sqnc-shim internal/shim/
+RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/sqnc-runtime-docker
 
 FROM base_image AS sequence
 COPY --from=build /usr/local/bin /usr/local/bin
-ENTRYPOINT ["sqncd"]
+RUN mkdir -p /etc/sqnc/plugins
+RUN ln -s /usr/local/bin/sqnc-runtime-docker /etc/sqnc/plugins/sqnc-runtime-default
+ENTRYPOINT ["sh"]
 
 FROM sequence

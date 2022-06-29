@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package sequence;
+
+import "job.proto";
+import "rpcio/log.proto";
+import "step.proto";
+
+option go_package = "github.com/frantjc/sequence";
+
+message Workflow {
+  string name = 1;
+  map<string, sequence.Job> jobs = 2;
+}
+
+service WorkflowService {
+  rpc RunWorkflow(RunWorkflowRequest) returns (stream RunWorkflowResponse);
+  rpc RunJob(RunJobRequest) returns (stream RunJobResponse);
+  rpc RunStep(RunStepRequest) returns (stream RunStepResponse);
+}
+
+message RunStepRequest {
+  sequence.Step step = 1;
+  sequence.Job job = 2;
+  sequence.Workflow workflow = 3;
+  string repository = 4;
+  string runner_image = 5;
+  bool verbose = 6;
+}
+
+message RunStepResponse {
+  rpcio.Log log = 1;
+}
+
+message RunJobRequest {
+  sequence.Job job = 1;
+  sequence.Workflow workflow = 2;
+  string repository = 4;
+  string runner_image = 5;
+  bool verbose = 6;
+}
+
+message RunJobResponse {
+  rpcio.Log log = 1;
+}
+
+message RunWorkflowRequest {
+  sequence.Workflow workflow = 1;
+  string repository = 4;
+  string runner_image = 5;
+  bool verbose = 6;
+}
+
+message RunWorkflowResponse {
+  rpcio.Log log = 1;
+}

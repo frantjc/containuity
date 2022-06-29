@@ -1,14 +1,15 @@
 BIN ?= /usr/local/bin
+DOTENV ?= .env
 
 GO ?= go
 GO_LINUX_AMD64 ?= GOOS=linux GOARCH=amd64 $(GO)
 GIT ?= git
 DOCKER ?= docker
-PROTOC ?= protoc
 GOLANGCI-LINT ?= golangci-lint
+BUF ?= buf
 
 VERSION ?= 0.0.0
-PRERELEASE ?= alpha0
+PRERELEASE ?= dev0
 
 BRANCH ?= $(shell $(GIT) rev-parse --abbrev-ref HEAD 2>/dev/null)
 COMMIT ?= $(shell $(GIT) rev-parse HEAD 2>/dev/null)
@@ -22,8 +23,7 @@ IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
 BUILD_ARGS ?= --build-arg version=$(VERSION) --build-arg prerelease=$(PRERELEASE)
 
-PROTOS ?= $(shell find . -type f -name *.proto)
-PROTOC_ARGS ?= --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
+SQNC_GITHUB_TOKEN ?= $(shell source $(DOTENV) && echo $$SQNC_GITHUB_TOKEN)
 
 INSTALL ?= sudo install
 
@@ -34,54 +34,55 @@ install: binaries
 
 bins binaries: sqnc sqncd
 
-sqnc sqncd: shims
-	@$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+sqnc sqncd: shim
+# @$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 
-shims: shimuses shimsource
+shim shims: sqnc-shim
 
-shimuses: uses
-
-shimsource: source
-
-uses source:
-	@$(GO_LINUX_AMD64) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/internal/cmd/shim/$@
-	@cp $(CURDIR)/bin/$@ $(CURDIR)/workflow/shim/$@
+sqnc-shim:
+	@$(GO_LINUX_AMD64) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/internal/cmd/$@
+	@cp $(CURDIR)/bin/$@ $(CURDIR)/internal/shim/$@
 
 placeholders:
-	@cp $(CURDIR)/workflow/shim/shim.sh $(CURDIR)/workflow/shim/source
-	@cp $(CURDIR)/workflow/shim/shim.sh $(CURDIR)/workflow/shim/uses
+	@cp $(CURDIR)/internal/shim/shim.sh $(CURDIR)/internal/shim/sqnc-shim
 
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
 
-fmt vet test:
+generate:
+	@$(BUF) $@ .
+
+format:
+	@$(BUF) $@ -w
+
+test:
+	@SQNC_GITHUB_TOKEN=$(SQNC_GITHUB_TOKEN) $(GO) $@ ./...
+
+fmt vet:
 	@$(GO) $@ ./...
 
-tidy vendor verify:
+tidy vendor verify download:
 	@$(GO) mod $@
 
 clean: tidy placeholders
 	@rm -rf bin/* vendor
 	@$(DOCKER) system prune --volumes -a --filter label=sequence=true
 
-protos:
-	@$(PROTOC) $(PROTOC_ARGS) $(PROTOS)
-
 lint:
 	@$(GOLANGCI-LINT) run
 
 tools:
 	@$(GO) install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
-	@$(GO) install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+	@$(GO) install ./internal/cmd/protoc-gen-sqnc
 	@echo 'Update your PATH so that the protoc compiler can find the plugins:'
 	@echo '$$ export PATH=$$PATH:$(shell $(GO) env GOPATH)/bin"'
 
 .PHONY: \
 	install bins binaries sqnc sqncd \
-	shims shimuses shimsource uses source placeholders \
+	shim shims sqnc-shim placeholders \
 	image img \
-	fmt vet test \
+	format generate \
+	test fmt vet \
 	tidy vendor verify \
 	clean \
-	protos \
 	lint tools

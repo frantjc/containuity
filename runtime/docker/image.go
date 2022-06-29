@@ -10,6 +10,6 @@ var (
 	_ runtime.Image = &dockerImage{}
 )
 
-func (i *dockerImage) Ref() string {
+func (i *dockerImage) GetRef() string {
 	return i.ref
 }

@@ -3,20 +3,20 @@ package sqnc
 import (
 	"context"
 
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
+	"github.com/bufbuild/connect-go"
 	"github.com/frantjc/sequence/runtime"
 )
 
 func (r *sqncRuntime) GetContainer(ctx context.Context, id string) (runtime.Container, error) {
-	res, err := r.containerClient.GetContainer(ctx, &containerapi.GetContainerRequest{
+	res, err := r.runtimeClient.GetContainer(ctx, connect.NewRequest(&GetContainerRequest{
 		Id: id,
-	})
+	}))
 	if err != nil {
 		return nil, err
 	}
 
 	return &sqncContainer{
-		id:     res.Container.Id,
-		client: r.containerClient,
+		id:     res.Msg.GetContainer().GetId(),
+		client: r.runtimeClient,
 	}, nil
 }

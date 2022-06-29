@@ -1,12 +1,10 @@
 package sqnc
 
-import volumeapi "github.com/frantjc/sequence/pb/v1/volume"
-
 type sqncVolume struct {
 	source string
-	client volumeapi.VolumeClient
+	client RuntimeServiceClient
 }
 
-func (v *sqncVolume) Source() string {
+func (v *sqncVolume) GetSource() string {
 	return v.source
 }

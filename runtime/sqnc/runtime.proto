@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package sequence.runtime.sqnc;
+
+import "rpcio/log.proto";
+import "runtime/spec.proto";
+import "runtime/sqnc/container.proto";
+import "runtime/sqnc/image.proto";
+import "runtime/sqnc/volume.proto";
+
+option go_package = "github.com/frantjc/sequence/runtime/sqnc";
+
+service RuntimeService {
+  rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
+  rpc GetContainer(GetContainerRequest) returns (GetContainerResponse);
+  rpc ExecContainer(ExecContainerRequest) returns (stream ExecContainerResponse);
+  rpc StartContainer(StartContainerRequest) returns (StartContainerResponse);
+  rpc AttachContainer(AttachContainerRequest) returns (stream AttachContainerResponse);
+  rpc RemoveContainer(RemoveContainerRequest) returns (RemoveContainerResponse);
+  rpc PruneContainers(PruneContainersRequest) returns (PruneContainersResponse);
+  rpc CopyToContainer(CopyToContainerRequest) returns (CopyToContainerResponse);
+  rpc CopyFromContainer(CopyFromContainerRequest) returns (CopyFromContainerResponse);
+  rpc PullImage(PullImageRequest) returns (PullImageResponse);
+  rpc PruneImages(PruneImagesRequest) returns (PruneImagesResponse);
+  rpc CreateVolume(CreateVolumeRequest) returns (CreateVolumeResponse);
+  rpc GetVolume(GetVolumeRequest) returns (GetVolumeResponse);
+  rpc RemoveVolume(RemoveVolumeRequest) returns (RemoveVolumeResponse);
+  rpc PruneVolumes(PruneVolumesRequest) returns (PruneVolumesResponse);
+}
+
+message CreateContainerRequest {
+  sequence.runtime.Spec spec = 1;
+}
+
+message CreateContainerResponse {
+  runtime.sqnc.Container container = 1;
+}
+
+message GetContainerRequest {
+  string id = 1;
+}
+
+message GetContainerResponse {
+  runtime.sqnc.Container container = 1;
+}
+
+message ExecContainerRequest {
+  string id = 1;
+}
+
+message ExecContainerResponse {
+  rpcio.Log log = 1;
+}
+
+message StartContainerRequest {
+  string id = 1;
+}
+
+message StartContainerResponse {
+  runtime.sqnc.Container container = 1;
+}
+
+message AttachContainerRequest {
+  string id = 1;
+}
+
+message AttachContainerResponse {
+  rpcio.Log log = 1;
+}
+
+message RemoveContainerRequest {
+  string id = 1;
+}
+
+message RemoveContainerResponse {}
+
+message PruneContainersRequest {}
+
+message PruneContainersResponse {}
+
+message CopyToContainerRequest {
+  string id = 1;
+  string destination = 2;
+  bytes content = 3;
+}
+
+message CopyToContainerResponse {}
+
+message CopyFromContainerRequest {
+  string id = 1;
+  string source = 2;
+}
+
+message CopyFromContainerResponse {
+  bytes content = 1;
+}
+
+message PullImageRequest {
+  string ref = 1;
+}
+
+message PullImageResponse {
+  sequence.runtime.sqnc.Image image = 1;
+}
+
+message PruneImagesRequest {}
+
+message PruneImagesResponse {}
+
+message CreateVolumeRequest {
+  string name = 1;
+}
+
+message CreateVolumeResponse {
+  sequence.runtime.sqnc.Volume volume = 1;
+}
+
+message GetVolumeRequest {
+  string name = 1;
+}
+
+message GetVolumeResponse {
+  sequence.runtime.sqnc.Volume volume = 1;
+}
+
+message RemoveVolumeRequest {
+  string name = 1;
+}
+
+message RemoveVolumeResponse {}
+
+message PruneVolumesRequest {}
+
+message PruneVolumesResponse {}

@@ -1,12 +1,10 @@
 package sqnc
 
-import containerapi "github.com/frantjc/sequence/pb/v1/container"
-
 type sqncContainer struct {
 	id     string
-	client containerapi.ContainerClient
+	client RuntimeServiceClient
 }
 
-func (c *sqncContainer) ID() string {
+func (c *sqncContainer) GetID() string {
 	return c.id
 }

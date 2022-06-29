@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package sequence;
+
+import "step.proto";
+
+option go_package = "github.com/frantjc/sequence";
+
+message Job {
+  message Container {
+    string image = 1;
+  }
+
+  message Environment {
+    string name = 1;
+    string url = 2;
+  }
+
+  repeated sequence.Step steps = 1;
+  string runs_on = 2;
+  sequence.Job.Container container = 3;
+  string name = 4;
+  map<string, string> outputs = 5;
+  map<string, string> env = 6;
+  sequence.Job.Environment environment = 7;
+  string if = 8;
+  // concurrency = 9;
+  // permissions = 10;
+  // needs = 11;
+}

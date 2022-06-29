@@ -6,7 +6,7 @@ import (
 )
 
 type Container interface {
-	ID() string
+	GetID() string
 	Exec(context.Context, *Streams) error
 	CopyTo(context.Context, io.Reader, string) error
 	CopyFrom(context.Context, string) (io.ReadCloser, error)

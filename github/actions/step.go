@@ -2,7 +2,7 @@ package actions
 
 type Step struct {
 	Shell            string            `json:"shell,omitempty" yaml:"shell,omitempty"`
-	If               interface{}       `json:"if,omitempty" yaml:"if,omitempty"`
+	If               string            `json:"if,omitempty" yaml:"if,omitempty"`
 	Name             string            `json:"name,omitempty" yaml:"name,omitempty"`
 	ID               string            `json:"id,omitempty" yaml:"id,omitempty"`
 	Env              map[string]string `json:"env,omitempty" yaml:"env,omitempty"`

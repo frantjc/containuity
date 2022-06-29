@@ -3,12 +3,12 @@ package sqnc
 import (
 	"context"
 
-	containerapi "github.com/frantjc/sequence/pb/v1/container"
+	"github.com/bufbuild/connect-go"
 )
 
 func (c *sqncContainer) Remove(ctx context.Context) error {
-	_, err := c.client.RemoveContainer(ctx, &containerapi.RemoveContainerRequest{
+	_, err := c.client.RemoveContainer(ctx, connect.NewRequest(&RemoveContainerRequest{
 		Id: c.id,
-	})
+	}))
 	return err
 }

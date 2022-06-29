@@ -6,6 +6,7 @@
 .DS_Store
 
 # dev
+.env
 bin/*
 !bin/.gitkeep
 
