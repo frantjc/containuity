@@ -21,6 +21,6 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: 1.18
-      - run: go test -v ./...
+      - run: make shim test
         env:
           SQNC_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
