@@ -3,7 +3,8 @@ package sequence
 import "context"
 
 func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executor, error) {
-	internalOpts := append(opts, func(e *executor) error {
+	internalOpts := opts
+	internalOpts = append(internalOpts, func(e *executor) error {
 		for k, v := range job.Env {
 			e.GlobalContext.EnvContext[k] = v
 		}
@@ -22,5 +23,5 @@ func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executo
 		internalOpts = append(internalOpts, WithID(job.GetName()))
 	}
 
-	return NewStepsExecutor(ctx, job.Steps, opts...)
+	return NewStepsExecutor(ctx, job.Steps, internalOpts...)
 }
