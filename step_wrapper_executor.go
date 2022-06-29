@@ -16,7 +16,7 @@ import (
 )
 
 type stepWrapperExecutor struct {
-	executor
+	*executor
 	stepWrapper        *stepWrapper
 	echo               bool
 	stopCommandsTokens map[string]bool

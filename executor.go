@@ -30,7 +30,7 @@ type executor struct {
 	OnWorkflowCommand Hooks[*actions.WorkflowCommand]
 }
 
-func (e executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams *runtime.Streams) error {
+func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams *runtime.Streams) error {
 	image, err := e.Runtime.PullImage(ctx, spec.Image)
 	if err != nil {
 		return err
