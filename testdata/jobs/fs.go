@@ -4,14 +4,14 @@ import _ "embed"
 
 var (
 	//go:embed checkout_test_job.yml
-	CheckoutTestJob []byte
+	CheckoutTest []byte
 
 	//go:embed env_job.yml
-	EnvJob []byte
+	Env []byte
 
 	//go:embed save_state_job.yml
-	SaveStateJob []byte
+	SaveState []byte
 
 	//go:embed set_output_job.yml
-	SetOutputJob []byte
+	SetOutput []byte
 )

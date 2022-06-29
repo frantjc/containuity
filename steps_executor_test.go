@@ -16,8 +16,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	ctx = context.TODO()
+)
+
 func TestDockerRuntime(t *testing.T) {
-	ctx := context.TODO()
 	rt, err := docker.NewRuntime(ctx)
 	assert.Nil(t, err)
 	assert.NotNil(t, rt)
@@ -33,7 +36,9 @@ func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 	assert.NotNil(t, checkoutStep)
 
 	StepExecutorTest(t, rt, []*sequence.Step{
-		checkoutStep,
+		{
+			Uses: "actions/checkout@v2",
+		},
 		{
 			Uses: "actions/setup-go@v2",
 			With: map[string]string{
@@ -41,6 +46,7 @@ func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 			},
 		},
 		{
+			// hilariously, recursively run sequence's test :)
 			Run: "go test ./github/...",
 		},
 	})
@@ -48,7 +54,6 @@ func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 
 func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step) {
 	var (
-		ctx                    = context.TODO()
 		imagesPulled           = []runtime.Image{}
 		containersCreated      = []runtime.Container{}
 		volumesCreated         = []runtime.Volume{}
@@ -95,7 +100,6 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step) 
 }
 
 func PruneRuntimeTest(t *testing.T, rt runtime.Runtime) {
-	ctx := context.TODO()
 	assert.Nil(t, rt.PruneContainers(ctx))
 	assert.Nil(t, rt.PruneVolumes(ctx))
 	assert.Nil(t, rt.PruneImages(ctx))
@@ -103,7 +107,6 @@ func PruneRuntimeTest(t *testing.T, rt runtime.Runtime) {
 
 func NewTestStepsExecutor(t *testing.T, steps []*sequence.Step, rt runtime.Runtime, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {
 	var (
-		ctx         = context.TODO()
 		githubToken = os.Getenv("SQNC_GITHUB_TOKEN")
 		// all tests in this suite are ran against
 		// https://github.com/frantjc/sequence

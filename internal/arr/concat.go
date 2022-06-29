@@ -5,5 +5,6 @@ func Concat[T any](in ...[]T) []T {
 	for _, t := range in {
 		out = append(out, t...)
 	}
+
 	return out
 }

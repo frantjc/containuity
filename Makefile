@@ -6,6 +6,7 @@ GO_LINUX_AMD64 ?= GOOS=linux GOARCH=amd64 $(GO)
 GIT ?= git
 DOCKER ?= docker
 GOLANGCI-LINT ?= golangci-lint
+BUF ?= buf
 
 VERSION ?= 0.0.0
 PRERELEASE ?= dev0
@@ -22,7 +23,7 @@ IMAGE ?= $(REGISTRY)/$(REPOSITORY):$(TAG)
 
 BUILD_ARGS ?= --build-arg version=$(VERSION) --build-arg prerelease=$(PRERELEASE)
 
-SQNC_GITHUB_TOKEN ?= $(shell source .env && echo $$SQNC_GITHUB_TOKEN)
+SQNC_GITHUB_TOKEN ?= $(shell source $(DOTENV) && echo $$SQNC_GITHUB_TOKEN)
 
 INSTALL ?= sudo install
 
@@ -33,10 +34,10 @@ install: binaries
 
 bins binaries: sqnc sqncd
 
-sqnc sqncd: shims
-	@$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+sqnc sqncd: shim
+# @$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
 
-shim: sqnc-shim
+shim shims: sqnc-shim
 
 sqnc-shim:
 	@$(GO_LINUX_AMD64) build -ldflags "-s -w" -o $(CURDIR)/bin $(CURDIR)/internal/cmd/$@
@@ -48,8 +49,17 @@ placeholders:
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .
 
-generate fmt vet test:
+generate:
+	@$(BUF) $@ .
+
+format:
+	@$(BUF) $@ -w
+
+test:
 	@SQNC_GITHUB_TOKEN=$(SQNC_GITHUB_TOKEN) $(GO) $@ ./...
+
+fmt vet:
+	@$(GO) $@ ./...
 
 tidy vendor verify download:
 	@$(GO) mod $@
@@ -69,10 +79,10 @@ tools:
 
 .PHONY: \
 	install bins binaries sqnc sqncd \
-	shim sqnc-shim placeholders \
+	shim shims sqnc-shim placeholders \
 	image img \
-	format fmt vet test \
+	format generate \
+	test fmt vet \
 	tidy vendor verify \
 	clean \
-	protos \
 	lint tools

@@ -4,23 +4,23 @@ import _ "embed"
 
 var (
 	//go:embed checkout_step.yml
-	CheckoutStep []byte
+	Checkout []byte
 
 	//go:embed default_image_step.yml
-	DefaultImageStep []byte
+	DefaultImage []byte
 
 	//go:embed env_step.yml
-	EnvStep []byte
+	Env []byte
 
 	//go:embed expand_step.yml
-	ExpandStep []byte
+	Expand []byte
 
 	//go:embed fail_step.yml
-	FailStep []byte
+	Fail []byte
 
 	//go:embed slow_step.yml
-	SlowStep []byte
+	Slow []byte
 
 	//go:embed stop_commands_step.yml
-	StopCommandsStep []byte
+	StopCommands []byte
 )
