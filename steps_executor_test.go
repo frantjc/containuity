@@ -52,7 +52,103 @@ func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 	})
 }
 
-func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step) {
+type image string
+
+func (i image) GetRef() string {
+	return string(i)
+}
+
+const ref = "docker.io/library/alpine"
+
+func StepDefaultImageTest(t *testing.T, rt runtime.Runtime) {
+	var (
+		img = image(ref)
+	)
+	StepExecutorTest(
+		t, rt,
+		[]*sequence.Step{
+			{
+				Run: "ls",
+			},
+		},
+		sequence.WithRunnerImage(img),
+		sequence.OnImagePull(func(i runtime.Image) {
+			assert.Equal(t, img.GetRef(), i.GetRef())
+		}),
+	)
+}
+
+func StepImageTest(t *testing.T, rt runtime.Runtime) {
+	StepExecutorTest(
+		t, rt,
+		[]*sequence.Step{
+			{
+				Image: ref,
+				Run:   "ls",
+			},
+		},
+		sequence.OnImagePull(func(i runtime.Image) {
+			assert.Equal(t, ref, i.GetRef())
+		}),
+	)
+}
+
+func StepStopCommandsTest(t *testing.T, rt runtime.Runtime) {
+	var (
+		count = 0
+	)
+	StepExecutorTest(
+		t, rt,
+		[]*sequence.Step{
+			{
+				Run: `
+				echo ::debug::test1
+				echo ::stop-commands::token
+				echo ::debug::test2
+				echo ::token::
+				echo ::debug::test3
+				`,
+			},
+		},
+		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+			switch wc.Command {
+			case actions.CommandStopCommands:
+				assert.Equal(t, "token", wc.Value)
+			case actions.CommandDebug:
+				count++
+			default:
+				assert.Equal(t, "token", wc.Command)
+			}
+		}),
+	)
+	assert.Equal(t, count, 2)
+}
+
+func StepSetOutputTest(t *testing.T, rt runtime.Runtime) {
+	StepExecutorTest(
+		t, rt,
+		[]*sequence.Step{
+			{
+				Id:  "test",
+				Run: "echo '::set-output name=hellothere::general kenobi'",
+			},
+			{
+				Run: "echo '::notice::${{ steps.test.outputs.hellothere }}'",
+			},
+		},
+		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+			switch wc.Command {
+			case actions.CommandSetOutput:
+				assert.Equal(t, "hellothere", wc.Parameters["name"])
+				assert.Equal(t, "general kenobi", wc.Value)
+			case actions.CommandNotice:
+				assert.Equal(t, "general kenobi", wc.Value)
+			}
+		}),
+	)
+}
+
+func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) {
 	var (
 		imagesPulled           = []runtime.Image{}
 		containersCreated      = []runtime.Container{}
@@ -61,19 +157,22 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step) 
 	)
 
 	se, err := NewTestStepsExecutor(
-		t, steps, rt,
-		sequence.OnImagePull(func(i runtime.Image) {
-			imagesPulled = append(imagesPulled, i)
-		}),
-		sequence.OnContainerCreate(func(c runtime.Container) {
-			containersCreated = append(containersCreated, c)
-		}),
-		sequence.OnVolumeCreate(func(v runtime.Volume) {
-			volumesCreated = append(volumesCreated, v)
-		}),
-		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-			workflowCommandsIssued = append(workflowCommandsIssued, wc)
-		}),
+		t, rt, steps,
+		append(
+			opts,
+			sequence.OnImagePull(func(i runtime.Image) {
+				imagesPulled = append(imagesPulled, i)
+			}),
+			sequence.OnContainerCreate(func(c runtime.Container) {
+				containersCreated = append(containersCreated, c)
+			}),
+			sequence.OnVolumeCreate(func(v runtime.Volume) {
+				volumesCreated = append(volumesCreated, v)
+			}),
+			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+				workflowCommandsIssued = append(workflowCommandsIssued, wc)
+			}),
+		)...,
 	)
 	assert.Nil(t, err)
 	assert.NotNil(t, se)
@@ -105,7 +204,7 @@ func PruneRuntimeTest(t *testing.T, rt runtime.Runtime) {
 	assert.Nil(t, rt.PruneImages(ctx))
 }
 
-func NewTestStepsExecutor(t *testing.T, steps []*sequence.Step, rt runtime.Runtime, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {
+func NewTestStepsExecutor(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {
 	var (
 		githubToken = os.Getenv("SQNC_GITHUB_TOKEN")
 		// all tests in this suite are ran against
