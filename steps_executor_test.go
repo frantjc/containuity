@@ -166,6 +166,13 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, 
 		workflowCommandsIssued = []*actions.WorkflowCommand{}
 	)
 
+	stdout, err := os.CreateTemp("", "")
+	assert.NotNil(t, stdout)
+	assert.Nil(t, err)
+
+	stderr := stdout
+	assert.NotNil(t, stderr)
+
 	se, err := NewTestStepsExecutor(
 		t, rt, steps,
 		append(
@@ -182,6 +189,7 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, 
 			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
 				workflowCommandsIssued = append(workflowCommandsIssued, wc)
 			}),
+			sequence.WithStreams(os.Stdin, stdout, stderr),
 		)...,
 	)
 	assert.NotNil(t, se)

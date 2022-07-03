@@ -52,7 +52,13 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 			return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, wc.Value))
 		}
 	case actions.CommandSetOutput:
-		e.GlobalContext.StepsContext["TODO"].Outputs[wc.Parameters["name"]] = wc.Value
+		if e.GlobalContext.StepsContext[e.stepWrapper.step.GetId()] == nil {
+			e.GlobalContext.StepsContext[e.stepWrapper.step.GetId()] = &actions.StepsContext{
+				Outputs: map[string]string{},
+			}
+		}
+
+		e.GlobalContext.StepsContext[e.stepWrapper.step.GetId()].Outputs[wc.Parameters["name"]] = wc.Value
 		if e.Verbose || e.echo {
 			return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s for", log.ColorDebug, log.ColorNone, wc.Command, wc.Parameters["name"], wc.Value))
 		}
