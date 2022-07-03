@@ -135,8 +135,9 @@ func (e *stepsExecutor) Execute(ctx context.Context) error {
 		e.postStepWrappers...,
 	) {
 		swe := &stepWrapperExecutor{
-			executor:    e.executor,
-			stepWrapper: stepWrapper,
+			executor:           e.executor,
+			stepWrapper:        stepWrapper,
+			stopCommandsTokens: map[string]bool{},
 		}
 
 		if err := swe.ExecuteStep(ctx); err != nil {
