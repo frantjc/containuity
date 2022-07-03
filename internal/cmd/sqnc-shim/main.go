@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/frantjc/go-js"
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github/actions"
@@ -26,12 +27,8 @@ func mainE() error {
 		args = os.Args
 	)
 
-	if runnerToolCache := os.Getenv(actions.EnvVarRunnerToolCache); runnerToolCache != "" {
-		os.Setenv("PATH", fmt.Sprintf("%s:%s", runnerToolCache, os.Getenv("PATH")))
-	}
-
 	if len(args) == 1 {
-		return fmt.Errorf("shim requires at least 1 argument")
+		return fmt.Errorf("%s requires at least 1 argument", os.Args[0])
 	} else if _, ok := os.LookupEnv(shim.EnvVarShimSwitch); !ok {
 		var (
 			actionRef = args[1]
@@ -84,17 +81,21 @@ func mainE() error {
 	}
 
 	if githubPath, err := env.PathFromFile(githubPathFile); err == nil && githubPath != "" {
-		pathIndex := -1
-		for i, env := range command.Env {
-			if spl := strings.Split(env, "="); len(spl) > 0 && strings.EqualFold(spl[0], "PATH") {
-				pathIndex = i
-				break
-			}
+		pathIndex := js.FindIndex(command.Env, func(s string, _ int, _ []string) bool {
+			spl := strings.Split(s, "=")
+			return len(spl) > 0 && strings.EqualFold(spl[0], "PATH")
+		})
+
+		pathAddendum := ""
+
+		if runnerToolCache := os.Getenv(actions.EnvVarRunnerToolCache); runnerToolCache != "" {
+			pathAddendum = fmt.Sprintf(":%s", runnerToolCache)
 		}
+
 		if pathIndex >= 0 {
-			command.Env[pathIndex] = fmt.Sprintf("PATH=%s:%s", githubPath, os.Getenv("PATH"))
+			command.Env[pathIndex] = fmt.Sprintf("PATH=%s:%s%s", githubPath, os.Getenv("PATH"), pathAddendum)
 		} else {
-			command.Env = append(command.Env, fmt.Sprintf("PATH=%s", githubPath))
+			command.Env = append(command.Env, fmt.Sprintf("PATH=%s%s", githubPath, pathAddendum))
 		}
 	} else {
 		if _, err = os.Create(githubPathFile); err != nil {

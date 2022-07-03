@@ -23,9 +23,8 @@ type stepWrapperExecutor struct {
 }
 
 func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.WorkflowCommand) []byte {
-	e.OnWorkflowCommand.Hook(wc)
-
 	if _, ok := e.stopCommandsTokens[wc.Command]; ok {
+		e.OnWorkflowCommand.Hook(wc)
 		e.stopCommandsTokens[wc.Command] = false
 		if e.Verbose {
 			return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s end token '%s'", log.ColorDebug, log.ColorNone, actions.CommandStopCommands, wc.Command))
@@ -38,6 +37,8 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 			return []byte(wc.String())
 		}
 	}
+
+	e.OnWorkflowCommand.Hook(wc)
 
 	switch wc.Command {
 	case actions.CommandError:
@@ -101,7 +102,7 @@ func (e *stepWrapperExecutor) ExecuteStep(ctx context.Context) error {
 			Env:  map[string]string{},
 			With: map[string]string{},
 		}
-		id = js.Coalesce(expandedStep.Id, expandedStep.Name, expandedStep.Uses)
+		id = js.Coalesce(expandedStep.Id, expandedStep.Name)
 	)
 
 	for k, v := range e.stepWrapper.step.Env {

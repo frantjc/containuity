@@ -20,20 +20,30 @@ var (
 	ctx = context.TODO()
 )
 
+type RuntimeTest func(*testing.T, runtime.Runtime)
+
 func TestDockerRuntime(t *testing.T) {
 	rt, err := docker.NewRuntime(ctx)
-	assert.Nil(t, err)
 	assert.NotNil(t, rt)
+	assert.Nil(t, err)
 
-	StepExecutorCheckoutSetupGoTest(t, rt)
+	for _, f := range []RuntimeTest{
+		StepExecutorCheckoutSetupGoTest,
+		StepExecutorDefaultImageTest,
+		StepExecutorImageTest,
+		StepExecutorStopCommandsTest,
+		StepExecutorSetOutputTest,
+	} {
+		f(t, rt)
+	}
 }
 
 func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 	checkoutStep, err := sequence.NewStepFromReader(
 		bytes.NewReader(testdata.CheckoutStep),
 	)
-	assert.Nil(t, err)
 	assert.NotNil(t, checkoutStep)
+	assert.Nil(t, err)
 
 	StepExecutorTest(t, rt, []*sequence.Step{
 		{
@@ -46,7 +56,7 @@ func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 			},
 		},
 		{
-			// hilariously, recursively run sequence's test :)
+			// hilariously, "recursively" run some of sequence's test :)
 			Run: "go test ./github/...",
 		},
 	})
@@ -58,12 +68,12 @@ func (i image) GetRef() string {
 	return string(i)
 }
 
-const ref = "docker.io/library/alpine"
+const (
+	ref = "docker.io/library/alpine"
+	img = image(ref)
+)
 
-func StepDefaultImageTest(t *testing.T, rt runtime.Runtime) {
-	var (
-		img = image(ref)
-	)
+func StepExecutorDefaultImageTest(t *testing.T, rt runtime.Runtime) {
 	StepExecutorTest(
 		t, rt,
 		[]*sequence.Step{
@@ -78,7 +88,7 @@ func StepDefaultImageTest(t *testing.T, rt runtime.Runtime) {
 	)
 }
 
-func StepImageTest(t *testing.T, rt runtime.Runtime) {
+func StepExecutorImageTest(t *testing.T, rt runtime.Runtime) {
 	StepExecutorTest(
 		t, rt,
 		[]*sequence.Step{
@@ -93,20 +103,19 @@ func StepImageTest(t *testing.T, rt runtime.Runtime) {
 	)
 }
 
-func StepStopCommandsTest(t *testing.T, rt runtime.Runtime) {
-	var (
-		count = 0
-	)
+func StepExecutorStopCommandsTest(t *testing.T, rt runtime.Runtime) {
+	debugCount := 0
+
 	StepExecutorTest(
 		t, rt,
 		[]*sequence.Step{
 			{
 				Run: `
-				echo ::debug::test1
-				echo ::stop-commands::token
-				echo ::debug::test2
-				echo ::token::
-				echo ::debug::test3
+				echo '::debug::test1'
+				echo '::stop-commands::token'
+				echo '::debug::test2'
+				echo '::token::'
+				echo '::debug::test3'
 				`,
 			},
 		},
@@ -115,16 +124,17 @@ func StepStopCommandsTest(t *testing.T, rt runtime.Runtime) {
 			case actions.CommandStopCommands:
 				assert.Equal(t, "token", wc.Value)
 			case actions.CommandDebug:
-				count++
+				debugCount++
 			default:
 				assert.Equal(t, "token", wc.Command)
 			}
 		}),
 	)
-	assert.Equal(t, count, 2)
+
+	assert.Equal(t, debugCount, 2)
 }
 
-func StepSetOutputTest(t *testing.T, rt runtime.Runtime) {
+func StepExecutorSetOutputTest(t *testing.T, rt runtime.Runtime) {
 	StepExecutorTest(
 		t, rt,
 		[]*sequence.Step{
@@ -174,8 +184,8 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, 
 			}),
 		)...,
 	)
-	assert.Nil(t, err)
 	assert.NotNil(t, se)
+	assert.Nil(t, err)
 
 	assert.Nil(t, se.Execute(ctx))
 	assert.Greater(t, len(imagesPulled), 0)
@@ -215,8 +225,8 @@ func NewTestStepsExecutor(t *testing.T, rt runtime.Runtime, steps []*sequence.St
 	assert.NotEmpty(t, githubToken)
 
 	gc, err := actions.NewContextFromPath(ctx, wd, actions.WithToken(githubToken))
-	assert.Nil(t, err)
 	assert.NotNil(t, gc)
+	assert.Nil(t, err)
 
 	se, err := sequence.NewStepsExecutor(
 		ctx, steps,
@@ -225,8 +235,8 @@ func NewTestStepsExecutor(t *testing.T, rt runtime.Runtime, steps []*sequence.St
 			sequence.WithGlobalContext(gc),
 		}, opts...)...,
 	)
-	assert.Nil(t, err)
 	assert.NotNil(t, se)
+	assert.Nil(t, err)
 
 	return se, err
 }
