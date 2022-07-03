@@ -197,9 +197,6 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, 
 
 	assert.Nil(t, se.Execute(ctx))
 	assert.Greater(t, len(imagesPulled), 0)
-	assert.True(t, js.Some(imagesPulled, func(i runtime.Image, _ int, _ []runtime.Image) bool {
-		return i.GetRef() == sequence.ImageNode12.GetRef()
-	}))
 	assert.Greater(t, len(containersCreated), 0)
 	assert.Greater(t, len(volumesCreated), 0)
 
