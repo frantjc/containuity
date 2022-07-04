@@ -14,7 +14,7 @@ func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executo
 
 	if job.GetContainer() != nil && job.GetContainer().GetImage() != "" {
 		internalOpts = append(internalOpts, func(e *executor) error {
-			e.RunnerImage = image(job.Container.GetImage())
+			e.RunnerImage = job.Container
 			return nil
 		})
 	}

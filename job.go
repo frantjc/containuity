@@ -31,3 +31,7 @@ func (j *Job) GetStep(id string) (*Step, error) {
 	}
 	return nil, fmt.Errorf("job has no step with name or id %s", id)
 }
+
+func (c *Job_Container) GetRef() string {
+	return c.GetImage()
+}

@@ -2,7 +2,6 @@ package sequence_test
 
 import (
 	"bytes"
-	"context"
 	"os"
 	"testing"
 
@@ -16,37 +15,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	ctx = context.TODO()
-)
-
-type RuntimeTest func(*testing.T, runtime.Runtime)
-
-func TestDockerRuntime(t *testing.T) {
+func TestStepsExecutor(t *testing.T) {
 	rt, err := docker.NewRuntime(ctx)
 	assert.NotNil(t, rt)
 	assert.Nil(t, err)
 
-	for _, f := range []RuntimeTest{
-		StepExecutorCheckoutSetupGoTest,
-		StepExecutorDefaultImageTest,
-		StepExecutorImageTest,
-		StepExecutorStopCommandsTest,
-		StepExecutorSetOutputTest,
-		PruneTest,
-	} {
-		f(t, rt)
+	for _, r := range []runtime.Runtime{rt} {
+		for _, f := range []RuntimeTest{
+			StepsExecutorCheckoutSetupGoTest,
+			StepsExecutorDefaultImageTest,
+			StepsExecutorImageTest,
+			StepsExecutorStopCommandsTest,
+			StepsExecutorSetOutputTest,
+			PruneTest,
+		} {
+			f(t, r)
+		}
 	}
 }
 
-func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
+func StepsExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 	checkoutStep, err := sequence.NewStepFromReader(
 		bytes.NewReader(testdata.CheckoutStep),
 	)
 	assert.NotNil(t, checkoutStep)
 	assert.Nil(t, err)
 
-	StepExecutorTest(t, rt, []*sequence.Step{
+	StepsExecutorTest(t, rt, []*sequence.Step{
 		{
 			Uses: "actions/checkout@v2",
 		},
@@ -63,51 +58,40 @@ func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 	})
 }
 
-type image string
-
-func (i image) GetRef() string {
-	return string(i)
-}
-
-const (
-	ref = "docker.io/library/alpine"
-	img = image(ref)
-)
-
-func StepExecutorDefaultImageTest(t *testing.T, rt runtime.Runtime) {
-	StepExecutorTest(
+func StepsExecutorDefaultImageTest(t *testing.T, rt runtime.Runtime) {
+	StepsExecutorTest(
 		t, rt,
 		[]*sequence.Step{
 			{
 				Run: "echo test",
 			},
 		},
-		sequence.WithRunnerImage(img),
+		sequence.WithRunnerImage(alpineImg),
 		sequence.OnImagePull(func(i runtime.Image) {
-			assert.Equal(t, img.GetRef(), i.GetRef())
+			assert.Equal(t, alpineRef, i.GetRef())
 		}),
 	)
 }
 
-func StepExecutorImageTest(t *testing.T, rt runtime.Runtime) {
-	StepExecutorTest(
+func StepsExecutorImageTest(t *testing.T, rt runtime.Runtime) {
+	StepsExecutorTest(
 		t, rt,
 		[]*sequence.Step{
 			{
-				Image: ref,
+				Image: alpineRef,
 				Run:   "echo test",
 			},
 		},
 		sequence.OnImagePull(func(i runtime.Image) {
-			assert.Equal(t, ref, i.GetRef())
+			assert.Equal(t, alpineRef, i.GetRef())
 		}),
 	)
 }
 
-func StepExecutorStopCommandsTest(t *testing.T, rt runtime.Runtime) {
+func StepsExecutorStopCommandsTest(t *testing.T, rt runtime.Runtime) {
 	debugCount := 0
 
-	StepExecutorTest(
+	StepsExecutorTest(
 		t, rt,
 		[]*sequence.Step{
 			{
@@ -135,8 +119,8 @@ func StepExecutorStopCommandsTest(t *testing.T, rt runtime.Runtime) {
 	assert.Equal(t, debugCount, 2)
 }
 
-func StepExecutorSetOutputTest(t *testing.T, rt runtime.Runtime) {
-	StepExecutorTest(
+func StepsExecutorSetOutputTest(t *testing.T, rt runtime.Runtime) {
+	StepsExecutorTest(
 		t, rt,
 		[]*sequence.Step{
 			{
@@ -159,7 +143,7 @@ func StepExecutorSetOutputTest(t *testing.T, rt runtime.Runtime) {
 	)
 }
 
-func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) {
+func StepsExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) {
 	var (
 		imagesPulled           = []runtime.Image{}
 		containersCreated      = []runtime.Container{}
@@ -211,12 +195,6 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, 
 			}))
 		}
 	}
-}
-
-func PruneTest(t *testing.T, rt runtime.Runtime) {
-	assert.Nil(t, rt.PruneContainers(ctx))
-	assert.Nil(t, rt.PruneVolumes(ctx))
-	assert.Nil(t, rt.PruneImages(ctx))
 }
 
 func NewTestStepsExecutor(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {

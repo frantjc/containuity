@@ -17,9 +17,8 @@ func TestWorkflowCommandToString(t *testing.T) {
 			},
 			Value: "value",
 		}
-		expected1 = "::set-output name=var,otherParam=param::value"
-		expected2 = "::set-output otherParam=param,name=var::value"
-		actual    = command.String()
+		expected = []string{"::set-output name=var,otherParam=param::value", "::set-output otherParam=param,name=var::value"}
+		actual   = command.String()
 	)
-	assert.True(t, actual == expected1 || actual == expected2)
+	assert.Contains(t, expected, actual)
 }
