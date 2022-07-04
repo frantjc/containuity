@@ -88,6 +88,40 @@ func StepsExecutorImageTest(t *testing.T, rt runtime.Runtime) {
 	)
 }
 
+func StepsExecutoGitHubPathTest(t *testing.T, rt runtime.Runtime) {
+	StepsExecutorTest(
+		t, rt,
+		[]*sequence.Step{
+			{
+				Run: "echo /.bin >> $GITHUB_PATH",
+			},
+			{
+				Run: "echo \"::debug::$PATH\"",
+			},
+		},
+		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+			assert.Contains(t, wc.Value, "/.bin")
+		}),
+	)
+}
+
+func StepsExecutoGitHubEnvTest(t *testing.T, rt runtime.Runtime) {
+	StepsExecutorTest(
+		t, rt,
+		[]*sequence.Step{
+			{
+				Run: "echo HELLO_THERE=generalkenobi >> $GITHUB_ENV",
+			},
+			{
+				Run: "echo \"::debug::$HELLO_THERE\"",
+			},
+		},
+		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+			assert.Equal(t, wc.Value, "generalkenobi")
+		}),
+	)
+}
+
 func StepsExecutorStopCommandsTest(t *testing.T, rt runtime.Runtime) {
 	debugCount := 0
 
