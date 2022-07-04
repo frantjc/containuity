@@ -33,6 +33,7 @@ func TestDockerRuntime(t *testing.T) {
 		StepExecutorImageTest,
 		StepExecutorStopCommandsTest,
 		StepExecutorSetOutputTest,
+		PruneTest,
 	} {
 		f(t, rt)
 	}
@@ -57,7 +58,7 @@ func StepExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
 		},
 		{
 			// hilariously, "recursively" run some of sequence's test :)
-			Run: "go test ./github/...",
+			Run: "go test ./internal/...",
 		},
 	})
 }
@@ -78,7 +79,7 @@ func StepExecutorDefaultImageTest(t *testing.T, rt runtime.Runtime) {
 		t, rt,
 		[]*sequence.Step{
 			{
-				Run: "ls",
+				Run: "echo test",
 			},
 		},
 		sequence.WithRunnerImage(img),
@@ -94,7 +95,7 @@ func StepExecutorImageTest(t *testing.T, rt runtime.Runtime) {
 		[]*sequence.Step{
 			{
 				Image: ref,
-				Run:   "ls",
+				Run:   "echo test",
 			},
 		},
 		sequence.OnImagePull(func(i runtime.Image) {
@@ -169,6 +170,7 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, 
 	stdout, err := os.CreateTemp("", "")
 	assert.NotNil(t, stdout)
 	assert.Nil(t, err)
+	defer os.Remove(stdout.Name())
 
 	stderr := stdout
 	assert.NotNil(t, stderr)
@@ -209,11 +211,9 @@ func StepExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, 
 			}))
 		}
 	}
-
-	PruneRuntimeTest(t, rt)
 }
 
-func PruneRuntimeTest(t *testing.T, rt runtime.Runtime) {
+func PruneTest(t *testing.T, rt runtime.Runtime) {
 	assert.Nil(t, rt.PruneContainers(ctx))
 	assert.Nil(t, rt.PruneVolumes(ctx))
 	assert.Nil(t, rt.PruneImages(ctx))
@@ -221,13 +221,15 @@ func PruneRuntimeTest(t *testing.T, rt runtime.Runtime) {
 
 func NewTestStepsExecutor(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {
 	var (
-		githubToken = os.Getenv("SQNC_GITHUB_TOKEN")
+		githubToken = os.Getenv("GITHUB_TOKEN")
 		// all tests in this suite are ran against
 		// https://github.com/frantjc/sequence
 		wd, err = os.Getwd()
 	)
 	assert.Nil(t, err)
-	assert.NotEmpty(t, githubToken)
+	if !assert.NotEmpty(t, githubToken) {
+		assert.FailNow(t, "GITHUB_TOKEN must be set")
+	}
 
 	gc, err := actions.NewContextFromPath(ctx, wd, actions.WithToken(githubToken))
 	assert.NotNil(t, gc)
