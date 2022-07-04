@@ -25,6 +25,8 @@ func TestStepsExecutor(t *testing.T) {
 			StepsExecutorCheckoutSetupGoTest,
 			StepsExecutorDefaultImageTest,
 			StepsExecutorImageTest,
+			StepsExecutoGitHubPathTest,
+			StepsExecutoGitHubEnvTest,
 			StepsExecutorStopCommandsTest,
 			StepsExecutorSetOutputTest,
 			PruneTest,
