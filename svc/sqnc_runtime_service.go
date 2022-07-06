@@ -1,73 +1,248 @@
+//nolint:dupl
 package svc
 
 import (
+	"bytes"
 	"context"
-	"errors"
+	"io"
+	"os"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/frantjc/sequence/internal/rpcio"
+	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/sqnc"
 )
 
 type SqncRuntimeServiceHandler struct {
 	sqnc.UnimplementedRuntimeServiceHandler
+	Runtime runtime.Runtime
 }
 
-func (*SqncRuntimeServiceHandler) CreateContainer(context.Context, *connect.Request[sqnc.CreateContainerRequest]) (*connect.Response[sqnc.CreateContainerResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.CreateContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) CreateContainer(ctx context.Context, req *connect.Request[sqnc.CreateContainerRequest]) (*connect.Response[sqnc.CreateContainerResponse], error) {
+	container, err := h.Runtime.CreateContainer(ctx, req.Msg.GetSpec())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.CreateContainerResponse{
+		Container: &sqnc.Container{
+			Id: container.GetID(),
+		},
+	}), nil
 }
 
-func (*SqncRuntimeServiceHandler) GetContainer(context.Context, *connect.Request[sqnc.GetContainerRequest]) (*connect.Response[sqnc.GetContainerResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.GetContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) GetContainer(ctx context.Context, req *connect.Request[sqnc.GetContainerRequest]) (*connect.Response[sqnc.GetContainerResponse], error) {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	return connect.NewResponse(&sqnc.GetContainerResponse{
+		Container: &sqnc.Container{
+			Id: container.GetID(),
+		},
+	}), nil
 }
 
-func (*SqncRuntimeServiceHandler) ExecContainer(context.Context, *connect.Request[sqnc.ExecContainerRequest], *connect.ServerStream[sqnc.ExecContainerResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.ExecContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) ExecContainer(ctx context.Context, req *connect.Request[sqnc.ExecContainerRequest], stream *connect.ServerStream[sqnc.ExecContainerResponse]) error {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if err := container.Exec(ctx, &runtime.Streams{
+		Stdin: os.Stdin,
+		Stdout: rpcio.NewServerStreamWriter[sqnc.ExecContainerResponse](stream, func(b []byte) *sqnc.ExecContainerResponse {
+			return &sqnc.ExecContainerResponse{
+				Log: &rpcio.Log{
+					Data:   b,
+					Stream: int32(rpcio.StreamStdout),
+				},
+			}
+		}),
+		Stderr: rpcio.NewServerStreamWriter[sqnc.ExecContainerResponse](stream, func(b []byte) *sqnc.ExecContainerResponse {
+			return &sqnc.ExecContainerResponse{
+				Log: &rpcio.Log{
+					Data:   b,
+					Stream: int32(rpcio.StreamStderr),
+				},
+			}
+		}),
+	}); err != nil {
+		return connect.NewError(connect.CodeInternal, err)
+	}
+
+	return nil
 }
 
-func (*SqncRuntimeServiceHandler) StartContainer(context.Context, *connect.Request[sqnc.StartContainerRequest]) (*connect.Response[sqnc.StartContainerResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.StartContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) StartContainer(ctx context.Context, req *connect.Request[sqnc.StartContainerRequest]) (*connect.Response[sqnc.StartContainerResponse], error) {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if err := container.Start(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.StartContainerResponse{
+		Container: &sqnc.Container{
+			Id: container.GetID(),
+		},
+	}), nil
 }
 
-func (*SqncRuntimeServiceHandler) AttachContainer(context.Context, *connect.Request[sqnc.AttachContainerRequest], *connect.ServerStream[sqnc.AttachContainerResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.AttachContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) AttachContainer(ctx context.Context, req *connect.Request[sqnc.AttachContainerRequest], stream *connect.ServerStream[sqnc.AttachContainerResponse]) error {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if err := container.Attach(ctx, &runtime.Streams{
+		Stdin: os.Stdin,
+		Stdout: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
+			return &sqnc.AttachContainerResponse{
+				Log: &rpcio.Log{
+					Data:   b,
+					Stream: int32(rpcio.StreamStdout),
+				},
+			}
+		}),
+		Stderr: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
+			return &sqnc.AttachContainerResponse{
+				Log: &rpcio.Log{
+					Data:   b,
+					Stream: int32(rpcio.StreamStderr),
+				},
+			}
+		}),
+	}); err != nil {
+		return connect.NewError(connect.CodeInternal, err)
+	}
+
+	return nil
 }
 
-func (*SqncRuntimeServiceHandler) RemoveContainer(context.Context, *connect.Request[sqnc.RemoveContainerRequest]) (*connect.Response[sqnc.RemoveContainerResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.RemoveContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) RemoveContainer(ctx context.Context, req *connect.Request[sqnc.RemoveContainerRequest]) (*connect.Response[sqnc.RemoveContainerResponse], error) {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if err := container.Remove(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.RemoveContainerResponse{}), nil
 }
 
-func (*SqncRuntimeServiceHandler) PruneContainers(context.Context, *connect.Request[sqnc.PruneContainersRequest]) (*connect.Response[sqnc.PruneContainersResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.PruneContainers is not implemented"))
+func (h *SqncRuntimeServiceHandler) PruneContainers(ctx context.Context, _ *connect.Request[sqnc.PruneContainersRequest]) (*connect.Response[sqnc.PruneContainersResponse], error) {
+	if err := h.Runtime.PruneContainers(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.PruneContainersResponse{}), nil
 }
 
-func (*SqncRuntimeServiceHandler) CopyToContainer(context.Context, *connect.Request[sqnc.CopyToContainerRequest]) (*connect.Response[sqnc.CopyToContainerResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.CopyToContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) CopyToContainer(ctx context.Context, req *connect.Request[sqnc.CopyToContainerRequest]) (*connect.Response[sqnc.CopyToContainerResponse], error) {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if err := container.CopyTo(ctx, bytes.NewReader(req.Msg.GetContent()), req.Msg.GetDestination()); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.CopyToContainerResponse{}), nil
 }
 
-func (*SqncRuntimeServiceHandler) CopyFromContainer(context.Context, *connect.Request[sqnc.CopyFromContainerRequest]) (*connect.Response[sqnc.CopyFromContainerResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.CopyFromContainer is not implemented"))
+func (h *SqncRuntimeServiceHandler) CopyFromContainer(ctx context.Context, req *connect.Request[sqnc.CopyFromContainerRequest]) (*connect.Response[sqnc.CopyFromContainerResponse], error) {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	r, err := container.CopyFrom(ctx, req.Msg.GetSource())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	defer r.Close()
+
+	content, err := io.ReadAll(r)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.CopyFromContainerResponse{
+		Content: content,
+	}), nil
 }
 
-func (*SqncRuntimeServiceHandler) PullImage(context.Context, *connect.Request[sqnc.PullImageRequest]) (*connect.Response[sqnc.PullImageResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.PullImage is not implemented"))
+func (h *SqncRuntimeServiceHandler) PullImage(ctx context.Context, req *connect.Request[sqnc.PullImageRequest]) (*connect.Response[sqnc.PullImageResponse], error) {
+	image, err := h.Runtime.PullImage(ctx, req.Msg.GetRef())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.PullImageResponse{
+		Image: &sqnc.Image{
+			Ref: image.GetRef(),
+		},
+	}), nil
 }
 
-func (*SqncRuntimeServiceHandler) PruneImages(context.Context, *connect.Request[sqnc.PruneImagesRequest]) (*connect.Response[sqnc.PruneImagesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.PruneImages is not implemented"))
+func (h *SqncRuntimeServiceHandler) PruneImages(ctx context.Context, req *connect.Request[sqnc.PruneImagesRequest]) (*connect.Response[sqnc.PruneImagesResponse], error) {
+	if err := h.Runtime.PruneImages(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.PruneImagesResponse{}), nil
 }
 
-func (*SqncRuntimeServiceHandler) CreateVolume(context.Context, *connect.Request[sqnc.CreateVolumeRequest]) (*connect.Response[sqnc.CreateVolumeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.CreateVolume is not implemented"))
+func (h *SqncRuntimeServiceHandler) CreateVolume(ctx context.Context, req *connect.Request[sqnc.CreateVolumeRequest]) (*connect.Response[sqnc.CreateVolumeResponse], error) {
+	volume, err := h.Runtime.CreateVolume(ctx, req.Msg.GetName())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.CreateVolumeResponse{
+		Volume: &sqnc.Volume{
+			Source: volume.GetSource(),
+		},
+	}), nil
 }
 
-func (*SqncRuntimeServiceHandler) GetVolume(context.Context, *connect.Request[sqnc.GetVolumeRequest]) (*connect.Response[sqnc.GetVolumeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.GetVolume is not implemented"))
+func (h *SqncRuntimeServiceHandler) GetVolume(ctx context.Context, req *connect.Request[sqnc.GetVolumeRequest]) (*connect.Response[sqnc.GetVolumeResponse], error) {
+	volume, err := h.Runtime.GetVolume(ctx, req.Msg.GetName())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	return connect.NewResponse(&sqnc.GetVolumeResponse{
+		Volume: &sqnc.Volume{
+			Source: volume.GetSource(),
+		},
+	}), nil
 }
 
-func (*SqncRuntimeServiceHandler) RemoveVolume(context.Context, *connect.Request[sqnc.RemoveVolumeRequest]) (*connect.Response[sqnc.RemoveVolumeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.RemoveVolume is not implemented"))
+func (h *SqncRuntimeServiceHandler) RemoveVolume(ctx context.Context, req *connect.Request[sqnc.RemoveVolumeRequest]) (*connect.Response[sqnc.RemoveVolumeResponse], error) {
+	volume, err := h.Runtime.GetVolume(ctx, req.Msg.GetName())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if err = volume.Remove(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.RemoveVolumeResponse{}), nil
 }
 
-func (*SqncRuntimeServiceHandler) PruneVolumes(context.Context, *connect.Request[sqnc.PruneVolumesRequest]) (*connect.Response[sqnc.PruneVolumesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.PruneVolumes is not implemented"))
+func (h *SqncRuntimeServiceHandler) PruneVolumes(ctx context.Context, _ *connect.Request[sqnc.PruneVolumesRequest]) (*connect.Response[sqnc.PruneVolumesResponse], error) {
+	if err := h.Runtime.PruneVolumes(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.PruneVolumesResponse{}), nil
 }

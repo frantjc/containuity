@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/bufbuild/connect-go v0.1.1
 	github.com/docker/distribution v2.8.1+incompatible
-	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.4.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/rs/zerolog v1.26.1
@@ -31,6 +30,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
+	golang.org/x/text v0.3.7 // indirect
 )
 
 require (
@@ -57,7 +57,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9 // indirect
+	golang.org/x/net v0.0.0-20220630215102-69896b714898
 	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/warnings.v0 v0.1.2 // indirect

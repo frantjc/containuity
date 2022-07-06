@@ -12,3 +12,4 @@ bin/*
 
 # go
 vendor/
+__debug_bin

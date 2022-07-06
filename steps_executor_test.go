@@ -10,17 +10,12 @@ import (
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/frantjc/sequence/runtime/docker"
 	"github.com/frantjc/sequence/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStepsExecutor(t *testing.T) {
-	rt, err := docker.NewRuntime(ctx)
-	assert.NotNil(t, rt)
-	assert.Nil(t, err)
-
-	for _, r := range []runtime.Runtime{rt} {
+	for _, r := range NewTestRuntimes(t) {
 		for _, f := range []RuntimeTest{
 			StepsExecutorCheckoutSetupGoTest,
 			StepsExecutorDefaultImageTest,

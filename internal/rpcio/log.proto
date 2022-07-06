@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package sequence.internal.rpcio;
+
+option go_package = "github.com/frantjc/sequence/internal/rpcio";
+
+message Log {
+  bytes data = 1;
+  int32 stream = 2;
+}

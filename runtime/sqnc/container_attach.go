@@ -1,11 +1,12 @@
+//nolint:dupl
 package sqnc
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/frantjc/sequence/internal/rpcio"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -21,18 +22,33 @@ func (c *sqncContainer) Attach(ctx context.Context, streams *runtime.Streams) er
 		stderr = streams.Stderr
 	}
 
-	_, err := c.client.AttachContainer(ctx, connect.NewRequest(&AttachContainerRequest{
+	stream, err := c.client.AttachContainer(ctx, connect.NewRequest(&AttachContainerRequest{
 		Id: c.GetID(),
 	}))
 	if err != nil {
 		return err
 	}
 
-	var (
-		_ = stdout
-		_ = stderr
-	)
+	for stream.Receive() {
+		var (
+			msg = stream.Msg()
+			b   = msg.GetLog().Data
+		)
+		switch rpcio.Stream(msg.Log.Stream) {
+		case rpcio.StreamStdout:
+			if _, err := stdout.Write(b); err != nil {
+				return err
+			}
+		case rpcio.StreamStderr:
+			if _, err := stderr.Write(b); err != nil {
+				return err
+			}
+		}
+	}
 
-	// TODO
-	return fmt.Errorf("unimplemented")
+	if err = stream.Err(); err != nil {
+		return err
+	}
+
+	return stream.Close()
 }

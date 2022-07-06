@@ -8,19 +8,17 @@ import (
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/sqnc"
 	"github.com/frantjc/sequence/svc"
-	"github.com/gorilla/mux"
 )
 
 type Server struct {
-	handler http.Handler
+	mux     *http.ServeMux
 	runtime runtime.Runtime
 }
 
-func NewServer(ctx context.Context, opts ...Opt) (*Server, error) {
+func NewHandler(ctx context.Context, opts ...Opt) (*Server, error) {
 	var (
-		router = mux.NewRouter()
 		server = &Server{
-			handler: router,
+			mux: http.NewServeMux(),
 		}
 	)
 	for _, opt := range opts {
@@ -41,16 +39,18 @@ func NewServer(ctx context.Context, opts ...Opt) (*Server, error) {
 			return sequence.NewWorkflowServiceHandler(&svc.WorkflowServiceHandler{})
 		},
 		func() (string, http.Handler) {
-			return sqnc.NewRuntimeServiceHandler(&svc.SqncRuntimeServiceHandler{})
+			return sqnc.NewRuntimeServiceHandler(&svc.SqncRuntimeServiceHandler{
+				Runtime: server.runtime,
+			})
 		},
 	} {
 		path, handler := f()
-		router.Handle(path, handler)
+		server.mux.Handle(path, handler)
 	}
 
 	return server, nil
 }
 
 func (h *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.handler.ServeHTTP(w, r)
+	h.mux.ServeHTTP(w, r)
 }

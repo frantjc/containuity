@@ -9,7 +9,7 @@ func MapFromArr(a []string) map[string]string {
 	m := map[string]string{}
 	for _, s := range a {
 		kv := strings.Split(s, "=")
-		if len(kv) >= 2 && kv[0] != "" && kv[1] != "" {
+		if len(kv) >= 2 && kv[0] != "" {
 			m[kv[0]] = kv[1]
 		}
 	}
@@ -23,7 +23,7 @@ func ToMap(ss ...string) map[string]string {
 func ArrFromMap(m map[string]string) []string {
 	a := []string{}
 	for k, v := range m {
-		if k != "" && v != "" {
+		if k != "" {
 			a = append(a, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
@@ -35,7 +35,7 @@ func ToArr(ss ...string) []string {
 	for i, s := range ss {
 		if i%2 == 1 {
 			sm1 := ss[i-1]
-			if s != "" && sm1 != "" {
+			if sm1 != "" {
 				a = append(a, fmt.Sprintf("%s=%s", sm1, s))
 			}
 		}

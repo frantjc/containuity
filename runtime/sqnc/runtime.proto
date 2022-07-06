@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package sequence.runtime.sqnc;
 
-import "rpcio/log.proto";
+import "internal/rpcio/log.proto";
 import "runtime/spec.proto";
 import "runtime/sqnc/container.proto";
 import "runtime/sqnc/image.proto";
@@ -49,7 +49,7 @@ message ExecContainerRequest {
 }
 
 message ExecContainerResponse {
-  rpcio.Log log = 1;
+  sequence.internal.rpcio.Log log = 1;
 }
 
 message StartContainerRequest {
@@ -65,7 +65,7 @@ message AttachContainerRequest {
 }
 
 message AttachContainerResponse {
-  rpcio.Log log = 1;
+  sequence.internal.rpcio.Log log = 1;
 }
 
 message RemoveContainerRequest {
