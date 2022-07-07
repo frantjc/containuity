@@ -10,9 +10,9 @@ import (
 
 	"github.com/frantjc/go-js"
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/shim"
 	"github.com/frantjc/sequence/pkg/envconv"
+	"github.com/frantjc/sequence/pkg/github/actions"
 )
 
 func main() {

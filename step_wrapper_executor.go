@@ -6,7 +6,7 @@ import (
 	"path"
 
 	"github.com/frantjc/go-js"
-	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions"
 
 	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/internal/paths"

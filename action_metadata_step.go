@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/frantjc/go-js"
-	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions"
 )
 
 var (

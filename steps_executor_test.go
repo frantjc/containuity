@@ -6,8 +6,8 @@ import (
 
 	"github.com/frantjc/go-js"
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/paths/volumes"
+	"github.com/frantjc/sequence/pkg/github/actions"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/stretchr/testify/assert"
 )

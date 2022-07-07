@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"path/filepath"
 
-	"github.com/frantjc/sequence/github"
+	"github.com/frantjc/sequence/pkg/github"
 )
 
 type cloneOpts struct {

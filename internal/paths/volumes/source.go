@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions"
 )
 
 var regExp = regexp.MustCompile("[^a-zA-Z0-9_.-]")

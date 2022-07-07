@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/paths"
+	"github.com/frantjc/sequence/pkg/github/actions"
 	"github.com/frantjc/sequence/runtime"
 )
 

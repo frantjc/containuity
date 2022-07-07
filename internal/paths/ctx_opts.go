@@ -1,6 +1,6 @@
 package paths
 
-import "github.com/frantjc/sequence/github/actions"
+import "github.com/frantjc/sequence/pkg/github/actions"
 
 func GlobalContextOpts() []actions.CtxOpt {
 	return []actions.CtxOpt{

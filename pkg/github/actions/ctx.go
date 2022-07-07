@@ -7,8 +7,8 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/frantjc/sequence/github"
 	"github.com/frantjc/sequence/pkg/envconv"
+	"github.com/frantjc/sequence/pkg/github"
 	"github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
 )

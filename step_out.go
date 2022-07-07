@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions"
 )
 
 const (

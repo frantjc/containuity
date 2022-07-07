@@ -3,7 +3,7 @@ package actions_test
 import (
 	"testing"
 
-	"github.com/frantjc/sequence/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions"
 	"github.com/stretchr/testify/assert"
 )
 
