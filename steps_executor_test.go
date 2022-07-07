@@ -1,7 +1,6 @@
 package sequence_test
 
 import (
-	"bytes"
 	"os"
 	"testing"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/frantjc/sequence/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,12 +30,6 @@ func TestStepsExecutor(t *testing.T) {
 }
 
 func StepsExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
-	checkoutStep, err := sequence.NewStepFromReader(
-		bytes.NewReader(testdata.CheckoutStep),
-	)
-	assert.NotNil(t, checkoutStep)
-	assert.Nil(t, err)
-
 	StepsExecutorTest(t, rt, []*sequence.Step{
 		{
 			Uses: "actions/checkout@v2",

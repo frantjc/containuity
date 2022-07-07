@@ -1,10 +1,10 @@
-package env_test
+package envconv_test
 
 import (
 	"testing"
 
 	"github.com/frantjc/go-js"
-	"github.com/frantjc/sequence/env"
+	"github.com/frantjc/sequence/pkg/envconv"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +15,7 @@ func TestMapFromArr(t *testing.T) {
 			"KEY1": "val",
 			"KEY2": "",
 		}
-		actual = env.MapFromArr(a)
+		actual = envconv.MapFromArr(a)
 	)
 
 	assert.Equal(t, expected, actual)
@@ -27,7 +27,7 @@ func TestToMap(t *testing.T) {
 			"KEY1": "val",
 			"KEY2": "",
 		}
-		actual = env.ToMap("KEY1=val", "KEY2=", "=val", "notakeyvalpair")
+		actual = envconv.ToMap("KEY1=val", "KEY2=", "=val", "notakeyvalpair")
 	)
 
 	assert.Equal(t, expected, actual)
@@ -41,7 +41,7 @@ func TestArrFromMap(t *testing.T) {
 			"KEY2": "",
 		}
 		expected = []string{"KEY1=val", "KEY2="}
-		actual   = env.ArrFromMap(m)
+		actual   = envconv.ArrFromMap(m)
 	)
 
 	assert.True(t, js.Every(expected, func(e string, _ int, _ []string) bool {
@@ -52,7 +52,7 @@ func TestArrFromMap(t *testing.T) {
 func TestToArr(t *testing.T) {
 	var (
 		expected = []string{"KEY2=", "KEY1=val"}
-		actual   = env.ToArr("KEY1", "val", "", "val", "KEY2", "")
+		actual   = envconv.ToArr("KEY1", "val", "", "val", "KEY2", "")
 	)
 
 	assert.True(t, js.Every(expected, func(e string, _ int, _ []string) bool {

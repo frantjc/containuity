@@ -10,9 +10,9 @@ import (
 
 	"github.com/frantjc/go-js"
 	"github.com/frantjc/sequence"
-	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github/actions"
 	"github.com/frantjc/sequence/internal/shim"
+	"github.com/frantjc/sequence/pkg/envconv"
 )
 
 func main() {
@@ -72,7 +72,7 @@ func mainE() error {
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 
-	if githubEnv, err := env.ArrFromFile(githubEnvFile); err == nil {
+	if githubEnv, err := envconv.ArrFromFile(githubEnvFile); err == nil {
 		command.Env = append(command.Env, githubEnv...)
 	} else {
 		if _, err = os.Create(githubEnvFile); err != nil {
@@ -80,7 +80,7 @@ func mainE() error {
 		}
 	}
 
-	if githubPath, err := env.PathFromFile(githubPathFile); err == nil && githubPath != "" {
+	if githubPath, err := envconv.PathFromFile(githubPathFile); err == nil && githubPath != "" {
 		pathIndex := js.FindIndex(command.Env, func(s string, _ int, _ []string) bool {
 			spl := strings.Split(s, "=")
 			return len(spl) > 0 && strings.EqualFold(spl[0], "PATH")

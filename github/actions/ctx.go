@@ -7,8 +7,8 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/frantjc/sequence/env"
 	"github.com/frantjc/sequence/github"
+	"github.com/frantjc/sequence/pkg/envconv"
 	"github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
 )
@@ -447,5 +447,5 @@ func (c *GlobalContext) EnvMap() map[string]string {
 }
 
 func (c *GlobalContext) EnvArr() []string {
-	return env.ArrFromMap(c.EnvMap())
+	return envconv.ArrFromMap(c.EnvMap())
 }
