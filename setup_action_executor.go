@@ -9,10 +9,11 @@ import (
 	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/pkg/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions/uses"
 	"github.com/frantjc/sequence/runtime"
 )
 
-func (e *executor) SetupAction(ctx context.Context, action *actions.Reference) (*actions.Metadata, error) {
+func (e *executor) SetupAction(ctx context.Context, action *uses.Uses) (*actions.Metadata, error) {
 	if action == nil {
 		return nil, fmt.Errorf("action must not be nil")
 	}

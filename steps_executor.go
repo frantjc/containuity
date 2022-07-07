@@ -8,6 +8,7 @@ import (
 	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/pkg/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions/uses"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -49,7 +50,7 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 func (e *stepsExecutor) Execute(ctx context.Context) error {
 	for _, step := range e.steps {
 		if step.IsGitHubAction() {
-			action, err := actions.ParseReference(step.Uses)
+			action, err := uses.Parse(step.Uses)
 			if err != nil {
 				return err
 			}

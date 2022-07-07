@@ -13,6 +13,7 @@ import (
 	"github.com/frantjc/sequence/internal/shim"
 	"github.com/frantjc/sequence/pkg/envconv"
 	"github.com/frantjc/sequence/pkg/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions/uses"
 )
 
 func main() {
@@ -31,15 +32,15 @@ func mainE() error {
 		return fmt.Errorf("%s requires at least 1 argument", os.Args[0])
 	} else if _, ok := os.LookupEnv(shim.EnvVarShimSwitch); !ok {
 		var (
-			actionRef = args[1]
-			path      = "."
+			usesStr = args[1]
+			path    = "."
 		)
 
 		if len(args) > 1 {
 			path = args[2]
 		}
 
-		parsed, err := actions.ParseReference(actionRef)
+		parsed, err := uses.Parse(usesStr)
 		if err != nil {
 			return err
 		}

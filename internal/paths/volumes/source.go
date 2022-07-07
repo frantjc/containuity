@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/frantjc/sequence/pkg/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions/uses"
 )
 
 var regExp = regexp.MustCompile("[^a-zA-Z0-9_.-]")
@@ -14,7 +14,7 @@ func normalize(s string) string {
 	return strings.TrimPrefix(regExp.ReplaceAllLiteralString(s, "-"), "-")
 }
 
-func GetActionSource(action *actions.Reference) string {
+func GetActionSource(action *uses.Uses) string {
 	return normalize(fmt.Sprintf("sqnc-actions-%s-%s-%s", action.Owner, action.Repository, action.Version))
 }
 

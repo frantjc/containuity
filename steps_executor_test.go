@@ -8,6 +8,7 @@ import (
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/pkg/github/actions"
+	"github.com/frantjc/sequence/pkg/github/actions/uses"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/stretchr/testify/assert"
 )
@@ -211,7 +212,7 @@ func StepsExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step,
 
 	for _, step := range steps {
 		if step.IsGitHubAction() {
-			action, err := actions.ParseReference(step.Uses)
+			action, err := uses.Parse(step.Uses)
 			assert.Nil(t, err)
 			assert.True(t, js.Some(volumesCreated, func(v runtime.Volume, _ int, _ []runtime.Volume) bool {
 				return volumes.GetActionSource(action) == v.GetSource()
