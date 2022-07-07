@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/frantjc/sequence/github"
+	"github.com/frantjc/sequence/pkg/github"
 	"github.com/stretchr/testify/assert"
 )
 

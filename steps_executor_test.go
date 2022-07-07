@@ -15,18 +15,14 @@ import (
 
 func TestStepsExecutor(t *testing.T) {
 	for _, r := range NewTestRuntimes(t) {
-		for _, f := range []RuntimeTest{
-			StepsExecutorCheckoutSetupGoTest,
-			StepsExecutorDefaultImageTest,
-			StepsExecutorImageTest,
-			StepsExecutoGitHubPathTest,
-			StepsExecutoGitHubEnvTest,
-			StepsExecutorStopCommandsTest,
-			StepsExecutorSetOutputTest,
-			PruneTest,
-		} {
-			f(t, r)
-		}
+		StepsExecutorCheckoutSetupGoTest(t, r)
+		StepsExecutorDefaultImageTest(t, r)
+		StepsExecutorImageTest(t, r)
+		StepsExecutoGitHubPathTest(t, r)
+		StepsExecutoGitHubEnvTest(t, r)
+		StepsExecutorStopCommandsTest(t, r)
+		StepsExecutorSetOutputTest(t, r)
+		PruneTest(t, r)
 	}
 }
 

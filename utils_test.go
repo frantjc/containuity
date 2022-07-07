@@ -68,7 +68,7 @@ func NewTestRuntimes(t *testing.T) []runtime.Runtime {
 	assert.NotNil(t, sqncRuntime)
 
 	return []runtime.Runtime{
-		dockerRuntime,
+		// dockerRuntime,
 		sqncRuntime,
 	}
 }

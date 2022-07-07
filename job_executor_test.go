@@ -15,14 +15,10 @@ import (
 
 func TestJobExecutor(t *testing.T) {
 	for _, r := range NewTestRuntimes(t) {
-		for _, f := range []RuntimeTest{
-			JobExecutorCheckoutTestTest,
-			JobExecutorContainerImageTest,
-			JobExecutorEnvTest,
-			PruneTest,
-		} {
-			f(t, r)
-		}
+		JobExecutorCheckoutTestTest(t, r)
+		JobExecutorContainerImageTest(t, r)
+		JobExecutorEnvTest(t, r)
+		PruneTest(t, r)
 	}
 }
 
