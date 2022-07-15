@@ -24,3 +24,13 @@ jobs:
       - run: go test -v ./...
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SQNC_PRUNE_VOLUMES: true
+          SQNC_PRUNE_IMAGES: true
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/build-push-action@v3
+        with:
+          load: true
+          tags: ghcr.io/${{ github.repository }}

@@ -21,15 +21,16 @@ type GlobalContext struct {
 	RunnerContext  *RunnerContext
 	InputsContext  map[string]string
 	SecretsContext map[string]string
+	NeedsContext   map[string]*NeedsContext
 }
 
-func (c *GlobalContext) Get(key string) string {
+func (c *GlobalContext) GetString(key string) string {
 	keys := strings.Split(key, ".")
 	if len(keys) > 0 {
 		switch keys[0] {
 		case "github":
 			if len(keys) > 1 {
-				return c.GitHubContext.Get(strings.Join(keys[1:], "."))
+				return c.GitHubContext.GetString(strings.Join(keys[1:], "."))
 			}
 		case "env":
 			if len(keys) > 1 {
@@ -39,17 +40,17 @@ func (c *GlobalContext) Get(key string) string {
 			}
 		case "job":
 			if len(keys) > 1 {
-				return c.JobContext.Get(strings.Join(keys[1:], "."))
+				return c.JobContext.GetString(strings.Join(keys[1:], "."))
 			}
 		case "steps":
 			if len(keys) > 2 {
 				if v, ok := c.StepsContext[keys[1]]; ok {
-					return v.Get(strings.Join(keys[2:], "."))
+					return v.GetString(strings.Join(keys[2:], "."))
 				}
 			}
 		case "runner":
 			if len(keys) > 1 {
-				return c.RunnerContext.Get(strings.Join(keys[1:], "."))
+				return c.RunnerContext.GetString(strings.Join(keys[1:], "."))
 			}
 		case "inputs":
 			if len(keys) > 1 {
@@ -61,6 +62,12 @@ func (c *GlobalContext) Get(key string) string {
 			if len(keys) > 1 {
 				if v, ok := c.SecretsContext[keys[1]]; ok {
 					return v
+				}
+			}
+		case "needs":
+			if len(keys) > 2 {
+				if v, ok := c.NeedsContext[keys[1]]; ok {
+					return v.GetString(strings.Join(keys[2:], "."))
 				}
 			}
 		}
@@ -97,7 +104,7 @@ type GitHubContext struct {
 	Workspace       string
 }
 
-func (c *GitHubContext) Get(key string) string {
+func (c *GitHubContext) GetString(key string) string {
 	keys := strings.Split(key, ".")
 	if len(keys) > 0 {
 		switch keys[0] {
@@ -167,7 +174,7 @@ type JobContext struct {
 	Status string
 }
 
-func (c *JobContext) Get(key string) string {
+func (c *JobContext) GetString(key string) string {
 	keys := strings.Split(key, ".")
 	if len(keys) > 0 {
 		switch keys[0] {
@@ -213,7 +220,7 @@ type StepsContext struct {
 	Outcome    string
 }
 
-func (c *StepsContext) Get(key string) string {
+func (c *StepsContext) GetString(key string) string {
 	keys := strings.Split(key, ".")
 	if len(keys) > 0 {
 		switch keys[0] {
@@ -241,7 +248,7 @@ type RunnerContext struct {
 	ToolCache string
 }
 
-func (c *RunnerContext) Get(key string) string {
+func (c *RunnerContext) GetString(key string) string {
 	keys := strings.Split(key, ".")
 	if len(keys) > 0 {
 		switch keys[0] {
@@ -255,6 +262,26 @@ func (c *RunnerContext) Get(key string) string {
 			return c.Temp
 		case "tool_cache":
 			return c.ToolCache
+		}
+	}
+
+	return ""
+}
+
+type NeedsContext struct {
+	Outputs map[string]string
+}
+
+func (c *NeedsContext) GetString(key string) string {
+	keys := strings.Split(key, ".")
+	if len(keys) > 0 {
+		switch keys[0] {
+		case "outputs":
+			if len(keys) > 1 {
+				if v, ok := c.Outputs[keys[1]]; ok {
+					return v
+				}
+			}
 		}
 	}
 
@@ -292,6 +319,7 @@ func EmptyContext(opts ...CtxOpt) *GlobalContext {
 			Arch: ArchX86,
 		},
 		InputsContext: map[string]string{},
+		NeedsContext:  map[string]*NeedsContext{},
 	}
 }
 

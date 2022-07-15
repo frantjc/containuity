@@ -88,9 +88,7 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 
 func (e *stepWrapperExecutor) ExecuteStep(ctx context.Context) error {
 	var (
-		// logStdout    = log.New(e.stdout).SetVerbose(e.verbose)
-		// logStderr    = log.New(e.stderr).SetVerbose(e.verbose)
-		expander     = actions.NewExpander(e.GlobalContext.Get)
+		expander     = actions.NewExpander(e.GlobalContext.GetString)
 		expandedStep = &Step{
 			Id:         expander.Expand(e.stepWrapper.step.Id),
 			Name:       expander.Expand(e.stepWrapper.step.Name),
@@ -105,6 +103,7 @@ func (e *stepWrapperExecutor) ExecuteStep(ctx context.Context) error {
 			Cmd: js.Map(e.stepWrapper.step.Cmd, func(arg string, _ int, _ []string) string {
 				return expander.Expand(arg)
 			}),
+			// expand these later as it can't be easily reduced into a one-liner
 			Env:  map[string]string{},
 			With: map[string]string{},
 		}

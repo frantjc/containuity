@@ -5,6 +5,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -67,14 +69,28 @@ func NewTestRuntimes(t *testing.T) []runtime.Runtime {
 	sqncRuntime := client.Runtime()
 	assert.NotNil(t, sqncRuntime)
 
-	return []runtime.Runtime{
-		// dockerRuntime,
-		sqncRuntime,
+	runtimes := []runtime.Runtime{
+		dockerRuntime,
+		// sqncRuntime,
 	}
+
+	for _, rt := range runtimes {
+		t.Cleanup(func() {
+			PruneTest(t, rt)
+		})
+	}
+
+	return runtimes
 }
 
 func PruneTest(t *testing.T, rt runtime.Runtime) {
 	assert.Nil(t, rt.PruneContainers(ctx))
-	assert.Nil(t, rt.PruneVolumes(ctx))
-	assert.Nil(t, rt.PruneImages(ctx))
+
+	if prune, err := strconv.ParseBool(os.Getenv("SQNC_PRUNE_VOLUMES")); err == nil && prune {
+		assert.Nil(t, rt.PruneVolumes(ctx))
+	}
+
+	if prune, err := strconv.ParseBool(os.Getenv("SQNC_PRUNE_IMAGES")); err == nil && prune {
+		assert.Nil(t, rt.PruneImages(ctx))
+	}
 }

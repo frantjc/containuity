@@ -25,3 +25,13 @@ func (c *WorkflowCommand) String() string {
 
 	return fmt.Sprintf("%s::%s", s, c.Value)
 }
+
+func (c *WorkflowCommand) GetName() string {
+	if c.Parameters != nil {
+		if name, ok := c.Parameters["name"]; ok {
+			return name
+		}
+	}
+
+	return ""
+}

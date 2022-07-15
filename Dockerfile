@@ -16,11 +16,11 @@ ARG prerelease=
 RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/sqnc-shim
 RUN cp /usr/local/bin/sqnc-shim internal/shim/
 RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/sqnc-runtime-docker
+RUN go build -ldflags "-s -w" -o /usr/local/bin ./cmd/sqnc
 
 FROM base_image AS sequence
 COPY --from=build /usr/local/bin /usr/local/bin
-RUN mkdir -p /etc/sqnc/plugins
 RUN ln -s /usr/local/bin/sqnc-runtime-docker /etc/sqnc/plugins/sqnc-runtime-default
-ENTRYPOINT ["sh"]
+ENTRYPOINT ["sqnc"]
 
 FROM sequence

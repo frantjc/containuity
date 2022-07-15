@@ -8,4 +8,13 @@ var (
 
 	//go:embed demo_workflow.yml
 	Demo []byte
+
+	//go:embed env_workflow.yml
+	Env []byte
+
+	//go:embed slow_workflow.yml
+	Slow []byte
+
+	//go:embed stop_commands_workflow.yml
+	StopCommands []byte
 )

@@ -1,9 +1,19 @@
 package sequence
 
-import "context"
+import (
+	"context"
+
+	"github.com/frantjc/sequence/pkg/github/actions"
+)
+
+type jobExecutor struct {
+	*stepsExecutor
+	job *Job
+}
 
 func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executor, error) {
 	internalOpts := opts
+
 	internalOpts = append(internalOpts, func(e *executor) error {
 		for k, v := range job.Env {
 			e.GlobalContext.EnvContext[k] = v
@@ -20,8 +30,35 @@ func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executo
 	}
 
 	if job.GetName() != "" {
-		internalOpts = append(internalOpts, WithID(job.GetName()))
+		internalOpts = append(internalOpts, WithID(job.GetName()), WithJobName(job.GetName()))
 	}
 
-	return NewStepsExecutor(ctx, job.Steps, internalOpts...)
+	executor, err := NewStepsExecutor(ctx, job.Steps, internalOpts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &jobExecutor{
+		stepsExecutor: executor.(*stepsExecutor),
+		job:           job,
+	}, nil
+}
+
+func (e *jobExecutor) Execute(ctx context.Context) error {
+	if err := e.stepsExecutor.Execute(ctx); err != nil {
+		return err
+	}
+
+	if e.ID != "" {
+		e.stepsExecutor.GlobalContext.NeedsContext[e.ID] = &actions.NeedsContext{
+			Outputs: map[string]string{},
+		}
+
+		expander := actions.NewExpander(e.GlobalContext.GetString)
+		for k, v := range e.job.Outputs {
+			e.stepsExecutor.GlobalContext.NeedsContext[e.ID].Outputs[k] = expander.Expand(v)
+		}
+	}
+
+	return nil
 }

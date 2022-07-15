@@ -11,7 +11,7 @@ const (
 	// ActionMetadataKey is the key in a Step's
 	// Step_Out.Metadata map that holds the json
 	// encoding of the action that the step cloned
-	ActionMetadataKey = "_sqnc_action_metadata"
+	ActionMetadataKey = "__sqnc_action_metadata"
 )
 
 func (o *Step_Out) GetActionMetadata() (*actions.Metadata, error) {

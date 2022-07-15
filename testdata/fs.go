@@ -32,4 +32,7 @@ var (
 var (
 	CheckoutTestBuildWorkflow = workflows.CheckoutTestBuild
 	DemoWorkflow = workflows.Demo
+	EnvWorkflow = workflows.Env
+	SlowWorkflow = workflows.Slow
+	StopCommandsWorkflow = workflows.StopCommands
 )

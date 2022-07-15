@@ -24,7 +24,8 @@ message Job {
   map<string, string> env = 6;
   sequence.Job.Environment environment = 7;
   string if = 8;
-  // concurrency = 9;
-  // permissions = 10;
-  // needs = 11;
+  string needs = 9;
+  // concurrency = 10;
+  // permissions = 11;
+  // needs = 12;
 }

@@ -13,72 +13,72 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestJobExecutor(t *testing.T) {
-	for _, r := range NewTestRuntimes(t) {
-		JobExecutorCheckoutTestTest(t, r)
-		JobExecutorContainerImageTest(t, r)
-		JobExecutorEnvTest(t, r)
-		PruneTest(t, r)
+func TestJobExecutorCheckoutTest(t *testing.T) {
+	for _, rt := range NewTestRuntimes(t) {
+		JobExecutorTest(
+			t, rt,
+			&sequence.Job{
+				Steps: []*sequence.Step{
+					{
+						Uses: "actions/checkout@v3",
+					},
+					{
+						// hilariously, "recursively" run some of sequence's test :)
+						Image: golang118Ref,
+						Run:   "go test ./internal/...",
+					},
+				},
+			},
+			sequence.OnImagePull(func(i runtime.Image) {
+				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef(), golang118Ref}, i.GetRef())
+			}),
+		)
 	}
 }
 
-func JobExecutorCheckoutTestTest(t *testing.T, rt runtime.Runtime) {
-	JobExecutorTest(
-		t, rt,
-		&sequence.Job{
-			Steps: []*sequence.Step{
-				{
-					Uses: "actions/checkout@v3",
-				},
-				{
-					// hilariously, "recursively" run some of sequence's test :)
+func TestJobExecutorContainerImage(t *testing.T) {
+	for _, rt := range NewTestRuntimes(t) {
+		JobExecutorTest(
+			t, rt,
+			&sequence.Job{
+				Container: &sequence.Job_Container{
 					Image: golang118Ref,
-					Run:   "go test ./internal/...",
+				},
+				Steps: []*sequence.Step{
+					{
+						Run: "go version",
+					},
 				},
 			},
-		},
-		sequence.OnImagePull(func(i runtime.Image) {
-			assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef(), golang118Ref}, i.GetRef())
-		}),
-	)
+			sequence.OnImagePull(func(i runtime.Image) {
+				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef(), golang118Ref}, i.GetRef())
+			}),
+		)
+	}
 }
 
-func JobExecutorContainerImageTest(t *testing.T, rt runtime.Runtime) {
-	JobExecutorTest(
-		t, rt,
-		&sequence.Job{
-			Container: &sequence.Job_Container{
-				Image: golang118Ref,
-			},
-			Steps: []*sequence.Step{
-				{
-					Run: "go version",
+func TestJobExecutorEnv(t *testing.T) {
+	var (
+		value = "general kenobi"
+	)
+	for _, rt := range NewTestRuntimes(t) {
+		JobExecutorTest(
+			t, rt,
+			&sequence.Job{
+				Env: map[string]string{
+					"HELLO_THERE": value,
+				},
+				Steps: []*sequence.Step{
+					{
+						Run: "echo ::debug::$HELLO_THERE",
+					},
 				},
 			},
-		},
-		sequence.OnImagePull(func(i runtime.Image) {
-			assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef(), golang118Ref}, i.GetRef())
-		}),
-	)
-}
-
-func JobExecutorEnvTest(t *testing.T, rt runtime.Runtime) {
-	JobExecutorTest(
-		t, rt,
-		&sequence.Job{
-			Env: map[string]string{
-				"HELLO_THERE": "general kenobi",
-			},
-			Steps: []*sequence.Step{
-				{
-					Run: "echo \"::debug::$HELLO_THERE\"",
-				},
-			},
-		},
-		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-			assert.Equal(t, "general kenobi", wc.Value)
-		}),
-	)
+			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+				assert.Equal(t, value, wc.Value)
+			}),
+		)
+	}
 }
 
 func JobExecutorTest(t *testing.T, rt runtime.Runtime, job *sequence.Job, opts ...sequence.ExecutorOpt) {

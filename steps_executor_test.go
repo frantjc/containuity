@@ -1,6 +1,7 @@
 package sequence_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -13,154 +14,170 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStepsExecutor(t *testing.T) {
-	for _, r := range NewTestRuntimes(t) {
-		StepsExecutorCheckoutSetupGoTest(t, r)
-		StepsExecutorDefaultImageTest(t, r)
-		StepsExecutorImageTest(t, r)
-		StepsExecutoGitHubPathTest(t, r)
-		StepsExecutoGitHubEnvTest(t, r)
-		StepsExecutorStopCommandsTest(t, r)
-		StepsExecutorSetOutputTest(t, r)
-		PruneTest(t, r)
+func TestStepsExecutorCheckoutSetupGo(t *testing.T) {
+	for _, rt := range NewTestRuntimes(t) {
+		StepsExecutorTest(t, rt, []*sequence.Step{
+			{
+				Uses: "actions/checkout@v2",
+			},
+			{
+				Uses: "actions/setup-go@v2",
+				With: map[string]string{
+					"go-version": "1.18",
+				},
+			},
+			{
+				// hilariously, "recursively" run some of sequence's test :)
+				Run: "go test ./internal/...",
+			},
+		})
 	}
 }
 
-func StepsExecutorCheckoutSetupGoTest(t *testing.T, rt runtime.Runtime) {
-	StepsExecutorTest(t, rt, []*sequence.Step{
-		{
-			Uses: "actions/checkout@v2",
-		},
-		{
-			Uses: "actions/setup-go@v2",
-			With: map[string]string{
-				"go-version": "1.18",
+func TestStepsExecutorDefaultImage(t *testing.T) {
+	for _, rt := range NewTestRuntimes(t) {
+		StepsExecutorTest(
+			t, rt,
+			[]*sequence.Step{
+				{
+					Run: "echo test",
+				},
 			},
-		},
-		{
-			// hilariously, "recursively" run some of sequence's test :)
-			Run: "go test ./internal/...",
-		},
-	})
+			sequence.WithRunnerImage(alpineImg),
+			sequence.OnImagePull(func(i runtime.Image) {
+				assert.Equal(t, alpineRef, i.GetRef())
+			}),
+		)
+	}
 }
 
-func StepsExecutorDefaultImageTest(t *testing.T, rt runtime.Runtime) {
-	StepsExecutorTest(
-		t, rt,
-		[]*sequence.Step{
-			{
-				Run: "echo test",
+func TestStepsExecutorImage(t *testing.T) {
+	for _, rt := range NewTestRuntimes(t) {
+		StepsExecutorTest(
+			t, rt,
+			[]*sequence.Step{
+				{
+					Image: alpineRef,
+					Run:   "echo test",
+				},
 			},
-		},
-		sequence.WithRunnerImage(alpineImg),
-		sequence.OnImagePull(func(i runtime.Image) {
-			assert.Equal(t, alpineRef, i.GetRef())
-		}),
-	)
+			sequence.OnImagePull(func(i runtime.Image) {
+				assert.Equal(t, alpineRef, i.GetRef())
+			}),
+		)
+	}
 }
 
-func StepsExecutorImageTest(t *testing.T, rt runtime.Runtime) {
-	StepsExecutorTest(
-		t, rt,
-		[]*sequence.Step{
-			{
-				Image: alpineRef,
-				Run:   "echo test",
+func TestStepsExecutorGitHubPath(t *testing.T) {
+	for _, rt := range NewTestRuntimes(t) {
+		StepsExecutorTest(
+			t, rt,
+			[]*sequence.Step{
+				{
+					Run: fmt.Sprintf("echo /.bin >> $%s", actions.EnvVarPath),
+				},
+				{
+					Run: "echo \"::debug::$PATH\"",
+				},
 			},
-		},
-		sequence.OnImagePull(func(i runtime.Image) {
-			assert.Equal(t, alpineRef, i.GetRef())
-		}),
-	)
+			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+				assert.Contains(t, wc.Value, "/.bin")
+			}),
+		)
+	}
 }
 
-func StepsExecutoGitHubPathTest(t *testing.T, rt runtime.Runtime) {
-	StepsExecutorTest(
-		t, rt,
-		[]*sequence.Step{
-			{
-				Run: "echo /.bin >> $GITHUB_PATH",
-			},
-			{
-				Run: "echo \"::debug::$PATH\"",
-			},
-		},
-		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-			assert.Contains(t, wc.Value, "/.bin")
-		}),
+func TestStepsExecutorGitHubEnv(t *testing.T) {
+	var (
+		envVar = "HELLO_THERE"
+		value  = "general kenobi"
 	)
+	for _, rt := range NewTestRuntimes(t) {
+		StepsExecutorTest(
+			t, rt,
+			[]*sequence.Step{
+				{
+					Run: fmt.Sprintf("echo %s=%s >> $%s", envVar, value, actions.EnvVarEnv),
+				},
+				{
+					Run: fmt.Sprintf("echo ::debug::$%s", envVar),
+				},
+			},
+			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+				assert.Equal(t, wc.Value, value)
+			}),
+		)
+	}
 }
 
-func StepsExecutoGitHubEnvTest(t *testing.T, rt runtime.Runtime) {
-	StepsExecutorTest(
-		t, rt,
-		[]*sequence.Step{
-			{
-				Run: "echo HELLO_THERE=generalkenobi >> $GITHUB_ENV",
-			},
-			{
-				Run: "echo \"::debug::$HELLO_THERE\"",
-			},
-		},
-		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-			assert.Equal(t, wc.Value, "generalkenobi")
-		}),
+func TestStepsExecutorStopCommands(t *testing.T) {
+	var (
+		stopCommandsToken = "token"
 	)
+	for _, rt := range NewTestRuntimes(t) {
+		var (
+			debugCount = 0
+		)
+		StepsExecutorTest(
+			t, rt,
+			[]*sequence.Step{
+				{
+					Run: fmt.Sprintf(`
+					echo '::debug::test1'
+					echo '::stop-commands::%s'
+					echo '::debug::test2'
+					echo '::%s::'
+					echo '::debug::test3'
+					`, stopCommandsToken, stopCommandsToken),
+				},
+			},
+			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+				switch wc.Command {
+				case actions.CommandStopCommands:
+					assert.Equal(t, stopCommandsToken, wc.Value)
+				case actions.CommandDebug:
+					debugCount++
+				default:
+					assert.Equal(t, stopCommandsToken, wc.Command)
+				}
+			}),
+		)
+
+		assert.Equal(t, debugCount, 2)
+	}
 }
 
-func StepsExecutorStopCommandsTest(t *testing.T, rt runtime.Runtime) {
-	debugCount := 0
-
-	StepsExecutorTest(
-		t, rt,
-		[]*sequence.Step{
-			{
-				Run: `
-				echo '::debug::test1'
-				echo '::stop-commands::token'
-				echo '::debug::test2'
-				echo '::token::'
-				echo '::debug::test3'
-				`,
-			},
-		},
-		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-			switch wc.Command {
-			case actions.CommandStopCommands:
-				assert.Equal(t, "token", wc.Value)
-			case actions.CommandDebug:
-				debugCount++
-			default:
-				assert.Equal(t, "token", wc.Command)
-			}
-		}),
+func TestStepsExecutorSetOutput(t *testing.T) {
+	var (
+		output = "hellothere"
+		value  = "general kenobi"
+		stepID = "test"
 	)
-
-	assert.Equal(t, debugCount, 2)
-}
-
-func StepsExecutorSetOutputTest(t *testing.T, rt runtime.Runtime) {
-	StepsExecutorTest(
-		t, rt,
-		[]*sequence.Step{
-			{
-				Id:  "test",
-				Run: "echo '::set-output name=hellothere::general kenobi'",
+	for _, rt := range NewTestRuntimes(t) {
+		StepsExecutorTest(
+			t, rt,
+			[]*sequence.Step{
+				{
+					Id:  stepID,
+					Run: fmt.Sprintf("echo ::set-output name=%s::%s", output, value),
+				},
+				{
+					Run: fmt.Sprintf("echo ::notice::${{ steps.%s.outputs.%s }}", stepID, output),
+				},
 			},
-			{
-				Run: "echo '::notice::${{ steps.test.outputs.hellothere }}'",
-			},
-		},
-		sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-			switch wc.Command {
-			case actions.CommandSetOutput:
-				assert.Equal(t, "hellothere", wc.Parameters["name"])
-				assert.Equal(t, "general kenobi", wc.Value)
-			case actions.CommandNotice:
-				assert.Equal(t, "general kenobi", wc.Value)
-			}
-		}),
-	)
+			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
+				switch wc.Command {
+				case actions.CommandSetOutput:
+					assert.Equal(t, output, wc.Parameters["name"])
+					assert.Equal(t, value, wc.Value)
+				case actions.CommandNotice:
+					assert.Equal(t, value, wc.Value)
+				default:
+					assert.True(t, false, "unexpected workflow command", wc.String())
+				}
+			}),
+		)
+	}
 }
 
 func StepsExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) {

@@ -1,0 +1,13 @@
+jobs:
+  stop-commands:
+    steps:
+      - image: alpine:3.15
+        shell: sh
+        run: |
+          echo ::swallow::me1
+          echo ::notice::test1
+          echo ::stop-commands::token
+          echo ::notice::test2
+          echo ::swallow::me2
+          echo ::token::
+          echo ::notice::test3

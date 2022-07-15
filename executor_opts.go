@@ -60,6 +60,18 @@ func WithGlobalContext(gc *actions.GlobalContext) ExecutorOpt {
 	}
 }
 
+func WithJobName(jobName string) ExecutorOpt {
+	return func(e *executor) error {
+		return actions.WithJobName(jobName)(e.GlobalContext)
+	}
+}
+
+func WithWorkflowName(workflowName string) ExecutorOpt {
+	return func(e *executor) error {
+		return actions.WithWorkflowName(workflowName)(e.GlobalContext)
+	}
+}
+
 func OnImagePull(hooks ...Hook[runtime.Image]) ExecutorOpt {
 	return func(e *executor) error {
 		e.OnImagePull = append(e.OnImagePull, hooks...)
