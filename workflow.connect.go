@@ -26,9 +26,9 @@ const (
 
 // WorkflowServiceClient is a client for the sequence.WorkflowService service.
 type WorkflowServiceClient interface {
-	RunWorkflow(context.Context, *connect_go.Request[RunWorkflowRequest]) (*connect_go.ServerStreamForClient[RunWorkflowResponse], error)
-	RunJob(context.Context, *connect_go.Request[RunJobRequest]) (*connect_go.ServerStreamForClient[RunJobResponse], error)
 	RunStep(context.Context, *connect_go.Request[RunStepRequest]) (*connect_go.ServerStreamForClient[RunStepResponse], error)
+	RunJob(context.Context, *connect_go.Request[RunJobRequest]) (*connect_go.ServerStreamForClient[RunJobResponse], error)
+	RunWorkflow(context.Context, *connect_go.Request[RunWorkflowRequest]) (*connect_go.ServerStreamForClient[RunWorkflowResponse], error)
 }
 
 // NewWorkflowServiceClient constructs a client for the sequence.WorkflowService service. By
@@ -41,9 +41,9 @@ type WorkflowServiceClient interface {
 func NewWorkflowServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) WorkflowServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &workflowServiceClient{
-		runWorkflow: connect_go.NewClient[RunWorkflowRequest, RunWorkflowResponse](
+		runStep: connect_go.NewClient[RunStepRequest, RunStepResponse](
 			httpClient,
-			baseURL+"/sequence.WorkflowService/RunWorkflow",
+			baseURL+"/sequence.WorkflowService/RunStep",
 			opts...,
 		),
 		runJob: connect_go.NewClient[RunJobRequest, RunJobResponse](
@@ -51,9 +51,9 @@ func NewWorkflowServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/sequence.WorkflowService/RunJob",
 			opts...,
 		),
-		runStep: connect_go.NewClient[RunStepRequest, RunStepResponse](
+		runWorkflow: connect_go.NewClient[RunWorkflowRequest, RunWorkflowResponse](
 			httpClient,
-			baseURL+"/sequence.WorkflowService/RunStep",
+			baseURL+"/sequence.WorkflowService/RunWorkflow",
 			opts...,
 		),
 	}
@@ -61,19 +61,9 @@ func NewWorkflowServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 
 // workflowServiceClient implements WorkflowServiceClient.
 type workflowServiceClient struct {
-	runWorkflow *connect_go.Client[RunWorkflowRequest, RunWorkflowResponse]
-	runJob      *connect_go.Client[RunJobRequest, RunJobResponse]
 	runStep     *connect_go.Client[RunStepRequest, RunStepResponse]
-}
-
-// RunWorkflow calls sequence.WorkflowService.RunWorkflow.
-func (c *workflowServiceClient) RunWorkflow(ctx context.Context, req *connect_go.Request[RunWorkflowRequest]) (*connect_go.ServerStreamForClient[RunWorkflowResponse], error) {
-	return c.runWorkflow.CallServerStream(ctx, req)
-}
-
-// RunJob calls sequence.WorkflowService.RunJob.
-func (c *workflowServiceClient) RunJob(ctx context.Context, req *connect_go.Request[RunJobRequest]) (*connect_go.ServerStreamForClient[RunJobResponse], error) {
-	return c.runJob.CallServerStream(ctx, req)
+	runJob      *connect_go.Client[RunJobRequest, RunJobResponse]
+	runWorkflow *connect_go.Client[RunWorkflowRequest, RunWorkflowResponse]
 }
 
 // RunStep calls sequence.WorkflowService.RunStep.
@@ -81,11 +71,21 @@ func (c *workflowServiceClient) RunStep(ctx context.Context, req *connect_go.Req
 	return c.runStep.CallServerStream(ctx, req)
 }
 
+// RunJob calls sequence.WorkflowService.RunJob.
+func (c *workflowServiceClient) RunJob(ctx context.Context, req *connect_go.Request[RunJobRequest]) (*connect_go.ServerStreamForClient[RunJobResponse], error) {
+	return c.runJob.CallServerStream(ctx, req)
+}
+
+// RunWorkflow calls sequence.WorkflowService.RunWorkflow.
+func (c *workflowServiceClient) RunWorkflow(ctx context.Context, req *connect_go.Request[RunWorkflowRequest]) (*connect_go.ServerStreamForClient[RunWorkflowResponse], error) {
+	return c.runWorkflow.CallServerStream(ctx, req)
+}
+
 // WorkflowServiceHandler is an implementation of the sequence.WorkflowService service.
 type WorkflowServiceHandler interface {
-	RunWorkflow(context.Context, *connect_go.Request[RunWorkflowRequest], *connect_go.ServerStream[RunWorkflowResponse]) error
-	RunJob(context.Context, *connect_go.Request[RunJobRequest], *connect_go.ServerStream[RunJobResponse]) error
 	RunStep(context.Context, *connect_go.Request[RunStepRequest], *connect_go.ServerStream[RunStepResponse]) error
+	RunJob(context.Context, *connect_go.Request[RunJobRequest], *connect_go.ServerStream[RunJobResponse]) error
+	RunWorkflow(context.Context, *connect_go.Request[RunWorkflowRequest], *connect_go.ServerStream[RunWorkflowResponse]) error
 }
 
 // NewWorkflowServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -95,9 +95,9 @@ type WorkflowServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewWorkflowServiceHandler(svc WorkflowServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
 	mux := http.NewServeMux()
-	mux.Handle("/sequence.WorkflowService/RunWorkflow", connect_go.NewServerStreamHandler(
-		"/sequence.WorkflowService/RunWorkflow",
-		svc.RunWorkflow,
+	mux.Handle("/sequence.WorkflowService/RunStep", connect_go.NewServerStreamHandler(
+		"/sequence.WorkflowService/RunStep",
+		svc.RunStep,
 		opts...,
 	))
 	mux.Handle("/sequence.WorkflowService/RunJob", connect_go.NewServerStreamHandler(
@@ -105,9 +105,9 @@ func NewWorkflowServiceHandler(svc WorkflowServiceHandler, opts ...connect_go.Ha
 		svc.RunJob,
 		opts...,
 	))
-	mux.Handle("/sequence.WorkflowService/RunStep", connect_go.NewServerStreamHandler(
-		"/sequence.WorkflowService/RunStep",
-		svc.RunStep,
+	mux.Handle("/sequence.WorkflowService/RunWorkflow", connect_go.NewServerStreamHandler(
+		"/sequence.WorkflowService/RunWorkflow",
+		svc.RunWorkflow,
 		opts...,
 	))
 	return "/sequence.WorkflowService/", mux
@@ -116,14 +116,14 @@ func NewWorkflowServiceHandler(svc WorkflowServiceHandler, opts ...connect_go.Ha
 // UnimplementedWorkflowServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedWorkflowServiceHandler struct{}
 
-func (UnimplementedWorkflowServiceHandler) RunWorkflow(context.Context, *connect_go.Request[RunWorkflowRequest], *connect_go.ServerStream[RunWorkflowResponse]) error {
-	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("sequence.WorkflowService.RunWorkflow is not implemented"))
+func (UnimplementedWorkflowServiceHandler) RunStep(context.Context, *connect_go.Request[RunStepRequest], *connect_go.ServerStream[RunStepResponse]) error {
+	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("sequence.WorkflowService.RunStep is not implemented"))
 }
 
 func (UnimplementedWorkflowServiceHandler) RunJob(context.Context, *connect_go.Request[RunJobRequest], *connect_go.ServerStream[RunJobResponse]) error {
 	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("sequence.WorkflowService.RunJob is not implemented"))
 }
 
-func (UnimplementedWorkflowServiceHandler) RunStep(context.Context, *connect_go.Request[RunStepRequest], *connect_go.ServerStream[RunStepResponse]) error {
-	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("sequence.WorkflowService.RunStep is not implemented"))
+func (UnimplementedWorkflowServiceHandler) RunWorkflow(context.Context, *connect_go.Request[RunWorkflowRequest], *connect_go.ServerStream[RunWorkflowResponse]) error {
+	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("sequence.WorkflowService.RunWorkflow is not implemented"))
 }
