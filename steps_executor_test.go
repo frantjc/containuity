@@ -168,7 +168,7 @@ func TestStepsExecutorSetOutput(t *testing.T) {
 			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
 				switch wc.Command {
 				case actions.CommandSetOutput:
-					assert.Equal(t, output, wc.Parameters["name"])
+					assert.Equal(t, output, wc.GetName())
 					assert.Equal(t, value, wc.Value)
 				case actions.CommandNotice:
 					assert.Equal(t, value, wc.Value)

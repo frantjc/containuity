@@ -84,7 +84,7 @@ func TestWorkflowExecutorNeedsTest(t *testing.T) {
 				switch wc.Command {
 				case actions.CommandSetOutput:
 					assert.Equal(t, value, wc.Value)
-					assert.Equal(t, output, wc.Parameters["name"])
+					assert.Equal(t, output, wc.GetName())
 				case actions.CommandNotice:
 					assert.Equal(t, value, wc.Value)
 				default:
