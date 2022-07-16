@@ -18,30 +18,31 @@ func (e *executor) SetupAction(ctx context.Context, action *uses.Uses) (*actions
 		return nil, fmt.Errorf("action must not be nil")
 	}
 
-	spec := &runtime.Spec{
-		Image:      e.RunnerImage.GetRef(),
-		Entrypoint: []string{paths.Shim, action.String(), e.GlobalContext.GitHubContext.ActionPath},
-		Env: []string{
-			"SQNC=true",
-			"SEQUENCE=true",
-		},
-		Mounts: []*runtime.Mount{
-			{
-				// actions are global because each step that uses
-				// actions/checkout@v2 expects it to function the same
-				Source:      volumes.GetActionSource(action),
-				Destination: e.GlobalContext.GitHubContext.ActionPath,
-				Type:        runtime.MountTypeVolume,
+	var (
+		spec = &runtime.Spec{
+			Image:      e.RunnerImage.GetRef(),
+			Entrypoint: []string{paths.Shim, action.String(), e.GlobalContext.GitHubContext.ActionPath},
+			Env: []string{
+				"SQNC=true",
+				"SEQUENCE=true",
 			},
-		},
-	}
-
-	outbuf := new(bytes.Buffer)
+			Mounts: []*runtime.Mount{
+				{
+					// actions are global because each step that uses
+					// actions/checkout@v2 expects it to function the same
+					Source:      volumes.GetActionSource(action),
+					Destination: e.GlobalContext.GitHubContext.ActionPath,
+					Type:        runtime.MountTypeVolume,
+				},
+			},
+		}
+		outbuf = new(bytes.Buffer)
+		out    = &Step_Out{}
+	)
 	if err := e.RunContainer(ctx, spec, runtime.NewStreams(e.Stdin, outbuf, e.Stderr)); err != nil {
 		return nil, err
 	}
 
-	out := &Step_Out{}
 	if err := json.NewDecoder(outbuf).Decode(out); err != nil {
 		return nil, err
 	}

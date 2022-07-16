@@ -7,6 +7,7 @@ import (
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/internal/flags"
+	"github.com/frantjc/sequence/internal/plugins"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +15,11 @@ var (
 	rootCmd = &cobra.Command{
 		Use:     "sqnc",
 		Version: sequence.Semver(),
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+			if err := plugins.Open(); err != nil {
+				cmd.PrintErrln(err)
+			}
+		},
 	}
 )
 
@@ -24,10 +30,10 @@ func init() {
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&flags.PluginDir, "plugins", "p", "", "plugin directory")
-	if err := rootCmd.MarkFlagDirname("plugins"); err != nil {
-		panic(err)
-	}
+	rootCmd.PersistentFlags().StringVar(&flags.PluginDir, "plugins", "", "plugin directory")
+	// TODO if err := rootCmd.MarkFlagDirname("plugins"); err != nil {
+	// 	panic(err)
+	// }
 }
 
 func init() {

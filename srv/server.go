@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/internal/runtimes"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/sqnc"
 	"github.com/frantjc/sequence/svc"
@@ -20,6 +21,7 @@ func NewHandler(ctx context.Context, opts ...Opt) (*Server, error) {
 		server = &Server{
 			mux: http.NewServeMux(),
 		}
+		err error
 	)
 	for _, opt := range opts {
 		if err := opt(ctx, server); err != nil {
@@ -30,7 +32,7 @@ func NewHandler(ctx context.Context, opts ...Opt) (*Server, error) {
 	if server.runtime == nil {
 		// get any runtime, starting with one
 		// specified by SQNC_RUNTIME
-		if err := WithRuntimeName()(ctx, server); err != nil {
+		if server.runtime, err = runtimes.GetRuntime(ctx); err != nil {
 			return nil, err
 		}
 	}

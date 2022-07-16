@@ -14,9 +14,9 @@ message Workflow {
 }
 
 service WorkflowService {
-  rpc RunWorkflow(RunWorkflowRequest) returns (stream RunWorkflowResponse);
-  rpc RunJob(RunJobRequest) returns (stream RunJobResponse);
   rpc RunStep(RunStepRequest) returns (stream RunStepResponse);
+  rpc RunJob(RunJobRequest) returns (stream RunJobResponse);
+  rpc RunWorkflow(RunWorkflowRequest) returns (stream RunWorkflowResponse);
 }
 
 message RunStepRequest {

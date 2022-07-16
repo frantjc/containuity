@@ -48,9 +48,7 @@ func GetRuntime(ctx context.Context, names ...string) (runtime.Runtime, error) {
 
 	if len(names) == 0 {
 		if name, ok := os.LookupEnv(EnvVarRuntimeName); ok {
-			if runtime, err := GetRuntime(ctx, name); err == nil {
-				return runtime, nil
-			}
+			return GetRuntime(ctx, name)
 		}
 
 		for _, r := range initializedRuntimes.r {

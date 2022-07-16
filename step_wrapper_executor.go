@@ -6,12 +6,10 @@ import (
 	"path"
 
 	"github.com/frantjc/go-js"
-	"github.com/frantjc/sequence/pkg/github/actions"
-
-	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/internal/paths/volumes"
 	"github.com/frantjc/sequence/internal/shim"
+	"github.com/frantjc/sequence/pkg/github/actions"
 	"github.com/frantjc/sequence/runtime"
 )
 
@@ -26,9 +24,6 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 	if _, ok := e.stopCommandsTokens[wc.Command]; ok {
 		e.OnWorkflowCommand.Hook(wc)
 		e.stopCommandsTokens[wc.Command] = false
-		if e.Verbose {
-			return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s end token '%s'", log.ColorDebug, log.ColorNone, actions.CommandStopCommands, wc.Command))
-		}
 		return make([]byte, 0)
 	}
 
@@ -41,16 +36,6 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 	e.OnWorkflowCommand.Hook(wc)
 
 	switch wc.Command {
-	case actions.CommandError:
-		return []byte(fmt.Sprintf("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, wc.Value))
-	case actions.CommandWarning:
-		return []byte(fmt.Sprintf("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, wc.Value))
-	case actions.CommandNotice:
-		return []byte(fmt.Sprintf("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, wc.Value))
-	case actions.CommandDebug:
-		if e.Verbose || e.echo {
-			return []byte(fmt.Sprintf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, wc.Value))
-		}
 	case actions.CommandSetOutput:
 		if e.GlobalContext.StepsContext[e.stepWrapper.step.GetId()] == nil {
 			e.GlobalContext.StepsContext[e.stepWrapper.step.GetId()] = &actions.StepsContext{
@@ -59,14 +44,8 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 		}
 
 		e.GlobalContext.StepsContext[e.stepWrapper.step.GetId()].Outputs[wc.Parameters["name"]] = wc.Value
-		if e.Verbose || e.echo {
-			return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s for", log.ColorDebug, log.ColorNone, wc.Command, wc.Parameters["name"], wc.Value))
-		}
 	case actions.CommandStopCommands:
 		e.stopCommandsTokens[wc.Value] = true
-		if e.Verbose || e.echo {
-			return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s until '%s'", log.ColorDebug, log.ColorNone, wc.Command, wc.Value))
-		}
 	case actions.CommandEcho:
 		if wc.Value == "on" {
 			e.echo = true
@@ -75,14 +54,8 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 		}
 	case actions.CommandSaveState:
 		e.stepWrapper.state[wc.Parameters["name"]] = wc.Value
-		if e.Verbose || e.echo {
-			return []byte(fmt.Sprintf("[%sSQNC:DBG%s] %s %s=%s", log.ColorDebug, log.ColorNone, wc.Command, wc.Parameters["name"], wc.Value))
-		}
-	default:
-		if e.Verbose || e.echo {
-			return []byte(fmt.Sprintf("[%sSQNC:DBG%s] swallowing unrecognized workflow command '%s'", log.ColorDebug, log.ColorNone, wc.Command))
-		}
 	}
+
 	return make([]byte, 0)
 }
 

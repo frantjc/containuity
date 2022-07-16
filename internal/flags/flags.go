@@ -3,6 +3,6 @@ package flags
 var (
 	File        string
 	PluginDir   string
-	Quiet       bool
+	Verbose     bool
 	RuntimeName string
 )
