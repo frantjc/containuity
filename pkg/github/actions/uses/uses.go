@@ -24,6 +24,10 @@ func (u *Uses) String() string {
 	return s
 }
 
+func (u *Uses) GoString() string {
+	return fmt.Sprintf("&Uses{%s}", u)
+}
+
 func Parse(uses string) (*Uses, error) {
 	r := &Uses{}
 
