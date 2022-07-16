@@ -26,10 +26,6 @@ func TestStepsExecutorCheckoutSetupGo(t *testing.T) {
 					"go-version": "1.18",
 				},
 			},
-			{
-				// hilariously, "recursively" run some of sequence's test :)
-				Run: "go test ./internal/...",
-			},
 		})
 	}
 }
@@ -77,7 +73,7 @@ func TestStepsExecutorGitHubPath(t *testing.T) {
 					Run: fmt.Sprintf("echo /.bin >> $%s", actions.EnvVarPath),
 				},
 				{
-					Run: "echo \"::debug::$PATH\"",
+					Run: "echo ::debug::$PATH",
 				},
 			},
 			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {

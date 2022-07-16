@@ -51,7 +51,6 @@ Format `.go` and `.proto` code.
 
 ```sh
 make fmt    # go fmt ./...
-make format # buf format -w
 make lint   # golangci-lint run
 ```
 

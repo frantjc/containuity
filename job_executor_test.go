@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestJobExecutorCheckoutTest(t *testing.T) {
+func TestJobExecutorCheckout(t *testing.T) {
 	for _, rt := range NewTestRuntimes(t) {
 		JobExecutorTest(
 			t, rt,
@@ -22,15 +22,10 @@ func TestJobExecutorCheckoutTest(t *testing.T) {
 					{
 						Uses: "actions/checkout@v3",
 					},
-					{
-						// hilariously, "recursively" run some of sequence's test :)
-						Image: golang118Ref,
-						Run:   "go test ./internal/...",
-					},
 				},
 			},
 			sequence.OnImagePull(func(i runtime.Image) {
-				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef(), golang118Ref}, i.GetRef())
+				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef()}, i.GetRef())
 			}),
 		)
 	}
