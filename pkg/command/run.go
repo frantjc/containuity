@@ -1,6 +1,8 @@
 package command
 
 import (
+	"os"
+
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/internal/runtimes"
@@ -10,21 +12,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//nolint: gocyclo
 func NewRunCommand() (Cmd, error) {
 	var (
 		workflowFile string
 		runtimeName  string
 		verbose      bool
+		githubToken  string
+		context      string
 		runCmd       = &cobra.Command{
 			Use:  "run",
 			Args: cobra.NoArgs,
 			Run: func(cmd *cobra.Command, _ []string) {
 				var (
-					ctx     = cmd.Context()
-					rt, err = runtimes.GetRuntime(ctx, runtimeName)
-					stdout  = log.New(cmd.OutOrStdout())
-					stderr  = log.New(cmd.ErrOrStderr())
+					ctx    = cmd.Context()
+					stdout = log.New(cmd.OutOrStdout())
+					stderr = log.New(cmd.ErrOrStderr())
 				)
+
+				rt, err := runtimes.GetRuntime(ctx, runtimeName)
 				if err != nil {
 					cmd.PrintErrln(err)
 					return
@@ -36,10 +42,29 @@ func NewRunCommand() (Cmd, error) {
 					return
 				}
 
+				if githubToken == "" {
+					githubToken = os.Getenv("GITHUB_TOKEN")
+				}
+
+				if context == "" {
+					context, err = os.Getwd()
+					if err != nil {
+						cmd.PrintErrln(err)
+						return
+					}
+				}
+
+				gc, err := actions.NewContextFromPath(ctx, context, actions.WithToken(githubToken))
+				if err != nil {
+					cmd.PrintErrln(err)
+					return
+				}
+
 				var (
 					echo bool
 					opts = []sequence.ExecutorOpt{
 						sequence.WithRuntime(rt),
+						sequence.WithGlobalContext(gc),
 						sequence.WithStreams(
 							cmd.InOrStdin(),
 							cmd.OutOrStdout(),
@@ -113,6 +138,8 @@ func NewRunCommand() (Cmd, error) {
 
 	runCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "V", false, "debug logs")
 	runCmd.PersistentFlags().StringVar(&runtimeName, "runtime", docker.RuntimeName, "runtime to use")
+	runCmd.PersistentFlags().StringVar(&githubToken, "github-token", "", "GitHub token to use")
+	runCmd.PersistentFlags().StringVar(&context, "context", "", "path to get context from .git")
 
 	return runCmd, nil
 }
