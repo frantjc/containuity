@@ -13,6 +13,7 @@ var (
 
 func Semver() string {
 	version := Version
+
 	if Prerelease != "" {
 		version = fmt.Sprintf("%s-%s", version, Prerelease)
 	}

@@ -8,5 +8,3 @@ import (
 func init() {
 	runtimes.RegisterRuntime(docker.RuntimeName, docker.NewRuntime)
 }
-
-func main() {}

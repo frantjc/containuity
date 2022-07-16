@@ -1,26 +1,24 @@
-ARG base_image=alpine:3.15
-ARG build_image=golang:1.18-alpine3.15
+ARG base_image=debian
+ARG build_image=golang:1.18
 
 FROM ${base_image} AS base_image
 
 FROM ${build_image} AS build_image
-ENV CGO_ENABLED=0
 
 FROM build_image AS build
 WORKDIR $GOPATH/src/github.com/frantjc/sequence
+ARG version=0.0.0
+ARG prerelease=
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-ARG version=0.0.0
-ARG prerelease=
-RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/sqnc-shim
-RUN cp /usr/local/bin/sqnc-shim internal/shim/
-RUN go build -ldflags "-s -w" -o /usr/local/bin ./internal/cmd/sqnc-runtime-docker
-RUN go build -ldflags "-s -w" -o /usr/local/bin ./cmd/sqnc
+RUN go build -ldflags "-s -w" -o $GOPATH/bin ./cmd/sqnc
+RUN go build -buildmode=plugin -ldflags "-s -w" -o $GOPATH/bin/sqnc-runtime-docker.so ./internal/cmd/sqnc-runtime-docker
 
 FROM base_image AS sequence
-COPY --from=build /usr/local/bin /usr/local/bin
-RUN ln -s /usr/local/bin/sqnc-runtime-docker /etc/sqnc/plugins/sqnc-runtime-default
+RUN mkdir -p /etc/sqnc/plugins
+COPY --from=build /go/bin /usr/local/bin
+RUN mv /usr/local/bin/*.so /etc/sqnc/plugins
 ENTRYPOINT ["sqnc"]
 
 FROM sequence

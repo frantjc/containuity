@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/internal/flags"
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +21,13 @@ func init() {
 	rootCmd.SetVersionTemplate(
 		fmt.Sprintf("{{ .Name }}{{ .Version }} %s\n", runtime.Version()),
 	)
+}
+
+func init() {
+	rootCmd.Flags().StringVarP(&flags.PluginDir, "plugins", "p", "", "plugin directory")
+	if err := rootCmd.MarkFlagDirname("plugins"); err != nil {
+		panic(err)
+	}
 }
 
 func init() {

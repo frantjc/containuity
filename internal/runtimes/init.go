@@ -5,91 +5,79 @@ import (
 	"os"
 	"sync"
 
-	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/runtime"
-	"github.com/frantjc/sequence/runtime/docker"
 )
 
 const (
-	EnvVarRuntimeName  = "SQNC_RUNTIME"
-	DefaultRuntimeName = docker.RuntimeName
+	EnvVarRuntimeName = "SQNC_RUNTIME"
 )
-
-var (
-	RuntimeName = DefaultRuntimeName
-)
-
-func init() {
-	if runtimeName, ok := os.LookupEnv(EnvVarRuntimeName); ok {
-		RuntimeName = runtimeName
-	}
-}
 
 type NewRuntimeFunc func(context.Context) (runtime.Runtime, error)
 
 var (
-	RegisteredRuntimes = struct {
-		sync.RWMutex
+	registeredRuntimes = struct {
+		sync.Mutex
 		r map[string]NewRuntimeFunc
 	}{
 		r: map[string]NewRuntimeFunc{},
 	}
-	InitializedRuntimes = struct {
-		sync.RWMutex
+	initializedRuntimes = struct {
+		sync.Mutex
 		r map[string]runtime.Runtime
 	}{
 		r: map[string]runtime.Runtime{},
 	}
 )
 
+func init() {
+	// TODO RegisterRuntime(sqnc.RuntimeName, ...)
+}
+
 func RegisterRuntime(name string, f NewRuntimeFunc) {
-	RegisteredRuntimes.Lock()
-	defer RegisteredRuntimes.Unlock()
-	RegisteredRuntimes.r[name] = f
+	registeredRuntimes.Lock()
+	defer registeredRuntimes.Unlock()
+	registeredRuntimes.r[name] = f
 }
 
 func GetRuntime(ctx context.Context, names ...string) (runtime.Runtime, error) {
-	RegisteredRuntimes.Lock()
-	defer RegisteredRuntimes.Unlock()
+	registeredRuntimes.Lock()
+	defer registeredRuntimes.Unlock()
 
-	InitializedRuntimes.Lock()
-	defer InitializedRuntimes.Unlock()
-
-	log.Infof("%s, %s", names, RegisteredRuntimes.r)
+	initializedRuntimes.Lock()
+	defer initializedRuntimes.Unlock()
 
 	if len(names) == 0 {
-		for _, r := range InitializedRuntimes.r {
+		if name, ok := os.LookupEnv(EnvVarRuntimeName); ok {
+			if runtime, err := GetRuntime(ctx, name); err == nil {
+				return runtime, nil
+			}
+		}
+
+		for _, r := range initializedRuntimes.r {
 			return r, nil
 		}
 
-		for _, f := range RegisteredRuntimes.r {
+		for _, f := range registeredRuntimes.r {
 			return f(ctx)
 		}
 	}
 
 	for _, name := range names {
-		if r, ok := InitializedRuntimes.r[name]; ok {
+		if r, ok := initializedRuntimes.r[name]; ok {
 			return r, nil
 		}
 
-		if f, ok := RegisteredRuntimes.r[name]; ok {
+		if f, ok := registeredRuntimes.r[name]; ok {
 			r, err := f(ctx)
 			if err != nil {
 				return nil, err
 			}
-			InitializedRuntimes.r[name] = r
+
+			initializedRuntimes.r[name] = r
 
 			return r, nil
 		}
 	}
 
 	return nil, ErrRuntimeNotFound
-}
-
-func GetDefaultRuntime(ctx context.Context) (runtime.Runtime, error) {
-	return GetRuntime(ctx, RuntimeName)
-}
-
-func GetAnyRuntime(ctx context.Context) (runtime.Runtime, error) {
-	return GetRuntime(ctx)
 }

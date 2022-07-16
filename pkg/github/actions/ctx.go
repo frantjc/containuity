@@ -275,12 +275,9 @@ type NeedsContext struct {
 func (c *NeedsContext) GetString(key string) string {
 	keys := strings.Split(key, ".")
 	if len(keys) > 0 {
-		switch keys[0] {
-		case "outputs":
-			if len(keys) > 1 {
-				if v, ok := c.Outputs[keys[1]]; ok {
-					return v
-				}
+		if keys[0] == "outputs" && len(keys) > 1 {
+			if v, ok := c.Outputs[keys[1]]; ok {
+				return v
 			}
 		}
 	}

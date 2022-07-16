@@ -6,6 +6,7 @@ GIT ?= git
 DOCKER ?= docker
 GOLANGCI-LINT ?= golangci-lint
 BUF ?= buf
+INSTALL ?= sudo install
 
 VERSION ?= 0.0.0
 PRERELEASE ?= dev0
@@ -24,17 +25,24 @@ BUILD_ARGS ?= --build-arg version=$(VERSION) --build-arg prerelease=$(PRERELEASE
 
 GITHUB_TOKEN ?= $(shell source $(DOTENV) && echo $$GITHUB_TOKEN)
 
-INSTALL ?= sudo install
+HOME ?= ~
+CONFIG_DIR ?= $(HOME)/.sqnc
+PLUGIN_DIR ?= $(CONFIG_DIR)/plugins
 
 .DEFAULT: install
 
 install: binaries
-	@$(INSTALL) $(CURDIR)/bin/sqncd $(CURDIR)/bin/sqnc $(BIN)
+	@mkdir -p $(PLUGIN_DIR)
+	@$(INSTALL) $(CURDIR)/bin/sqnc $(BIN)
+	@$(INSTALL) $(CURDIR)/bin/sqnc-runtime-docker.so $(PLUGIN_DIR)
 
-bins binaries: sqnc sqncd sqnctl
+bins binaries: sqnc sqnc-runtime-docker
 
-sqnc sqncd sqnctl:
-# @$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+sqnc:
+	@$(GO) build -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin $(CURDIR)/cmd/$@
+
+sqnc-runtime-docker:
+	@$(GO) build -buildmode=plugin -ldflags "-s -w -X $(MODULE).Version=$(VERSION) -X $(MODULE).Prerelease=$(PRERELEASE)" -o $(CURDIR)/bin/$@.so $(CURDIR)/internal/cmd/$@
 
 image img: 
 	@$(DOCKER) build -t $(IMAGE) $(BUILD_ARGS) .

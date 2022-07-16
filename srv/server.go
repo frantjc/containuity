@@ -28,7 +28,9 @@ func NewHandler(ctx context.Context, opts ...Opt) (*Server, error) {
 	}
 
 	if server.runtime == nil {
-		if err := WithDefaultRuntime(ctx, server); err != nil {
+		// get any runtime, starting with one
+		// specified by SQNC_RUNTIME
+		if err := WithRuntimeName()(ctx, server); err != nil {
 			return nil, err
 		}
 	}
