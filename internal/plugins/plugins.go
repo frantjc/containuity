@@ -41,8 +41,8 @@ func Open() error {
 					return nil
 				}
 
-				_, err = plugin.Open(path)
-				return err
+				_, e := plugin.Open(path)
+				return e
 			}); err != nil {
 				return err
 			}
