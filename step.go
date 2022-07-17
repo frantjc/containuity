@@ -4,8 +4,14 @@ import (
 	"io"
 	"os"
 
+	"github.com/frantjc/go-js"
 	"gopkg.in/yaml.v3"
 )
+
+// GetID returns the step's effective ID
+func (s *Step) GetID() string {
+	return js.Coalesce(s.Id, s.Name)
+}
 
 // IsGitHubAction returns whether or not the step is a GitHub Action
 func (s *Step) IsGitHubAction() bool {

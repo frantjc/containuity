@@ -9,6 +9,8 @@ import (
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/sqnc"
 	"github.com/frantjc/sequence/svc"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 type Server struct {
@@ -16,7 +18,7 @@ type Server struct {
 	runtime runtime.Runtime
 }
 
-func NewHandler(ctx context.Context, opts ...Opt) (*Server, error) {
+func NewHandler(ctx context.Context, opts ...Opt) (http.Handler, error) {
 	var (
 		server = &Server{
 			mux: http.NewServeMux(),
@@ -52,7 +54,7 @@ func NewHandler(ctx context.Context, opts ...Opt) (*Server, error) {
 		server.mux.Handle(path, handler)
 	}
 
-	return server, nil
+	return h2c.NewHandler(server, &http2.Server{}), nil
 }
 
 func (h *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

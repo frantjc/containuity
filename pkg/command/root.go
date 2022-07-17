@@ -15,7 +15,7 @@ func NewRootCommand() (Cmd, error) {
 	var (
 		pluginDir string
 		rootCmd   = &cobra.Command{
-			Use:     "sqnc",
+			Use:     "sqnc [--plugins DIR] [-h] [command]",
 			Version: sequence.Semver(),
 			Args:    cobra.NoArgs,
 			PersistentPreRun: func(cmd *cobra.Command, _ []string) {
@@ -50,7 +50,8 @@ func NewRootCommand() (Cmd, error) {
 		pluginsValue = filepath.Join(homeDir, ".sqnc/plugins")
 	}
 
-	rootCmd.Flags().StringVar(&pluginDir, "plugins", pluginsValue, "plugin directory")
+	flags := rootCmd.Flags()
+	flags.StringVar(&pluginDir, "plugins", pluginsValue, "plugin directory")
 	if err := rootCmd.MarkFlagDirname("plugins"); err != nil {
 		return nil, err
 	}

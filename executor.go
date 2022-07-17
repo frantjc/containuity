@@ -28,6 +28,12 @@ type executor struct {
 	OnContainerCreate Hooks[runtime.Container]
 	OnVolumeCreate    Hooks[runtime.Volume]
 	OnWorkflowCommand Hooks[*actions.WorkflowCommand]
+	OnStepStart       Hooks[*Step]
+	OnStepFinish      Hooks[*Step]
+	OnJobStart        Hooks[*Job]
+	OnJobFinish       Hooks[*Job]
+	OnWorkflowStart   Hooks[*Workflow]
+	OnWorkflowFinish  Hooks[*Workflow]
 }
 
 func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams *runtime.Streams) error {
@@ -35,7 +41,10 @@ func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams
 	if err != nil {
 		return err
 	}
-	e.OnImagePull.Hook(image)
+	e.OnImagePull.Invoke(&Event[runtime.Image]{
+		Type:          image,
+		GlobalContext: e.GlobalContext,
+	})
 
 	for _, mount := range spec.Mounts {
 		if mount.Type == runtime.MountTypeVolume {
@@ -45,7 +54,10 @@ func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams
 					return err
 				}
 			} else {
-				e.OnVolumeCreate.Hook(volume)
+				e.OnVolumeCreate.Invoke(&Event[runtime.Volume]{
+					Type:          volume,
+					GlobalContext: e.GlobalContext,
+				})
 			}
 			mount.Source = volume.GetSource()
 		}
@@ -55,7 +67,10 @@ func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams
 	if err != nil {
 		return err
 	}
-	e.OnContainerCreate.Hook(container)
+	e.OnContainerCreate.Invoke(&Event[runtime.Container]{
+		Type:          container,
+		GlobalContext: e.GlobalContext,
+	})
 
 	tarArchive, err := runtimeutil.NewSingleFileTarArchiveReader(shim.Name, shim.Bytes)
 	if err != nil {

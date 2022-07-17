@@ -80,15 +80,15 @@ func TestWorkflowExecutorNeedsTest(t *testing.T) {
 					},
 				},
 			},
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				switch wc.Command {
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				switch event.Type.Command {
 				case actions.CommandSetOutput:
-					assert.Equal(t, value, wc.Value)
-					assert.Equal(t, output, wc.GetName())
+					assert.Equal(t, value, event.Type.Value)
+					assert.Equal(t, output, event.Type.GetName())
 				case actions.CommandNotice:
-					assert.Equal(t, value, wc.Value)
+					assert.Equal(t, value, event.Type.Value)
 				default:
-					assert.True(t, false, "unexpected workflow command", wc.String())
+					assert.True(t, false, "unexpected workflow command", event.Type.String())
 				}
 			}),
 		)
@@ -115,17 +115,17 @@ func WorkflowExecutorTest(t *testing.T, rt runtime.Runtime, workflow *sequence.W
 		t, rt, workflow,
 		append(
 			opts,
-			sequence.OnImagePull(func(i runtime.Image) {
-				imagesPulled = append(imagesPulled, i)
+			sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+				imagesPulled = append(imagesPulled, event.Type)
 			}),
-			sequence.OnContainerCreate(func(c runtime.Container) {
-				containersCreated = append(containersCreated, c)
+			sequence.OnContainerCreate(func(event *sequence.Event[runtime.Container]) {
+				containersCreated = append(containersCreated, event.Type)
 			}),
-			sequence.OnVolumeCreate(func(v runtime.Volume) {
-				volumesCreated = append(volumesCreated, v)
+			sequence.OnVolumeCreate(func(event *sequence.Event[runtime.Volume]) {
+				volumesCreated = append(volumesCreated, event.Type)
 			}),
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				workflowCommandsIssued = append(workflowCommandsIssued, wc)
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				workflowCommandsIssued = append(workflowCommandsIssued, event.Type)
 			}),
 			sequence.WithStreams(os.Stdin, stdout, stderr),
 		)...,

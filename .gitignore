@@ -13,3 +13,6 @@ bin/*
 # go
 vendor/
 __debug_bin
+
+# upx
+*.upx

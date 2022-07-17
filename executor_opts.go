@@ -99,3 +99,45 @@ func OnWorkflowCommand(hooks ...Hook[*actions.WorkflowCommand]) ExecutorOpt {
 		return nil
 	}
 }
+
+func OnStepStart(hooks ...Hook[*Step]) ExecutorOpt {
+	return func(e *executor) error {
+		e.OnStepStart = append(e.OnStepStart, hooks...)
+		return nil
+	}
+}
+
+func OnStepFinish(hooks ...Hook[*Step]) ExecutorOpt {
+	return func(e *executor) error {
+		e.OnStepFinish = append(e.OnStepFinish, hooks...)
+		return nil
+	}
+}
+
+func OnJobStart(hooks ...Hook[*Job]) ExecutorOpt {
+	return func(e *executor) error {
+		e.OnJobStart = append(e.OnJobStart, hooks...)
+		return nil
+	}
+}
+
+func OnJobFinish(hooks ...Hook[*Job]) ExecutorOpt {
+	return func(e *executor) error {
+		e.OnJobFinish = append(e.OnJobFinish, hooks...)
+		return nil
+	}
+}
+
+func OnWorkflowStart(hooks ...Hook[*Workflow]) ExecutorOpt {
+	return func(e *executor) error {
+		e.OnWorkflowStart = append(e.OnWorkflowStart, hooks...)
+		return nil
+	}
+}
+
+func OnWorkflowFinish(hooks ...Hook[*Workflow]) ExecutorOpt {
+	return func(e *executor) error {
+		e.OnWorkflowFinish = append(e.OnWorkflowFinish, hooks...)
+		return nil
+	}
+}

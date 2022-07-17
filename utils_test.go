@@ -8,15 +8,12 @@ import (
 	"os"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/frantjc/sequence"
 	"github.com/frantjc/sequence/runtime"
 	"github.com/frantjc/sequence/runtime/docker"
 	"github.com/frantjc/sequence/srv"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 var (
@@ -48,13 +45,11 @@ func NewTestRuntimes(t *testing.T) []runtime.Runtime {
 
 	// serve sqncRuntimeHandler on the random port
 	go func() {
-		assert.Error(t, http.Serve(l, h2c.NewHandler(sqncRuntimeHandler, &http2.Server{})))
+		assert.Error(t, http.Serve(l, sqncRuntimeHandler))
 	}()
 	t.Cleanup(func() {
 		assert.Nil(t, l.Close())
 	})
-
-	time.Sleep(time.Second * 5)
 
 	// get the random address
 	addr, err := url.Parse("http://" + l.Addr().String())
@@ -71,7 +66,7 @@ func NewTestRuntimes(t *testing.T) []runtime.Runtime {
 
 	runtimes := []runtime.Runtime{
 		dockerRuntime,
-		// sqncRuntime,
+		sqncRuntime,
 	}
 
 	for _, rt := range runtimes {

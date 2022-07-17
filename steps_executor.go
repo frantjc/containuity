@@ -23,7 +23,7 @@ type stepsExecutor struct {
 func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (Executor, error) {
 	var (
 		gc, err = actions.NewContext(paths.GlobalContextOpts()...)
-		e       = &stepsExecutor{
+		se      = &stepsExecutor{
 			executor: &executor{
 				Stdin:         os.Stdin,
 				Stdout:        os.Stdout,
@@ -39,12 +39,12 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 	}
 
 	for _, opt := range opts {
-		if err := opt(e.executor); err != nil {
+		if err := opt(se.executor); err != nil {
 			return nil, err
 		}
 	}
 
-	return e, nil
+	return se, nil
 }
 
 func (e *stepsExecutor) Execute(ctx context.Context) error {
@@ -66,18 +66,18 @@ func (e *stepsExecutor) Execute(ctx context.Context) error {
 					return err
 				}
 
-				re := &stepsExecutor{
+				rse := &stepsExecutor{
 					executor: e.executor,
 					steps:    steps,
 				}
 
-				if err := re.Execute(ctx); err != nil {
+				if err := rse.Execute(ctx); err != nil {
 					return err
 				}
 
-				e.preStepWrappers = append(e.preStepWrappers, re.preStepWrappers...)
-				e.mainStepWrappers = append(e.mainStepWrappers, re.mainStepWrappers...)
-				e.postStepWrappers = append(js.Reverse(re.postStepWrappers), e.postStepWrappers...)
+				e.preStepWrappers = append(e.preStepWrappers, rse.preStepWrappers...)
+				e.mainStepWrappers = append(e.mainStepWrappers, rse.mainStepWrappers...)
+				e.postStepWrappers = append(js.Reverse(rse.postStepWrappers), e.postStepWrappers...)
 			} else {
 				preStep, mainStep, postStep, err := NewStepsFromNonCompositeMetadata(actionMetadata, paths.Action, step)
 				if err != nil {
@@ -135,17 +135,27 @@ func (e *stepsExecutor) Execute(ctx context.Context) error {
 		append(e.preStepWrappers, e.mainStepWrappers...),
 		e.postStepWrappers...,
 	) {
+		e.OnStepStart.Invoke(&Event[*Step]{
+			Type:          stepWrapper.step,
+			GlobalContext: e.GlobalContext,
+		})
+
 		swe := &stepWrapperExecutor{
 			executor:           e.executor,
 			stepWrapper:        stepWrapper,
 			stopCommandsTokens: map[string]bool{},
 		}
 
-		if err := swe.ExecuteStep(ctx); err != nil {
+		if err := swe.Execute(ctx); err != nil {
 			return err
 		}
 
 		e.executor = swe.executor
+
+		e.OnStepFinish.Invoke(&Event[*Step]{
+			Type:          stepWrapper.step,
+			GlobalContext: e.GlobalContext,
+		})
 	}
 
 	return nil

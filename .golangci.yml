@@ -18,6 +18,7 @@ linters:
     - misspell
     - depguard
     - importas
-    - contextcheck
     - nolintlint
     - revive
+  disable:
+    - structcheck

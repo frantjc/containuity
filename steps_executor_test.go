@@ -40,8 +40,8 @@ func TestStepsExecutorDefaultImage(t *testing.T) {
 				},
 			},
 			sequence.WithRunnerImage(alpineImg),
-			sequence.OnImagePull(func(i runtime.Image) {
-				assert.Equal(t, alpineRef, i.GetRef())
+			sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+				assert.Equal(t, alpineRef, event.Type.GetRef())
 			}),
 		)
 	}
@@ -57,8 +57,8 @@ func TestStepsExecutorImage(t *testing.T) {
 					Run:   "echo test",
 				},
 			},
-			sequence.OnImagePull(func(i runtime.Image) {
-				assert.Equal(t, alpineRef, i.GetRef())
+			sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+				assert.Equal(t, alpineRef, event.Type.GetRef())
 			}),
 		)
 	}
@@ -76,8 +76,8 @@ func TestStepsExecutorGitHubPath(t *testing.T) {
 					Run: "echo ::debug::$PATH",
 				},
 			},
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				assert.Contains(t, wc.Value, "/.bin")
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				assert.Contains(t, event.Type.Value, "/.bin")
 			}),
 		)
 	}
@@ -99,8 +99,8 @@ func TestStepsExecutorGitHubEnv(t *testing.T) {
 					Run: fmt.Sprintf("echo ::debug::$%s", envVar),
 				},
 			},
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				assert.Equal(t, wc.Value, value)
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				assert.Equal(t, event.Type.Value, value)
 			}),
 		)
 	}
@@ -127,14 +127,14 @@ func TestStepsExecutorStopCommands(t *testing.T) {
 					`, stopCommandsToken, stopCommandsToken),
 				},
 			},
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				switch wc.Command {
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				switch event.Type.Command {
 				case actions.CommandStopCommands:
-					assert.Equal(t, stopCommandsToken, wc.Value)
+					assert.Equal(t, stopCommandsToken, event.Type.Value)
 				case actions.CommandDebug:
 					debugCount++
 				default:
-					assert.Equal(t, stopCommandsToken, wc.Command)
+					assert.Equal(t, stopCommandsToken, event.Type.Command)
 				}
 			}),
 		)
@@ -161,15 +161,15 @@ func TestStepsExecutorSetOutput(t *testing.T) {
 					Run: fmt.Sprintf("echo ::notice::${{ steps.%s.outputs.%s }}", stepID, output),
 				},
 			},
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				switch wc.Command {
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				switch event.Type.Command {
 				case actions.CommandSetOutput:
-					assert.Equal(t, output, wc.GetName())
-					assert.Equal(t, value, wc.Value)
+					assert.Equal(t, output, event.Type.GetName())
+					assert.Equal(t, value, event.Type.Value)
 				case actions.CommandNotice:
-					assert.Equal(t, value, wc.Value)
+					assert.Equal(t, value, event.Type.Value)
 				default:
-					assert.True(t, false, "unexpected workflow command", wc.String())
+					assert.True(t, false, "unexpected workflow command", event.Type.String())
 				}
 			}),
 		)
@@ -196,17 +196,17 @@ func StepsExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step,
 		t, rt, steps,
 		append(
 			opts,
-			sequence.OnImagePull(func(i runtime.Image) {
-				imagesPulled = append(imagesPulled, i)
+			sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+				imagesPulled = append(imagesPulled, event.Type)
 			}),
-			sequence.OnContainerCreate(func(c runtime.Container) {
-				containersCreated = append(containersCreated, c)
+			sequence.OnContainerCreate(func(event *sequence.Event[runtime.Container]) {
+				containersCreated = append(containersCreated, event.Type)
 			}),
-			sequence.OnVolumeCreate(func(v runtime.Volume) {
-				volumesCreated = append(volumesCreated, v)
+			sequence.OnVolumeCreate(func(event *sequence.Event[runtime.Volume]) {
+				volumesCreated = append(volumesCreated, event.Type)
 			}),
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				workflowCommandsIssued = append(workflowCommandsIssued, wc)
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				workflowCommandsIssued = append(workflowCommandsIssued, event.Type)
 			}),
 			sequence.WithStreams(os.Stdin, stdout, stderr),
 		)...,

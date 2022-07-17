@@ -18,11 +18,14 @@ func IsErrUnmeetableJobNeeds(err error) bool {
 
 type workflowExecutor struct {
 	jobExecutors []*jobExecutor
+	workflow     *Workflow
 }
 
 func NewWorkflowExecutor(ctx context.Context, workflow *Workflow, opts ...ExecutorOpt) (Executor, error) {
 	var (
-		w     = &workflowExecutor{}
+		w = &workflowExecutor{
+			workflow: workflow,
+		}
 		needs = []string{}
 		jLen  = len(workflow.Jobs)
 	)
@@ -72,10 +75,18 @@ func NewWorkflowExecutor(ctx context.Context, workflow *Workflow, opts ...Execut
 }
 
 func (e *workflowExecutor) Execute(ctx context.Context) error {
-	var globalContext *actions.GlobalContext
-	for _, jobExecutor := range e.jobExecutors {
-		if globalContext != nil {
+	var (
+		globalContext    *actions.GlobalContext
+		onWorkflowFinish Hooks[*Workflow]
+	)
+	for i, jobExecutor := range e.jobExecutors {
+		if i != 0 {
 			jobExecutor.executor.GlobalContext = globalContext
+		} else {
+			jobExecutor.OnWorkflowStart.Invoke(&Event[*Workflow]{
+				Type:          e.workflow,
+				GlobalContext: jobExecutor.GlobalContext,
+			})
 		}
 
 		if err := jobExecutor.Execute(ctx); err != nil {
@@ -83,7 +94,13 @@ func (e *workflowExecutor) Execute(ctx context.Context) error {
 		}
 
 		globalContext = jobExecutor.GlobalContext
+		onWorkflowFinish = jobExecutor.OnWorkflowFinish
 	}
+
+	onWorkflowFinish.Invoke(&Event[*Workflow]{
+		Type:          e.workflow,
+		GlobalContext: globalContext,
+	})
 
 	return nil
 }

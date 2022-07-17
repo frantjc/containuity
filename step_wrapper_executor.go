@@ -20,15 +20,21 @@ type stepWrapperExecutor struct {
 }
 
 // WorkflowCommandWriterCallback swallows the bytes of
-// _all_ non-stopped workflow commands
-// (non-stopped meaning not between a stop-commands
-//  workflow command and its end token).
+// _all_ non-stopped workflow commands.
+// "Non-stopped" means not between a "stop-commands"
+// workflow command and its end token.
 // However, it handles the functionality of all workflow commands.
 // It is up to the caller to handle the logging of workflow
 // commands if they so choose.
 func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.WorkflowCommand) []byte {
+	var (
+		event = &Event[*actions.WorkflowCommand]{
+			Type:          wc,
+			GlobalContext: e.GlobalContext,
+		}
+	)
 	if _, ok := e.stopCommandsTokens[wc.Command]; ok {
-		e.OnWorkflowCommand.Hook(wc)
+		e.OnWorkflowCommand.Invoke(event)
 		e.stopCommandsTokens[wc.Command] = false
 		return make([]byte, 0)
 	}
@@ -39,7 +45,7 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 		}
 	}
 
-	e.OnWorkflowCommand.Hook(wc)
+	e.OnWorkflowCommand.Invoke(event)
 
 	switch wc.Command {
 	case actions.CommandSetOutput:
@@ -59,7 +65,7 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 	return make([]byte, 0)
 }
 
-func (e *stepWrapperExecutor) ExecuteStep(ctx context.Context) error {
+func (e *stepWrapperExecutor) Execute(ctx context.Context) error {
 	var (
 		expander     = actions.NewExpander(e.GlobalContext.GetString)
 		expandedStep = &Step{

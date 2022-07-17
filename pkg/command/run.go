@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//nolint: gocyclo
 func NewRunCommand() (Cmd, error) {
 	var (
 		workflowFile string
@@ -21,13 +20,13 @@ func NewRunCommand() (Cmd, error) {
 		githubToken  string
 		context      string
 		runCmd       = &cobra.Command{
-			Use:  "run",
+			Use:  "run -f WORKFLOW_FILE [-V] [--github-token STRING] [--context DIR] [--runtime STRING]",
 			Args: cobra.NoArgs,
 			Run: func(cmd *cobra.Command, _ []string) {
 				var (
 					ctx    = cmd.Context()
-					stdout = log.New(cmd.OutOrStdout())
-					stderr = log.New(cmd.ErrOrStderr())
+					stdout = log.New(cmd.OutOrStdout()).SetVerbose(verbose)
+					stderr = log.New(cmd.ErrOrStderr()).SetVerbose(verbose)
 				)
 
 				rt, err := runtimes.GetRuntime(ctx, runtimeName)
@@ -36,7 +35,12 @@ func NewRunCommand() (Cmd, error) {
 					return
 				}
 
-				workflow, err := sequence.NewWorkflowFromFile(workflowFile)
+				var workflow *sequence.Workflow
+				if workflowFile == "-" {
+					workflow, err = sequence.NewWorkflowFromReader(os.Stdin)
+				} else {
+					workflow, err = sequence.NewWorkflowFromFile(workflowFile)
+				}
 				if err != nil {
 					cmd.PrintErrln(err)
 					return
@@ -61,7 +65,6 @@ func NewRunCommand() (Cmd, error) {
 				}
 
 				var (
-					echo bool
 					opts = []sequence.ExecutorOpt{
 						sequence.WithRuntime(rt),
 						sequence.WithGlobalContext(gc),
@@ -70,43 +73,47 @@ func NewRunCommand() (Cmd, error) {
 							cmd.OutOrStdout(),
 							cmd.ErrOrStderr(),
 						),
-						sequence.OnImagePull(func(i runtime.Image) {
-							stdout.Infof("[%sSQNC:INFO%s] pulling image '%s'", log.ColorInfo, log.ColorNone, i.GetRef())
+						sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+							stdout.Infof("[%sSQNC:INF%s] pulling image '%s'", log.ColorInfo, log.ColorNone, event.Type.GetRef())
 						}),
-						sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-							switch wc.Command {
+						sequence.OnStepStart(func(event *sequence.Event[*sequence.Step]) {
+							stdout.Infof("[%sSQNC:INF%s] running step '%s'", log.ColorInfo, log.ColorNone, event.Type.GetID())
+						}),
+						sequence.OnJobStart(func(event *sequence.Event[*sequence.Job]) {
+							stdout.Infof("[%sSQNC:INF%s] running job '%s'", log.ColorInfo, log.ColorNone, event.GlobalContext.GitHubContext.Job)
+						}),
+						sequence.OnWorkflowStart(func(event *sequence.Event[*sequence.Workflow]) {
+							stdout.Infof("[%sSQNC:INF%s] running workflow '%s'", log.ColorInfo, log.ColorNone, event.GlobalContext.GitHubContext.Workflow)
+						}),
+						sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+							switch event.Type.Command {
 							case actions.CommandError:
-								stderr.Infof("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, wc.Value)
+								stderr.Infof("[%sACTN:ERR%s] %s", log.ColorError, log.ColorNone, event.Type.Value)
 							case actions.CommandWarning:
-								stderr.Infof("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, wc.Value)
+								stderr.Infof("[%sACTN:WRN%s] %s", log.ColorWarn, log.ColorNone, event.Type.Value)
 							case actions.CommandNotice:
-								stdout.Infof("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, wc.Value)
+								stdout.Infof("[%sACTN:NTC%s] %s", log.ColorNotice, log.ColorNone, event.Type.Value)
 							case actions.CommandDebug:
-								if verbose || echo {
-									stdout.Infof("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, wc.Value)
-								}
+								stdout.Debugf("[%sACTN:DBG%s] %s", log.ColorDebug, log.ColorNone, event.Type.Value)
 							case actions.CommandSetOutput:
-								if verbose || echo {
-									stdout.Infof("[%sSQNC:DBG%s] %s %s=%s for", log.ColorDebug, log.ColorNone, wc.Command, wc.GetName(), wc.Value)
-								}
+								stdout.Debugf("[%sSQNC:DBG%s] %s %s=%s for", log.ColorDebug, log.ColorNone, event.Type.Command, event.Type.GetName(), event.Type.Value)
 							case actions.CommandStopCommands:
-								if verbose || echo {
-									stdout.Infof("[%sSQNC:DBG%s] %s until '%s'", log.ColorDebug, log.ColorNone, wc.Command, wc.Value)
-								}
+								stdout.Debugf("[%sSQNC:DBG%s] %s until '%s'", log.ColorDebug, log.ColorNone, event.Type.Command, event.Type.Value)
 							case actions.CommandEcho:
-								if wc.Value == "on" {
-									echo = true
-								} else if wc.Value == "off" {
-									echo = false
+								switch event.Type.Value {
+								case "on":
+									stdout.SetVerbose(true)
+									stderr.SetVerbose(true)
+								case "off":
+									stdout.SetVerbose(false)
+									stderr.SetVerbose(false)
+								default:
+									stdout.Debugf("[%sSQNC:DBG%s] swallowing unrecognized value '%s' for workflow command '%s', must be 'on' or 'off'", log.ColorDebug, log.ColorNone, event.Type.Value, event.Type.Command)
 								}
 							case actions.CommandSaveState:
-								if verbose || echo {
-									stdout.Infof("[%sSQNC:DBG%s] %s %s=%s", log.ColorDebug, log.ColorNone, wc.Command, wc.GetName(), wc.Value)
-								}
+								stdout.Debugf("[%sSQNC:DBG%s] %s %s=%s", log.ColorDebug, log.ColorNone, event.Type.Command, event.Type.GetName(), event.Type.Value)
 							default:
-								if verbose || echo {
-									stdout.Infof("[%sSQNC:DBG%s] swallowing unrecognized workflow command '%s'", log.ColorDebug, log.ColorNone, wc.Command)
-								}
+								stdout.Debugf("[%sSQNC:DBG%s] swallowing unrecognized workflow command '%s'", log.ColorDebug, log.ColorNone, event.Type.Command)
 							}
 						}),
 					}
@@ -128,7 +135,8 @@ func NewRunCommand() (Cmd, error) {
 		}
 	)
 
-	runCmd.Flags().StringVarP(&workflowFile, "file", "f", "", "workflow file to execute")
+	flags := runCmd.Flags()
+	flags.StringVarP(&workflowFile, "file", "f", "", "workflow file to execute")
 	if err := runCmd.MarkFlagFilename("file", "yaml", "yml", "json"); err != nil {
 		return nil, err
 	}
@@ -136,10 +144,11 @@ func NewRunCommand() (Cmd, error) {
 		return nil, err
 	}
 
-	runCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "V", false, "debug logs")
-	runCmd.PersistentFlags().StringVar(&runtimeName, "runtime", docker.RuntimeName, "runtime to use")
-	runCmd.PersistentFlags().StringVar(&githubToken, "github-token", "", "GitHub token to use")
-	runCmd.PersistentFlags().StringVar(&context, "context", "", "path to get context from .git")
+	persistentFlags := runCmd.PersistentFlags()
+	persistentFlags.BoolVarP(&verbose, "verbose", "V", false, "debug logs")
+	persistentFlags.StringVar(&runtimeName, "runtime", docker.RuntimeName, "runtime to use")
+	persistentFlags.StringVar(&githubToken, "github-token", "", "GitHub token to use")
+	persistentFlags.StringVar(&context, "context", "", "path to get context from .git")
 
 	return runCmd, nil
 }

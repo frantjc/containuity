@@ -24,8 +24,8 @@ func TestJobExecutorCheckout(t *testing.T) {
 					},
 				},
 			},
-			sequence.OnImagePull(func(i runtime.Image) {
-				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef()}, i.GetRef())
+			sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef()}, event.Type.GetRef())
 			}),
 		)
 	}
@@ -45,8 +45,8 @@ func TestJobExecutorContainerImage(t *testing.T) {
 					},
 				},
 			},
-			sequence.OnImagePull(func(i runtime.Image) {
-				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef(), golang118Ref}, i.GetRef())
+			sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+				assert.Contains(t, []string{sequence.ImageNode16.GetRef(), sequence.ImageNode12.GetRef(), golang118Ref}, event.Type.GetRef())
 			}),
 		)
 	}
@@ -69,8 +69,8 @@ func TestJobExecutorEnv(t *testing.T) {
 					},
 				},
 			},
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				assert.Equal(t, value, wc.Value)
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				assert.Equal(t, value, event.Type.Value)
 			}),
 		)
 	}
@@ -96,17 +96,17 @@ func JobExecutorTest(t *testing.T, rt runtime.Runtime, job *sequence.Job, opts .
 		t, rt, job,
 		append(
 			opts,
-			sequence.OnImagePull(func(i runtime.Image) {
-				imagesPulled = append(imagesPulled, i)
+			sequence.OnImagePull(func(event *sequence.Event[runtime.Image]) {
+				imagesPulled = append(imagesPulled, event.Type)
 			}),
-			sequence.OnContainerCreate(func(c runtime.Container) {
-				containersCreated = append(containersCreated, c)
+			sequence.OnContainerCreate(func(event *sequence.Event[runtime.Container]) {
+				containersCreated = append(containersCreated, event.Type)
 			}),
-			sequence.OnVolumeCreate(func(v runtime.Volume) {
-				volumesCreated = append(volumesCreated, v)
+			sequence.OnVolumeCreate(func(event *sequence.Event[runtime.Volume]) {
+				volumesCreated = append(volumesCreated, event.Type)
 			}),
-			sequence.OnWorkflowCommand(func(wc *actions.WorkflowCommand) {
-				workflowCommandsIssued = append(workflowCommandsIssued, wc)
+			sequence.OnWorkflowCommand(func(event *sequence.Event[*actions.WorkflowCommand]) {
+				workflowCommandsIssued = append(workflowCommandsIssued, event.Type)
 			}),
 			sequence.WithStreams(os.Stdin, stdout, stderr),
 		)...,
