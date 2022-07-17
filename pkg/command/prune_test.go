@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewRootCommand(t *testing.T) {
-	cmd, err := command.NewRootCmd()
+func TestNewPruneCommand(t *testing.T) {
+	cmd, err := command.NewPruneCmd()
 	assert.Nil(t, err)
 	assert.NotNil(t, cmd)
 }

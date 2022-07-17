@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRunCommand() (Cmd, error) {
+func NewRunCmd() (Cmd, error) {
 	var (
 		workflowFile string
 		runtimeName  string
@@ -20,8 +20,9 @@ func NewRunCommand() (Cmd, error) {
 		githubToken  string
 		context      string
 		runCmd       = &cobra.Command{
-			Use:  "run -f WORKFLOW_FILE [-V] [--github-token STRING] [--context DIR] [--runtime STRING]",
-			Args: cobra.NoArgs,
+			Use:   "run -f WORKFLOW_FILE [-V] [--github-token STRING] [--context DIR] [--runtime NAME]",
+			Short: "Run a workflow file",
+			Args:  cobra.NoArgs,
 			Run: func(cmd *cobra.Command, _ []string) {
 				var (
 					ctx    = cmd.Context()

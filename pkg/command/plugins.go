@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"plugin"
+	"strings"
 )
 
 var EnvVarPlugins = "SQNC_PLUGINS"
@@ -18,7 +19,7 @@ func OpenPlugins(dir string) error {
 
 			_, e := plugin.Open(path)
 			return e
-		}); err != nil {
+		}); err != nil && !strings.Contains(err.Error(), "plugin already loaded") {
 			return err
 		}
 	}

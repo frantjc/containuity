@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRootCommand() (Cmd, error) {
+func NewRootCmd() (Cmd, error) {
 	var (
 		pluginDir string
 		rootCmd   = &cobra.Command{
@@ -57,7 +57,8 @@ func NewRootCommand() (Cmd, error) {
 	}
 
 	for _, newChildCmd := range []func() (Cmd, error){
-		NewRunCommand,
+		NewRunCmd,
+		NewPruneCmd,
 	} {
 		childCmd, err := newChildCmd()
 		if err != nil {

@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewRunCommand(t *testing.T) {
-	cmd, err := command.NewRunCommand()
+	cmd, err := command.NewRunCmd()
 	assert.Nil(t, err)
 	assert.NotNil(t, cmd)
 }
