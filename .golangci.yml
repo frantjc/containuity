@@ -2,21 +2,24 @@ run:
   timeout: 5m
 linters:
   enable:
-    - megacheck
-    - revive
+    - depguard
+    - dupl
+    - exportloopref
     - gocyclo
     - gosec
     - gocritic
     - goconst
-    - unconvert
-    - dupl
-    - nakedret
-    - prealloc
-    - exportloopref
-    - depguard
     - importas
+    - megacheck
+    - nakedret
     - nolintlint
+    - prealloc
+    - revive
     - unconvert
+    # test
+    - tenv
+    - testpackage
+    - thelper
     # auto-fix
     - godot
     - gofmt
@@ -26,12 +29,8 @@ linters:
     # uses: golangci/golangci-lint-action@v3.2.0
     # - gofumpt
     # - whitespace
-    # test
-    - testpackage
-    - tenv
-    # - thelper
-  # disabled because of go1.18
-  # track go1.18 support at
+  # disabled because of go 1.18
+  # track support at
   # https://github.com/golangci/golangci-lint/issues/2649
   disable:
     - structcheck

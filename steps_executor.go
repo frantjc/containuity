@@ -47,7 +47,11 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 	return se, nil
 }
 
-func (e *stepsExecutor) Execute(ctx context.Context) error {
+func (e *stepsExecutor) Execute() error {
+	return e.ExecuteContext(context.Background())
+}
+
+func (e *stepsExecutor) ExecuteContext(ctx context.Context) error {
 	for _, step := range e.steps {
 		if step.IsGitHubAction() {
 			action, err := uses.Parse(step.Uses)
@@ -71,7 +75,7 @@ func (e *stepsExecutor) Execute(ctx context.Context) error {
 					steps:    steps,
 				}
 
-				if err := rse.Execute(ctx); err != nil {
+				if err := rse.ExecuteContext(ctx); err != nil {
 					return err
 				}
 

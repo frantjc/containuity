@@ -94,6 +94,8 @@ func TestWorkflowExecutorNeedsTest(t *testing.T) {
 }
 
 func WorkflowExecutorTest(t *testing.T, rt runtime.Runtime, workflow *sequence.Workflow, opts ...sequence.ExecutorOpt) {
+	t.Helper()
+
 	var (
 		imagesPulled           = []runtime.Image{}
 		containersCreated      = []runtime.Container{}
@@ -131,7 +133,7 @@ func WorkflowExecutorTest(t *testing.T, rt runtime.Runtime, workflow *sequence.W
 	assert.NotNil(t, we)
 	assert.Nil(t, err)
 
-	assert.Nil(t, we.Execute(ctx))
+	assert.Nil(t, we.ExecuteContext(ctx))
 	assert.Greater(t, len(imagesPulled), 0)
 	assert.Greater(t, len(containersCreated), 0)
 	assert.Greater(t, len(volumesCreated), 0)
@@ -150,20 +152,9 @@ func WorkflowExecutorTest(t *testing.T, rt runtime.Runtime, workflow *sequence.W
 }
 
 func NewTestWorkflowExecutor(t *testing.T, rt runtime.Runtime, workflow *sequence.Workflow, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {
-	var (
-		githubToken = os.Getenv("GITHUB_TOKEN")
-		// all tests in this suite are ran against
-		// https://github.com/frantjc/sequence
-		wd, err = os.Getwd()
-	)
-	assert.Nil(t, err)
-	if !assert.NotEmpty(t, githubToken) {
-		assert.FailNow(t, "GITHUB_TOKEN must be set")
-	}
+	t.Helper()
 
-	gc, err := actions.NewContextFromPath(ctx, wd, actions.WithToken(githubToken))
-	assert.NotNil(t, gc)
-	assert.Nil(t, err)
+	gc := NewTestGlobalContext(t)
 
 	we, err := sequence.NewWorkflowExecutor(
 		ctx, workflow,

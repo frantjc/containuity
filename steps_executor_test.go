@@ -173,6 +173,8 @@ func TestStepsExecutorSetOutput(t *testing.T) {
 }
 
 func StepsExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) {
+	t.Helper()
+
 	var (
 		imagesPulled           = []runtime.Image{}
 		containersCreated      = []runtime.Container{}
@@ -210,7 +212,7 @@ func StepsExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step,
 	assert.NotNil(t, se)
 	assert.Nil(t, err)
 
-	assert.Nil(t, se.Execute(ctx))
+	assert.Nil(t, se.ExecuteContext(ctx))
 	assert.Greater(t, len(imagesPulled), 0)
 	assert.Greater(t, len(containersCreated), 0)
 	assert.Greater(t, len(volumesCreated), 0)
@@ -227,20 +229,9 @@ func StepsExecutorTest(t *testing.T, rt runtime.Runtime, steps []*sequence.Step,
 }
 
 func NewTestStepsExecutor(t *testing.T, rt runtime.Runtime, steps []*sequence.Step, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {
-	var (
-		githubToken = os.Getenv("GITHUB_TOKEN")
-		// all tests in this suite are ran against
-		// https://github.com/frantjc/sequence
-		wd, err = os.Getwd()
-	)
-	assert.Nil(t, err)
-	if !assert.NotEmpty(t, githubToken) {
-		assert.FailNow(t, "GITHUB_TOKEN must be set")
-	}
+	t.Helper()
 
-	gc, err := actions.NewContextFromPath(ctx, wd, actions.WithToken(githubToken))
-	assert.NotNil(t, gc)
-	assert.Nil(t, err)
+	gc := NewTestGlobalContext(t)
 
 	se, err := sequence.NewStepsExecutor(
 		ctx, steps,

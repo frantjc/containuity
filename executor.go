@@ -13,7 +13,8 @@ import (
 )
 
 type Executor interface {
-	Execute(context.Context) error
+	Execute() error
+	ExecuteContext(context.Context) error
 }
 
 type executor struct {

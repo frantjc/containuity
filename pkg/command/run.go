@@ -126,7 +126,7 @@ func NewRunCommand() (Cmd, error) {
 					return
 				}
 
-				if err := executor.Execute(ctx); err != nil {
+				if err := executor.ExecuteContext(ctx); err != nil {
 					cmd.PrintErrln(err)
 				}
 			},

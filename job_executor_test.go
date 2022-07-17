@@ -75,6 +75,8 @@ func TestJobExecutorEnv(t *testing.T) {
 }
 
 func JobExecutorTest(t *testing.T, rt runtime.Runtime, job *sequence.Job, opts ...sequence.ExecutorOpt) {
+	t.Helper()
+
 	var (
 		imagesPulled           = []runtime.Image{}
 		containersCreated      = []runtime.Container{}
@@ -112,7 +114,7 @@ func JobExecutorTest(t *testing.T, rt runtime.Runtime, job *sequence.Job, opts .
 	assert.NotNil(t, je)
 	assert.Nil(t, err)
 
-	assert.Nil(t, je.Execute(ctx))
+	assert.Nil(t, je.ExecuteContext(ctx))
 	assert.Greater(t, len(imagesPulled), 0)
 	assert.Greater(t, len(containersCreated), 0)
 	assert.Greater(t, len(volumesCreated), 0)
@@ -129,20 +131,9 @@ func JobExecutorTest(t *testing.T, rt runtime.Runtime, job *sequence.Job, opts .
 }
 
 func NewTestJobExecutor(t *testing.T, rt runtime.Runtime, job *sequence.Job, opts ...sequence.ExecutorOpt) (sequence.Executor, error) {
-	var (
-		githubToken = os.Getenv("GITHUB_TOKEN")
-		// all tests in this suite are ran against
-		// https://github.com/frantjc/sequence
-		wd, err = os.Getwd()
-	)
-	assert.Nil(t, err)
-	if !assert.NotEmpty(t, githubToken) {
-		assert.FailNow(t, "GITHUB_TOKEN must be set")
-	}
+	t.Helper()
 
-	gc, err := actions.NewContextFromPath(ctx, wd, actions.WithToken(githubToken))
-	assert.NotNil(t, gc)
-	assert.Nil(t, err)
+	gc := NewTestGlobalContext(t)
 
 	je, err := sequence.NewJobExecutor(
 		ctx, job,

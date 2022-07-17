@@ -44,13 +44,17 @@ func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executo
 	}, nil
 }
 
-func (e *jobExecutor) Execute(ctx context.Context) error {
+func (e *jobExecutor) Execute() error {
+	return e.ExecuteContext(context.Background())
+}
+
+func (e *jobExecutor) ExecuteContext(ctx context.Context) error {
 	e.OnJobStart.Invoke(&Event[*Job]{
 		Type:          e.job,
 		GlobalContext: e.GlobalContext,
 	})
 
-	if err := e.stepsExecutor.Execute(ctx); err != nil {
+	if err := e.stepsExecutor.ExecuteContext(ctx); err != nil {
 		return err
 	}
 

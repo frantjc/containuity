@@ -72,7 +72,11 @@ func NewWorkflowExecutor(ctx context.Context, workflow *Workflow, opts ...Execut
 	return w, nil
 }
 
-func (e *workflowExecutor) Execute(ctx context.Context) error {
+func (e *workflowExecutor) Execute() error {
+	return e.ExecuteContext(context.Background())
+}
+
+func (e *workflowExecutor) ExecuteContext(ctx context.Context) error {
 	var (
 		globalContext    *actions.GlobalContext
 		onWorkflowFinish Hooks[*Workflow]
@@ -87,7 +91,7 @@ func (e *workflowExecutor) Execute(ctx context.Context) error {
 			})
 		}
 
-		if err := jobExecutor.Execute(ctx); err != nil {
+		if err := jobExecutor.ExecuteContext(ctx); err != nil {
 			return err
 		}
 
