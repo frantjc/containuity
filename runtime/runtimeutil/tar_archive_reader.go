@@ -20,7 +20,7 @@ func NewSingleFileTarArchiveReader(name string, b []byte) (io.Reader, error) {
 	if err := tarWriter.WriteHeader(&tar.Header{
 		Name:    name,
 		Size:    int64(len(b)),
-		Mode:    0777,
+		Mode:    0o777,
 		ModTime: time.Now(),
 	}); err != nil {
 		return nil, err

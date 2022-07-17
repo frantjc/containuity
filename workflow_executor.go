@@ -8,9 +8,7 @@ import (
 	"github.com/frantjc/sequence/pkg/github/actions"
 )
 
-var (
-	ErrUnmeetableJobNeeds = errors.New("job has an unmeetable needs clause")
-)
+var ErrUnmeetableJobNeeds = errors.New("job has an unmeetable needs clause")
 
 func IsErrUnmeetableJobNeeds(err error) bool {
 	return errors.Is(err, ErrUnmeetableJobNeeds)

@@ -61,7 +61,7 @@ clean: tidy
 	@$(DOCKER) system prune --volumes -a --filter label=sequence=true
 
 lint:
-	@$(GOLANGCI-LINT) run
+	@$(GOLANGCI-LINT) run --fix
 
 tools:
 	@$(GO) install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26

@@ -16,9 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	ctx = context.TODO()
-)
+var ctx = context.TODO()
 
 type RuntimeTest func(*testing.T, runtime.Runtime)
 

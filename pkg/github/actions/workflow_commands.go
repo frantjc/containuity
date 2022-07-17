@@ -19,9 +19,7 @@ const (
 	CommandStopCommands = "stop-commands"
 )
 
-var (
-	ErrNotAWorkflowCommand = errors.New("not a workflow command")
-)
+var ErrNotAWorkflowCommand = errors.New("not a workflow command")
 
 func ErrIsNotAWorkflowCommand(err error) bool {
 	return errors.Is(err, ErrNotAWorkflowCommand)

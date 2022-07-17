@@ -107,13 +107,9 @@ func TestStepsExecutorGitHubEnv(t *testing.T) {
 }
 
 func TestStepsExecutorStopCommands(t *testing.T) {
-	var (
-		stopCommandsToken = "token"
-	)
+	stopCommandsToken := "token"
 	for _, rt := range NewTestRuntimes(t) {
-		var (
-			debugCount = 0
-		)
+		debugCount := 0
 		StepsExecutorTest(
 			t, rt,
 			[]*sequence.Step{

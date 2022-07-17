@@ -7,9 +7,7 @@ import (
 	"plugin"
 )
 
-var (
-	EnvVarPlugins = "SQNC_PLUGINS"
-)
+var EnvVarPlugins = "SQNC_PLUGINS"
 
 func OpenPlugins(dir string) error {
 	if dirFi, err := os.Stat(dir); err == nil && dirFi.IsDir() {

@@ -6,9 +6,7 @@ import (
 	"github.com/mattn/go-colorable"
 )
 
-var (
-	log = New(colorable.NewColorableStdout())
-)
+var log = New(colorable.NewColorableStdout())
 
 func Writer() io.Writer {
 	return log

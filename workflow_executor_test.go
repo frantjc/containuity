@@ -31,9 +31,7 @@ func TestErrOnUnmeetableJobNeeds(t *testing.T) {
 }
 
 func TestNoErrOnMeetableJobNeeds(t *testing.T) {
-	var (
-		needs = "hello-there"
-	)
+	needs := "hello-there"
 	_, err := sequence.NewWorkflowExecutor(ctx, &sequence.Workflow{
 		Jobs: map[string]*sequence.Job{
 			needs: {},

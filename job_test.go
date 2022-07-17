@@ -10,10 +10,9 @@ import (
 )
 
 func TestNewJobFromReader(t *testing.T) {
-	var (
-		// expected = &sequence.Job{}
-		_, err = sequence.NewJobFromReader(bytes.NewReader(testdata.CheckoutTestJob))
-	)
+
+	// expected = &sequence.Job{}
+	_, err := sequence.NewJobFromReader(bytes.NewReader(testdata.CheckoutTestJob))
 	assert.Nil(t, err)
 
 	// assert.Equal(t, expected, actual)

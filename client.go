@@ -9,17 +9,17 @@ import (
 	"github.com/frantjc/sequence/runtime/sqnc"
 )
 
-// Client is a wrapper around each of sequence's rpc clients
+// Client is a wrapper around each of sequence's rpc clients.
 type Client struct {
 	httpClient      *http.Client
 	workflowsClient WorkflowServiceClient
 	runtimeClient   sqnc.RuntimeServiceClient
 }
 
-// New is an alias to NewClient
+// New is an alias to NewClient.
 var New = NewClient
 
-// NewClient returns a new Client
+// NewClient returns a new Client.
 func NewClient(ctx context.Context, addr *url.URL, opts ...ClientOpt) (*Client, error) {
 	client := &Client{
 		httpClient: http.DefaultClient,
@@ -37,17 +37,17 @@ func NewClient(ctx context.Context, addr *url.URL, opts ...ClientOpt) (*Client, 
 	return client, nil
 }
 
-// WorkflowsClient returns the client's underlying rpc WorkflowClient
+// WorkflowsClient returns the client's underlying rpc WorkflowClient.
 func (c *Client) WorkflowsClient() WorkflowServiceClient {
 	return c.workflowsClient
 }
 
-// RuntimeClient returns the client's underlying rpc RuntimeClient
+// RuntimeClient returns the client's underlying rpc RuntimeClient.
 func (c *Client) RuntimeClient() sqnc.RuntimeServiceClient {
 	return c.runtimeClient
 }
 
-// Runtime returns a runtime.Runtime implementation using the underlying clients
+// Runtime returns a runtime.Runtime implementation using the underlying clients.
 func (c *Client) Runtime() runtime.Runtime {
 	return sqnc.NewRuntime(c.RuntimeClient())
 }

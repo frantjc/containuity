@@ -16,9 +16,7 @@ func Clone(u *uses.Uses, opts ...CloneOpt) (*Metadata, error) {
 }
 
 func CloneContext(ctx context.Context, u *uses.Uses, opts ...CloneOpt) (*Metadata, error) {
-	var (
-		copts = defaultCloneOpts()
-	)
+	copts := defaultCloneOpts()
 	for _, opt := range opts {
 		err := opt(copts)
 		if err != nil {

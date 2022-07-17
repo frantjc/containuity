@@ -2,7 +2,5 @@ package shim
 
 import _ "embed"
 
-var (
-	//go:embed sqnc-shim
-	Bytes []byte
-)
+//go:embed sqnc-shim
+var Bytes []byte

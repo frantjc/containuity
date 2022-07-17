@@ -10,10 +10,9 @@ import (
 )
 
 func TestNewWorkflowFromReader(t *testing.T) {
-	var (
-		// expected = &sequence.Workflow{}
-		_, err = sequence.NewWorkflowFromReader(bytes.NewReader(testdata.CheckoutTestBuildWorkflow))
-	)
+
+	// expected = &sequence.Workflow{}
+	_, err := sequence.NewWorkflowFromReader(bytes.NewReader(testdata.CheckoutTestBuildWorkflow))
 	assert.Nil(t, err)
 
 	// assert.Equal(t, expected, actual)

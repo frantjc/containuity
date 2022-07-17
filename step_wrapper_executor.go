@@ -27,12 +27,10 @@ type stepWrapperExecutor struct {
 // It is up to the caller to handle the logging of workflow
 // commands if they so choose.
 func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.WorkflowCommand) []byte {
-	var (
-		event = &Event[*actions.WorkflowCommand]{
-			Type:          wc,
-			GlobalContext: e.GlobalContext,
-		}
-	)
+	event := &Event[*actions.WorkflowCommand]{
+		Type:          wc,
+		GlobalContext: e.GlobalContext,
+	}
 	if _, ok := e.stopCommandsTokens[wc.Command]; ok {
 		e.OnWorkflowCommand.Invoke(event)
 		e.stopCommandsTokens[wc.Command] = false

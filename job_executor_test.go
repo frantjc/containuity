@@ -53,9 +53,7 @@ func TestJobExecutorContainerImage(t *testing.T) {
 }
 
 func TestJobExecutorEnv(t *testing.T) {
-	var (
-		value = "general kenobi"
-	)
+	value := "general kenobi"
 	for _, rt := range NewTestRuntimes(t) {
 		JobExecutorTest(
 			t, rt,

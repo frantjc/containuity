@@ -8,18 +8,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// GetID returns the step's effective ID
+// GetID returns the step's effective ID.
 func (s *Step) GetID() string {
 	return js.Coalesce(s.Id, s.Name)
 }
 
-// IsGitHubAction returns whether or not the step is a GitHub Action
+// IsGitHubAction returns whether or not the step is a GitHub Action.
 func (s *Step) IsGitHubAction() bool {
 	return s.Uses != ""
 }
 
 // NewStepFromFile parses and returns a Step
-// from the given file name
+// from the given file name.
 func NewStepFromFile(name string) (*Step, error) {
 	f, err := os.Open(name)
 	if err != nil {
@@ -30,7 +30,7 @@ func NewStepFromFile(name string) (*Step, error) {
 }
 
 // NewStepFromReader parses and returns a Step
-// from the given reader e.g. a file
+// from the given reader e.g. a file.
 func NewStepFromReader(r io.Reader) (*Step, error) {
 	s := &Step{}
 	d := yaml.NewDecoder(r)
