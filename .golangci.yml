@@ -20,10 +20,12 @@ linters:
     # auto-fix
     - godot
     - gofmt
-    - gofumpt
     - goimports
     - misspell
-    - whitespace
+    # pass locally but not as a part of
+    # uses: golangci/golangci-lint-action@v3.2.0
+    # - gofumpt
+    # - whitespace
     # test
     - testpackage
     - tenv
