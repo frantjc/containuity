@@ -21,7 +21,7 @@ func (e *executor) SetupAction(ctx context.Context, action *uses.Uses) (*actions
 	var (
 		spec = &runtime.Spec{
 			Image:      e.RunnerImage.GetRef(),
-			Entrypoint: []string{paths.Shim, action.String(), e.GlobalContext.GitHubContext.ActionPath},
+			Entrypoint: []string{paths.Shim, "-c", action.String(), e.GlobalContext.GitHubContext.ActionPath},
 			Env: []string{
 				"SQNC=true",
 				"SEQUENCE=true",
@@ -39,7 +39,7 @@ func (e *executor) SetupAction(ctx context.Context, action *uses.Uses) (*actions
 		outbuf = new(bytes.Buffer)
 		out    = &Step_Out{}
 	)
-	if err := e.RunContainer(ctx, spec, runtime.NewStreams(e.Stdin, outbuf, e.Stderr)); err != nil {
+	if err := e.RunContainer(ctx, spec, runtime.NewStreams(e.StreamIn, outbuf, e.StreamErr)); err != nil {
 		return nil, err
 	}
 

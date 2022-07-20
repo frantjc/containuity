@@ -2,8 +2,10 @@ package sequence
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"path"
+	"strings"
 
 	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/internal/shim"
@@ -18,23 +20,32 @@ type Executor interface {
 }
 
 type executor struct {
-	ID                string
-	RunnerImage       runtime.Image
-	Runtime           runtime.Runtime
-	Stdout, Stderr    io.Writer
-	Stdin             io.Reader
-	Verbose           bool
-	GlobalContext     *actions.GlobalContext
-	OnImagePull       Hooks[runtime.Image]
-	OnContainerCreate Hooks[runtime.Container]
-	OnVolumeCreate    Hooks[runtime.Volume]
-	OnWorkflowCommand Hooks[*actions.WorkflowCommand]
-	OnStepStart       Hooks[*Step]
-	OnStepFinish      Hooks[*Step]
-	OnJobStart        Hooks[*Job]
-	OnJobFinish       Hooks[*Job]
-	OnWorkflowStart   Hooks[*Workflow]
-	OnWorkflowFinish  Hooks[*Workflow]
+	RunnerImage          runtime.Image
+	Runtime              runtime.Runtime
+	StreamOut, StreamErr io.Writer
+	StreamIn             io.Reader
+	Verbose              bool
+	GlobalContext        *actions.GlobalContext
+	OnImagePull          Hooks[runtime.Image]
+	OnContainerCreate    Hooks[runtime.Container]
+	OnVolumeCreate       Hooks[runtime.Volume]
+	OnWorkflowCommand    Hooks[*actions.WorkflowCommand]
+	OnStepStart          Hooks[*Step]
+	OnStepFinish         Hooks[*Step]
+	OnJobStart           Hooks[*Job]
+	OnJobFinish          Hooks[*Job]
+	OnWorkflowStart      Hooks[*Workflow]
+	OnWorkflowFinish     Hooks[*Workflow]
+}
+
+func (e *executor) GetID() string {
+	id := e.GlobalContext.GitHubContext.Job
+
+	if e.GlobalContext.GitHubContext.Workflow != "" {
+		id = fmt.Sprintf("%s-%s", e.GlobalContext.GitHubContext.Workflow, id)
+	}
+
+	return strings.ToLower(id)
 }
 
 func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams *runtime.Streams) error {
@@ -42,6 +53,7 @@ func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams
 	if err != nil {
 		return err
 	}
+
 	e.OnImagePull.Invoke(&Event[runtime.Image]{
 		Type:          image,
 		GlobalContext: e.GlobalContext,
@@ -68,10 +80,6 @@ func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams
 	if err != nil {
 		return err
 	}
-	e.OnContainerCreate.Invoke(&Event[runtime.Container]{
-		Type:          container,
-		GlobalContext: e.GlobalContext,
-	})
 
 	tarArchive, err := runtimeutil.NewSingleFileTarArchiveReader(shim.Name, shim.Bytes)
 	if err != nil {
@@ -81,6 +89,11 @@ func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams
 	if err = container.CopyTo(ctx, tarArchive, path.Dir(paths.Shim)); err != nil {
 		return err
 	}
+
+	e.OnContainerCreate.Invoke(&Event[runtime.Container]{
+		Type:          container,
+		GlobalContext: e.GlobalContext,
+	})
 
 	return container.Exec(ctx, streams)
 }

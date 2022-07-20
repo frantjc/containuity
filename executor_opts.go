@@ -11,23 +11,16 @@ import (
 
 type ExecutorOpt func(*executor) error
 
-func WithID(id string) ExecutorOpt {
-	return func(e *executor) error {
-		e.ID = id
-		return nil
-	}
-}
-
 func WithVerbose(e *executor) error {
 	e.Verbose = true
 	return nil
 }
 
-func WithStreams(stdin io.Reader, stdout, stderr io.Writer) ExecutorOpt {
+func WithStreams(in io.Reader, out, err io.Writer) ExecutorOpt {
 	return func(e *executor) error {
-		e.Stdin = stdin
-		e.Stdout = stdout
-		e.Stderr = stderr
+		e.StreamIn = in
+		e.StreamOut = out
+		e.StreamErr = err
 		return nil
 	}
 }

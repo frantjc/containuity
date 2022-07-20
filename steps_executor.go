@@ -25,9 +25,9 @@ func NewStepsExecutor(ctx context.Context, steps []*Step, opts ...ExecutorOpt) (
 		gc, err = actions.NewContext(paths.GlobalContextOpts()...)
 		se      = &stepsExecutor{
 			executor: &executor{
-				Stdin:         os.Stdin,
-				Stdout:        os.Stdout,
-				Stderr:        os.Stderr,
+				StreamIn:      os.Stdin,
+				StreamOut:     os.Stdout,
+				StreamErr:     os.Stderr,
 				RunnerImage:   DefaultRunnerImage,
 				GlobalContext: gc,
 			},
@@ -104,7 +104,7 @@ func (e *stepsExecutor) ExecuteContext(ctx context.Context) error {
 						step:        preStep,
 						extraMounts: extraMounts,
 						state:       state,
-						id:          e.ID,
+						id:          e.GetID(),
 					})
 				}
 
@@ -113,7 +113,7 @@ func (e *stepsExecutor) ExecuteContext(ctx context.Context) error {
 						step:        mainStep,
 						extraMounts: extraMounts,
 						state:       state,
-						id:          e.ID,
+						id:          e.GetID(),
 					})
 				}
 
@@ -123,7 +123,7 @@ func (e *stepsExecutor) ExecuteContext(ctx context.Context) error {
 							step:        postStep,
 							extraMounts: extraMounts,
 							state:       state,
-							id:          e.ID,
+							id:          e.GetID(),
 						},
 					}, e.postStepWrappers...)
 				}
@@ -131,6 +131,7 @@ func (e *stepsExecutor) ExecuteContext(ctx context.Context) error {
 		} else {
 			e.mainStepWrappers = append(e.mainStepWrappers, &stepWrapper{
 				step: step,
+				id:   e.GetID(),
 			})
 		}
 	}

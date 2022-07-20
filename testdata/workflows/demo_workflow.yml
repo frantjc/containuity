@@ -10,5 +10,5 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          echo "::notice::running \"$(which go) test ./cmd/sqnc\""
+          echo "::notice::running \"$(which go) build $(pwd)/cmd/sqnc\""
           go build ./cmd/sqnc

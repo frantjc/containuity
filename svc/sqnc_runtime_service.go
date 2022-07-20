@@ -51,8 +51,8 @@ func (h *SqncRuntimeServiceHandler) ExecContainer(ctx context.Context, req *conn
 	}
 
 	if err := container.Exec(ctx, &runtime.Streams{
-		Stdin: os.Stdin,
-		Stdout: rpcio.NewServerStreamWriter[sqnc.ExecContainerResponse](stream, func(b []byte) *sqnc.ExecContainerResponse {
+		In: os.Stdin,
+		Out: rpcio.NewServerStreamWriter[sqnc.ExecContainerResponse](stream, func(b []byte) *sqnc.ExecContainerResponse {
 			return &sqnc.ExecContainerResponse{
 				Log: &rpcio.Log{
 					Data:   b,
@@ -60,7 +60,7 @@ func (h *SqncRuntimeServiceHandler) ExecContainer(ctx context.Context, req *conn
 				},
 			}
 		}),
-		Stderr: rpcio.NewServerStreamWriter[sqnc.ExecContainerResponse](stream, func(b []byte) *sqnc.ExecContainerResponse {
+		Err: rpcio.NewServerStreamWriter[sqnc.ExecContainerResponse](stream, func(b []byte) *sqnc.ExecContainerResponse {
 			return &sqnc.ExecContainerResponse{
 				Log: &rpcio.Log{
 					Data:   b,
@@ -99,8 +99,8 @@ func (h *SqncRuntimeServiceHandler) AttachContainer(ctx context.Context, req *co
 	}
 
 	if err := container.Attach(ctx, &runtime.Streams{
-		Stdin: os.Stdin,
-		Stdout: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
+		In: os.Stdin,
+		Out: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
 			return &sqnc.AttachContainerResponse{
 				Log: &rpcio.Log{
 					Data:   b,
@@ -108,7 +108,7 @@ func (h *SqncRuntimeServiceHandler) AttachContainer(ctx context.Context, req *co
 				},
 			}
 		}),
-		Stderr: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
+		Err: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
 			return &sqnc.AttachContainerResponse{
 				Log: &rpcio.Log{
 					Data:   b,

@@ -6,22 +6,21 @@ import (
 )
 
 type Streams struct {
-	Stdin    io.Reader
-	Stdout   io.Writer
-	Stderr   io.Writer
-	Terminal bool
+	In  io.Reader
+	Out io.Writer
+	Err io.Writer
 }
 
 var StreamsStdio = &Streams{
-	Stdin:  os.Stdin,
-	Stdout: os.Stdout,
-	Stderr: os.Stderr,
+	In:  os.Stdin,
+	Out: os.Stdout,
+	Err: os.Stderr,
 }
 
 func NewStreams(stdin io.Reader, stdout, stderr io.Writer) *Streams {
 	return &Streams{
-		Stdin:  stdin,
-		Stdout: stdout,
-		Stderr: stderr,
+		In:  stdin,
+		Out: stdout,
+		Err: stderr,
 	}
 }

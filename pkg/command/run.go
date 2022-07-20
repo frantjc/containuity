@@ -19,7 +19,7 @@ func NewRunCmd() (Cmd, error) {
 		verbose      bool
 		githubToken  string
 		context      string
-		runCmd       = &cobra.Command{
+		runCmd       = std(&cobra.Command{
 			Use:   "run -f WORKFLOW_FILE [-V] [--github-token STRING] [--context DIR] [--runtime NAME]",
 			Short: "Run a workflow file",
 			Args:  cobra.NoArgs,
@@ -38,7 +38,7 @@ func NewRunCmd() (Cmd, error) {
 
 				var workflow *sequence.Workflow
 				if workflowFile == "-" {
-					workflow, err = sequence.NewWorkflowFromReader(os.Stdin)
+					workflow, err = sequence.NewWorkflowFromReader(cmd.InOrStdin())
 				} else {
 					workflow, err = sequence.NewWorkflowFromFile(workflowFile)
 				}
@@ -131,10 +131,14 @@ func NewRunCmd() (Cmd, error) {
 					cmd.PrintErrln(err)
 				}
 			},
-		}
+		})
 	)
 
 	flags := runCmd.Flags()
+	flags.BoolVarP(&verbose, "verbose", "V", false, "debug logs")
+	flags.StringVar(&runtimeName, "runtime", docker.RuntimeName, "runtime to use")
+	flags.StringVar(&githubToken, "github-token", "", "GitHub token to use")
+	flags.StringVar(&context, "context", "", "path to get context from .git")
 	flags.StringVarP(&workflowFile, "file", "f", "", "workflow file to execute")
 	if err := runCmd.MarkFlagFilename("file", "yaml", "yml", "json"); err != nil {
 		return nil, err
@@ -142,12 +146,6 @@ func NewRunCmd() (Cmd, error) {
 	if err := runCmd.MarkFlagRequired("file"); err != nil {
 		return nil, err
 	}
-
-	persistentFlags := runCmd.PersistentFlags()
-	persistentFlags.BoolVarP(&verbose, "verbose", "V", false, "debug logs")
-	persistentFlags.StringVar(&runtimeName, "runtime", docker.RuntimeName, "runtime to use")
-	persistentFlags.StringVar(&githubToken, "github-token", "", "GitHub token to use")
-	persistentFlags.StringVar(&context, "context", "", "path to get context from .git")
 
 	return runCmd, nil
 }

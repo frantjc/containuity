@@ -8,7 +8,8 @@ import (
 
 type jobExecutor struct {
 	*stepsExecutor
-	job *Job
+	job     *Job
+	jobName string
 }
 
 func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executor, error) {
@@ -30,7 +31,7 @@ func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executo
 	}
 
 	if job.GetName() != "" {
-		internalOpts = append(internalOpts, WithID(job.GetName()), WithJobName(job.GetName()))
+		internalOpts = append(internalOpts, WithJobName(job.GetName()))
 	}
 
 	executor, err := NewStepsExecutor(ctx, job.Steps, internalOpts...)
@@ -38,9 +39,11 @@ func NewJobExecutor(ctx context.Context, job *Job, opts ...ExecutorOpt) (Executo
 		return nil, err
 	}
 
+	stepsExecutor := executor.(*stepsExecutor)
 	return &jobExecutor{
-		stepsExecutor: executor.(*stepsExecutor),
+		stepsExecutor: stepsExecutor,
 		job:           job,
+		jobName:       stepsExecutor.GlobalContext.GitHubContext.Job,
 	}, nil
 }
 
@@ -58,14 +61,16 @@ func (e *jobExecutor) ExecuteContext(ctx context.Context) error {
 		return err
 	}
 
-	if e.ID != "" {
-		e.stepsExecutor.GlobalContext.NeedsContext[e.ID] = &actions.NeedsContext{
+	e.GlobalContext.GitHubContext.Job = e.jobName
+
+	if e.GlobalContext.GitHubContext.Job != "" {
+		e.stepsExecutor.GlobalContext.NeedsContext[e.GlobalContext.GitHubContext.Job] = &actions.NeedsContext{
 			Outputs: map[string]string{},
 		}
 
 		expander := actions.NewExpander(e.GlobalContext.GetString)
 		for k, v := range e.job.Outputs {
-			e.stepsExecutor.GlobalContext.NeedsContext[e.ID].Outputs[k] = expander.Expand(v)
+			e.stepsExecutor.GlobalContext.NeedsContext[e.GlobalContext.GitHubContext.Job].Outputs[k] = expander.Expand(v)
 		}
 	}
 

@@ -8,7 +8,6 @@ import (
 	"github.com/frantjc/go-js"
 	"github.com/frantjc/sequence/internal/paths"
 	"github.com/frantjc/sequence/internal/paths/volumes"
-	"github.com/frantjc/sequence/internal/shim"
 	"github.com/frantjc/sequence/pkg/github/actions"
 	"github.com/frantjc/sequence/runtime"
 )
@@ -31,6 +30,7 @@ func (e *stepWrapperExecutor) WorkflowCommandWriterCallback(wc *actions.Workflow
 		Type:          wc,
 		GlobalContext: e.GlobalContext,
 	}
+
 	if _, ok := e.stopCommandsTokens[wc.Command]; ok {
 		e.OnWorkflowCommand.Invoke(event)
 		e.stopCommandsTokens[wc.Command] = false
@@ -105,13 +105,12 @@ func (e *stepWrapperExecutor) Execute(ctx context.Context) error {
 
 	spec := &runtime.Spec{
 		Image:      js.Coalesce(expandedStep.Image, e.RunnerImage.GetRef()),
-		Entrypoint: []string{paths.Shim},
+		Entrypoint: []string{paths.Shim, "-e"},
 		Cwd:        e.GlobalContext.GitHubContext.Workspace,
 		Env: append(
 			[]string{
 				"SQNC=true",
 				"SEQUENCE=true",
-				fmt.Sprintf("%s=", shim.EnvVarShimSwitch),
 				fmt.Sprintf("%s=%s", actions.EnvVarEnv, paths.GitHubEnv),
 				fmt.Sprintf("%s=%s", actions.EnvVarPath, paths.GitHubPath),
 			},
@@ -167,9 +166,9 @@ func (e *stepWrapperExecutor) Execute(ctx context.Context) error {
 		ctx,
 		spec,
 		runtime.NewStreams(
-			e.Stdin,
-			actions.NewWorkflowCommandWriter(e.WorkflowCommandWriterCallback, e.Stdout),
-			actions.NewWorkflowCommandWriter(e.WorkflowCommandWriterCallback, e.Stderr),
+			e.StreamIn,
+			actions.NewWorkflowCommandWriter(e.WorkflowCommandWriterCallback, e.StreamOut),
+			actions.NewWorkflowCommandWriter(e.WorkflowCommandWriterCallback, e.StreamErr),
 		),
 	)
 }

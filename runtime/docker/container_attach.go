@@ -13,13 +13,13 @@ import (
 func (c *dockerContainer) Attach(ctx context.Context, streams *runtime.Streams) error {
 	attachResp, err := c.client.ContainerAttach(ctx, c.id, types.ContainerAttachOptions{
 		Stream: true,
-		Stdout: streams.Stdout != nil,
-		Stderr: streams.Stderr != nil,
+		Stdout: streams.Out != nil,
+		Stderr: streams.Err != nil,
 	})
 	if err != nil {
 		return err
 	}
-	go stdcopy.StdCopy(streams.Stdout, streams.Stderr, attachResp.Reader) //nolint:errcheck
+	go stdcopy.StdCopy(streams.Out, streams.Err, attachResp.Reader) //nolint:errcheck
 
 	statusC, errC := c.client.ContainerWait(ctx, c.id, container.WaitConditionNotRunning)
 	select {

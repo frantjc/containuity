@@ -15,11 +15,11 @@ func (c *sqncContainer) Attach(ctx context.Context, streams *runtime.Streams) er
 		stdout = io.Discard
 		stderr = stdout
 	)
-	if streams.Stdout != nil {
-		stdout = streams.Stdout
+	if streams.Out != nil {
+		stdout = streams.Out
 	}
-	if streams.Stderr != nil {
-		stderr = streams.Stderr
+	if streams.Err != nil {
+		stderr = streams.Err
 	}
 
 	stream, err := c.client.AttachContainer(ctx, connect.NewRequest(&AttachContainerRequest{

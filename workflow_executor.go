@@ -35,29 +35,23 @@ func NewWorkflowExecutor(ctx context.Context, workflow *Workflow, opts ...Execut
 		for jobName, job := range workflow.Jobs {
 			jobOpts := opts
 			jobOpts = append(jobOpts, WithWorkflowName(workflow.Name))
-
 			if job.Needs != "" && !js.Includes(needs, job.Needs) {
 				continue
 			}
 
-			if job.Name == "" {
-				if js.Includes(needs, jobName) {
-					continue
-				}
-
-				jobOpts = append(jobOpts, WithID(jobName), WithJobName(jobName))
-			} else if js.Includes(needs, jobName) {
+			jobID := js.Coalesce(job.Name, jobName)
+			if js.Includes(needs, jobID) {
 				continue
 			}
 
+			jobOpts = append(jobOpts, WithJobName(jobID))
 			executor, err := NewJobExecutor(ctx, job, jobOpts...)
 			if err != nil {
 				return nil, err
 			}
 
-			jobExecutor := executor.(*jobExecutor)
-			w.jobExecutors = append(w.jobExecutors, jobExecutor)
-			needs = append(needs, jobExecutor.GlobalContext.GitHubContext.Job)
+			w.jobExecutors = append(w.jobExecutors, executor.(*jobExecutor))
+			needs = append(needs, jobID)
 			added = true
 		}
 
@@ -80,29 +74,23 @@ func (e *workflowExecutor) ExecuteContext(ctx context.Context) error {
 	var (
 		globalContext    *actions.GlobalContext
 		onWorkflowFinish Hooks[*Workflow]
+		event            = &Event[*Workflow]{
+			Type:          e.workflow,
+			GlobalContext: globalContext,
+		}
 	)
 	for i, jobExecutor := range e.jobExecutors {
-		if i != 0 {
-			jobExecutor.executor.GlobalContext = globalContext
-		} else {
-			jobExecutor.OnWorkflowStart.Invoke(&Event[*Workflow]{
-				Type:          e.workflow,
-				GlobalContext: jobExecutor.GlobalContext,
-			})
+		if i == 0 {
+			onWorkflowFinish = jobExecutor.OnWorkflowFinish
+			jobExecutor.OnWorkflowStart.Invoke(event)
 		}
 
 		if err := jobExecutor.ExecuteContext(ctx); err != nil {
 			return err
 		}
-
-		globalContext = jobExecutor.GlobalContext
-		onWorkflowFinish = jobExecutor.OnWorkflowFinish
 	}
 
-	onWorkflowFinish.Invoke(&Event[*Workflow]{
-		Type:          e.workflow,
-		GlobalContext: globalContext,
-	})
+	onWorkflowFinish.Invoke(event)
 
 	return nil
 }
