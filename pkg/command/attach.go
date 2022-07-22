@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/frantjc/sequence"
+	"github.com/frantjc/sequence/internal/log"
 	"github.com/frantjc/sequence/internal/runtimes"
 	"github.com/frantjc/sequence/pkg/github/actions"
 	"github.com/frantjc/sequence/runtime"
@@ -11,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRunCmd() (Cmd, error) {
+func NewAttachCmd() (Cmd, error) {
 	var (
 		workflowFile string
 		runtimeName  string
@@ -19,12 +20,13 @@ func NewRunCmd() (Cmd, error) {
 		githubToken  string
 		context      string
 		runCmd       = std(&cobra.Command{
-			Use:   "run -f WORKFLOW_FILE [-V] [--github-token STRING] [--context DIR] [--runtime NAME]",
-			Short: "Run a workflow file",
+			Use:   "attach -f WORKFLOW_FILE [-V] [--github-token STRING] [--context DIR] [--runtime NAME]",
+			Short: "Attach to a workflow file",
 			Args:  cobra.NoArgs,
 			Run: func(cmd *cobra.Command, _ []string) {
 				var (
-					ctx = cmd.Context()
+					ctx    = cmd.Context()
+					stdout = log.New(cmd.OutOrStdout()).SetVerbose(verbose)
 				)
 
 				rt, err := runtimes.GetRuntime(ctx, runtimeName)
@@ -67,7 +69,15 @@ func NewRunCmd() (Cmd, error) {
 					sequence.WithRuntime(rt),
 					sequence.WithGlobalContext(gc),
 					sequence.OnContainerCreate(func(event *sequence.Event[runtime.Container]) {
-
+						stdout.Infof("[%sSQNC:INF%s] attaching to step", log.ColorError, log.ColorNone)
+						if err := event.Type.Attach(ctx, &runtime.Streams{
+							In:  cmd.InOrStdin(),
+							Out: cmd.OutOrStdout(),
+							Err: cmd.ErrOrStderr(),
+						}); err != nil {
+							cmd.PrintErrln(err)
+						}
+						stdout.Infof("[%sSQNC:INF%s] detached from step", log.ColorError, log.ColorNone)
 					}),
 				)
 				if verbose {

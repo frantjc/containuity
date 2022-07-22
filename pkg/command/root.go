@@ -59,6 +59,7 @@ func NewRootCmd() (Cmd, error) {
 	for _, newChildCmd := range []func() (Cmd, error){
 		NewRunCmd,
 		NewPruneCmd,
+		NewAttachCmd,
 	} {
 		childCmd, err := newChildCmd()
 		if err != nil {

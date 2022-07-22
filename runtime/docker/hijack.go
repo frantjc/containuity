@@ -1,6 +1,6 @@
 // adapted from
 // https://github.com/docker/cli/blob/f1615facb1ca44e4336ab20e621315fc2cfb845a/cli/command/container/hijack.go
-package command
+package docker
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"io"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/pkg/ioutils"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/moby/term"
 )
@@ -85,7 +84,7 @@ func (h *hijackedIOStreamer) setupInput() (restore func(), err error) {
 		}
 	}
 
-	h.inputStream = ioutils.NewReadCloserWrapper(term.NewEscapeProxy(h.inputStream, escapeKeys), h.inputStream.Close)
+	h.inputStream = io.NopCloser(term.NewEscapeProxy(h.inputStream, escapeKeys))
 
 	return restore, nil
 }
