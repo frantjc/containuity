@@ -49,6 +49,13 @@ func (e *executor) GetID() string {
 }
 
 func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams *runtime.Streams) error {
+	var (
+		originalCmd        = spec.Cmd
+		originalEntrypoint = spec.Entrypoint
+	)
+	spec.Cmd = []string{}
+	spec.Entrypoint = []string{paths.Shim, "-s"}
+
 	image, err := e.Runtime.PullImage(ctx, spec.Image)
 	if err != nil {
 		return err
@@ -90,10 +97,24 @@ func (e *executor) RunContainer(ctx context.Context, spec *runtime.Spec, streams
 		return err
 	}
 
+	if err = container.Start(ctx); err != nil {
+		return err
+	}
+
 	e.OnContainerCreate.Invoke(&Event[runtime.Container]{
 		Type:          container,
 		GlobalContext: e.GlobalContext,
 	})
 
-	return container.Exec(ctx, streams)
+	if err = container.Exec(ctx, &runtime.Exec{
+		Cmd: append(originalEntrypoint, originalCmd...),
+	}, streams); err != nil {
+		return err
+	}
+
+	if err = container.Stop(ctx); err != nil {
+		return err
+	}
+
+	return container.Remove(ctx)
 }

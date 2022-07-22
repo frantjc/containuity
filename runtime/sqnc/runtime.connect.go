@@ -31,6 +31,7 @@ type RuntimeServiceClient interface {
 	ExecContainer(context.Context, *connect_go.Request[ExecContainerRequest]) (*connect_go.ServerStreamForClient[ExecContainerResponse], error)
 	StartContainer(context.Context, *connect_go.Request[StartContainerRequest]) (*connect_go.Response[StartContainerResponse], error)
 	AttachContainer(context.Context, *connect_go.Request[AttachContainerRequest]) (*connect_go.ServerStreamForClient[AttachContainerResponse], error)
+	StopContainer(context.Context, *connect_go.Request[StopContainerRequest]) (*connect_go.Response[StopContainerResponse], error)
 	RemoveContainer(context.Context, *connect_go.Request[RemoveContainerRequest]) (*connect_go.Response[RemoveContainerResponse], error)
 	PruneContainers(context.Context, *connect_go.Request[PruneContainersRequest]) (*connect_go.Response[PruneContainersResponse], error)
 	CopyToContainer(context.Context, *connect_go.Request[CopyToContainerRequest]) (*connect_go.Response[CopyToContainerResponse], error)
@@ -76,6 +77,11 @@ func NewRuntimeServiceClient(httpClient connect_go.HTTPClient, baseURL string, o
 		attachContainer: connect_go.NewClient[AttachContainerRequest, AttachContainerResponse](
 			httpClient,
 			baseURL+"/sequence.runtime.sqnc.RuntimeService/AttachContainer",
+			opts...,
+		),
+		stopContainer: connect_go.NewClient[StopContainerRequest, StopContainerResponse](
+			httpClient,
+			baseURL+"/sequence.runtime.sqnc.RuntimeService/StopContainer",
 			opts...,
 		),
 		removeContainer: connect_go.NewClient[RemoveContainerRequest, RemoveContainerResponse](
@@ -138,6 +144,7 @@ type runtimeServiceClient struct {
 	execContainer     *connect_go.Client[ExecContainerRequest, ExecContainerResponse]
 	startContainer    *connect_go.Client[StartContainerRequest, StartContainerResponse]
 	attachContainer   *connect_go.Client[AttachContainerRequest, AttachContainerResponse]
+	stopContainer     *connect_go.Client[StopContainerRequest, StopContainerResponse]
 	removeContainer   *connect_go.Client[RemoveContainerRequest, RemoveContainerResponse]
 	pruneContainers   *connect_go.Client[PruneContainersRequest, PruneContainersResponse]
 	copyToContainer   *connect_go.Client[CopyToContainerRequest, CopyToContainerResponse]
@@ -173,6 +180,11 @@ func (c *runtimeServiceClient) StartContainer(ctx context.Context, req *connect_
 // AttachContainer calls sequence.runtime.sqnc.RuntimeService.AttachContainer.
 func (c *runtimeServiceClient) AttachContainer(ctx context.Context, req *connect_go.Request[AttachContainerRequest]) (*connect_go.ServerStreamForClient[AttachContainerResponse], error) {
 	return c.attachContainer.CallServerStream(ctx, req)
+}
+
+// StopContainer calls sequence.runtime.sqnc.RuntimeService.StopContainer.
+func (c *runtimeServiceClient) StopContainer(ctx context.Context, req *connect_go.Request[StopContainerRequest]) (*connect_go.Response[StopContainerResponse], error) {
+	return c.stopContainer.CallUnary(ctx, req)
 }
 
 // RemoveContainer calls sequence.runtime.sqnc.RuntimeService.RemoveContainer.
@@ -232,6 +244,7 @@ type RuntimeServiceHandler interface {
 	ExecContainer(context.Context, *connect_go.Request[ExecContainerRequest], *connect_go.ServerStream[ExecContainerResponse]) error
 	StartContainer(context.Context, *connect_go.Request[StartContainerRequest]) (*connect_go.Response[StartContainerResponse], error)
 	AttachContainer(context.Context, *connect_go.Request[AttachContainerRequest], *connect_go.ServerStream[AttachContainerResponse]) error
+	StopContainer(context.Context, *connect_go.Request[StopContainerRequest]) (*connect_go.Response[StopContainerResponse], error)
 	RemoveContainer(context.Context, *connect_go.Request[RemoveContainerRequest]) (*connect_go.Response[RemoveContainerResponse], error)
 	PruneContainers(context.Context, *connect_go.Request[PruneContainersRequest]) (*connect_go.Response[PruneContainersResponse], error)
 	CopyToContainer(context.Context, *connect_go.Request[CopyToContainerRequest]) (*connect_go.Response[CopyToContainerResponse], error)
@@ -274,6 +287,11 @@ func NewRuntimeServiceHandler(svc RuntimeServiceHandler, opts ...connect_go.Hand
 	mux.Handle("/sequence.runtime.sqnc.RuntimeService/AttachContainer", connect_go.NewServerStreamHandler(
 		"/sequence.runtime.sqnc.RuntimeService/AttachContainer",
 		svc.AttachContainer,
+		opts...,
+	))
+	mux.Handle("/sequence.runtime.sqnc.RuntimeService/StopContainer", connect_go.NewUnaryHandler(
+		"/sequence.runtime.sqnc.RuntimeService/StopContainer",
+		svc.StopContainer,
 		opts...,
 	))
 	mux.Handle("/sequence.runtime.sqnc.RuntimeService/RemoveContainer", connect_go.NewUnaryHandler(
@@ -350,6 +368,10 @@ func (UnimplementedRuntimeServiceHandler) StartContainer(context.Context, *conne
 
 func (UnimplementedRuntimeServiceHandler) AttachContainer(context.Context, *connect_go.Request[AttachContainerRequest], *connect_go.ServerStream[AttachContainerResponse]) error {
 	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.AttachContainer is not implemented"))
+}
+
+func (UnimplementedRuntimeServiceHandler) StopContainer(context.Context, *connect_go.Request[StopContainerRequest]) (*connect_go.Response[StopContainerResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("sequence.runtime.sqnc.RuntimeService.StopContainer is not implemented"))
 }
 
 func (UnimplementedRuntimeServiceHandler) RemoveContainer(context.Context, *connect_go.Request[RemoveContainerRequest]) (*connect_go.Response[RemoveContainerResponse], error) {

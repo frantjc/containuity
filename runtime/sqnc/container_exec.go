@@ -1,4 +1,3 @@
-//nolint:dupl
 package sqnc
 
 import (
@@ -10,7 +9,7 @@ import (
 	"github.com/frantjc/sequence/runtime"
 )
 
-func (c *sqncContainer) Exec(ctx context.Context, streams *runtime.Streams) error {
+func (c *sqncContainer) Exec(ctx context.Context, exec *runtime.Exec, streams *runtime.Streams) error {
 	var (
 		stdout = io.Discard
 		stderr = stdout
@@ -23,7 +22,8 @@ func (c *sqncContainer) Exec(ctx context.Context, streams *runtime.Streams) erro
 	}
 
 	stream, err := c.client.ExecContainer(ctx, connect.NewRequest(&ExecContainerRequest{
-		Id: c.GetID(),
+		Id:   c.GetID(),
+		Exec: exec,
 	}))
 	if err != nil {
 		return err

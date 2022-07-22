@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package sequence.runtime;
+
+option go_package = "github.com/frantjc/sequence/runtime";
+
+message Exec {
+  repeated string cmd = 1;
+}

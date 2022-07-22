@@ -1,4 +1,3 @@
-//nolint:dupl
 package svc
 
 import (
@@ -50,7 +49,9 @@ func (h *SqncRuntimeServiceHandler) ExecContainer(ctx context.Context, req *conn
 		return connect.NewError(connect.CodeNotFound, err)
 	}
 
-	if err := container.Exec(ctx, &runtime.Streams{
+	if err := container.Exec(ctx, &runtime.Exec{
+		Cmd: req.Msg.GetExec().GetCmd(),
+	}, &runtime.Streams{
 		In: os.Stdin,
 		Out: rpcio.NewServerStreamWriter[sqnc.ExecContainerResponse](stream, func(b []byte) *sqnc.ExecContainerResponse {
 			return &sqnc.ExecContainerResponse{
@@ -121,6 +122,19 @@ func (h *SqncRuntimeServiceHandler) AttachContainer(ctx context.Context, req *co
 	}
 
 	return nil
+}
+
+func (h *SqncRuntimeServiceHandler) StopContainer(ctx context.Context, req *connect.Request[sqnc.StopContainerRequest]) (*connect.Response[sqnc.StopContainerResponse], error) {
+	container, err := h.Runtime.GetContainer(ctx, req.Msg.GetId())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if err := container.Stop(ctx); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&sqnc.StopContainerResponse{}), nil
 }
 
 func (h *SqncRuntimeServiceHandler) RemoveContainer(ctx context.Context, req *connect.Request[sqnc.RemoveContainerRequest]) (*connect.Response[sqnc.RemoveContainerResponse], error) {

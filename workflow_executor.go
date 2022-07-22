@@ -74,15 +74,16 @@ func (e *workflowExecutor) ExecuteContext(ctx context.Context) error {
 	var (
 		globalContext    *actions.GlobalContext
 		onWorkflowFinish Hooks[*Workflow]
-		event            = &Event[*Workflow]{
-			Type:          e.workflow,
-			GlobalContext: globalContext,
-		}
 	)
 	for i, jobExecutor := range e.jobExecutors {
+		globalContext = jobExecutor.GlobalContext
+
 		if i == 0 {
 			onWorkflowFinish = jobExecutor.OnWorkflowFinish
-			jobExecutor.OnWorkflowStart.Invoke(event)
+			jobExecutor.OnWorkflowStart.Invoke(&Event[*Workflow]{
+				Type:          e.workflow,
+				GlobalContext: globalContext,
+			})
 		}
 
 		if err := jobExecutor.ExecuteContext(ctx); err != nil {
@@ -90,7 +91,10 @@ func (e *workflowExecutor) ExecuteContext(ctx context.Context) error {
 		}
 	}
 
-	onWorkflowFinish.Invoke(event)
+	onWorkflowFinish.Invoke(&Event[*Workflow]{
+		Type:          e.workflow,
+		GlobalContext: globalContext,
+	})
 
 	return nil
 }

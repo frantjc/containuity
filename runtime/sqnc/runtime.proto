@@ -3,6 +3,7 @@ syntax = "proto3";
 package sequence.runtime.sqnc;
 
 import "internal/rpcio/log.proto";
+import "runtime/exec.proto";
 import "runtime/spec.proto";
 import "runtime/sqnc/container.proto";
 import "runtime/sqnc/image.proto";
@@ -16,6 +17,7 @@ service RuntimeService {
   rpc ExecContainer(ExecContainerRequest) returns (stream ExecContainerResponse);
   rpc StartContainer(StartContainerRequest) returns (StartContainerResponse);
   rpc AttachContainer(AttachContainerRequest) returns (stream AttachContainerResponse);
+  rpc StopContainer(StopContainerRequest) returns (StopContainerResponse);
   rpc RemoveContainer(RemoveContainerRequest) returns (RemoveContainerResponse);
   rpc PruneContainers(PruneContainersRequest) returns (PruneContainersResponse);
   rpc CopyToContainer(CopyToContainerRequest) returns (CopyToContainerResponse);
@@ -46,6 +48,7 @@ message GetContainerResponse {
 
 message ExecContainerRequest {
   string id = 1;
+  sequence.runtime.Exec exec = 2;
 }
 
 message ExecContainerResponse {
@@ -67,6 +70,12 @@ message AttachContainerRequest {
 message AttachContainerResponse {
   sequence.internal.rpcio.Log log = 1;
 }
+
+message StopContainerRequest {
+  string id = 1;
+}
+
+message StopContainerResponse {}
 
 message RemoveContainerRequest {
   string id = 1;
