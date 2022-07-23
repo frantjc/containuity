@@ -122,13 +122,21 @@ records:
   - delay: 5
     content: *terminal
   - delay: 1000
-    content: "sqnc run demo.yml"
+    content: "sqnc run -f demo.yml"
   - delay: 1000
     content: "\r\n"
   - delay: 31
-    content: "[\e[36mSQNC\e[0m] running workflow 'Demo'\r\n[\e[36mSQNC\e[0m] running job 'Checkout and build'\r\n[\e[36mSQNC\e[0m] setting up action 'actions/checkout@v2'\r\n[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:16'\r\n"
+    content: "[\e[36mSQNC\e[0m] running workflow 'Demo'\r\n"
+  - delay: 5
+    content: "[\e[36mSQNC\e[0m] running job 'Checkout and build'\r\n"
+  - delay: 5
+    content: "[\e[36mSQNC\e[0m] setting up action 'actions/checkout@v2'\r\n"
+  - delay: 5
+    content: "[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:16'\r\n"
   - delay: 2000
-    content: "[\e[36mSQNC\e[0m] running step 'Checkout action'\r\n[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:12'\r\n"
+    content: "[\e[36mSQNC\e[0m] running step 'Checkout action'\r\n"
+  - delay: 5
+    content: "[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:12'\r\n"
   - delay: 2000
     content: "Syncing repository: frantjc/sequence\r\nWorking directory is '/sqnc/workspace'\r\n"
   - delay: 21
