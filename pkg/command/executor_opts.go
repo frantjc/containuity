@@ -10,7 +10,6 @@ import (
 
 func getDefaultExecutorOpts(cmd *cobra.Command, verbose bool) []sequence.ExecutorOpt {
 	var (
-		ctx    = cmd.Context()
 		stdout = log.New(cmd.OutOrStdout()).SetVerbose(verbose)
 		stderr = log.New(cmd.ErrOrStderr()).SetVerbose(verbose)
 	)
@@ -26,17 +25,6 @@ func getDefaultExecutorOpts(cmd *cobra.Command, verbose bool) []sequence.Executo
 		}),
 		sequence.OnStepStart(func(event *sequence.Event[*sequence.Step]) {
 			stdout.Infof("[%sSQNC:INF%s] running step '%s'", log.ColorInfo, log.ColorNone, event.Type.GetID())
-		}),
-		sequence.OnContainerCreate(func(event *sequence.Event[runtime.Container]) {
-			stdout.Infof("[%sSQNC:INF%s] attaching to step", log.ColorInfo, log.ColorNone)
-			if err := event.Type.Attach(ctx, &runtime.Streams{
-				In:  cmd.InOrStdin(),
-				Out: cmd.OutOrStdout(),
-				Err: cmd.ErrOrStderr(),
-			}); err != nil {
-				cmd.PrintErrln(err)
-			}
-			stdout.Infof("[%sSQNC:INF%s] detached from step", log.ColorInfo, log.ColorNone)
 		}),
 		sequence.OnJobStart(func(event *sequence.Event[*sequence.Job]) {
 			stdout.Infof("[%sSQNC:INF%s] running job '%s'", log.ColorInfo, log.ColorNone, event.GlobalContext.GitHubContext.Job)

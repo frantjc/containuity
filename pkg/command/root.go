@@ -14,7 +14,7 @@ import (
 func NewRootCmd() (Cmd, error) {
 	var (
 		pluginDir string
-		rootCmd   = std(&cobra.Command{
+		rootCmd   = &cobra.Command{
 			Use:     "sqnc [--plugins DIR] [--help|--version|command]",
 			Version: sequence.Semver(),
 			Args:    cobra.NoArgs,
@@ -35,7 +35,7 @@ func NewRootCmd() (Cmd, error) {
 					}
 				}
 			},
-		})
+		}
 	)
 
 	rootCmd.SetVersionTemplate(

@@ -9,7 +9,7 @@ import (
 func NewPruneCmd() (Cmd, error) {
 	var (
 		runtimeName string
-		pruneCmd    = std(&cobra.Command{
+		pruneCmd    = &cobra.Command{
 			Use:   "prune [--runtime NAME]",
 			Short: "Prune dangling resources",
 			Args:  cobra.NoArgs,
@@ -36,7 +36,7 @@ func NewPruneCmd() (Cmd, error) {
 					cmd.PrintErrln(err)
 				}
 			},
-		})
+		}
 	)
 
 	flags := pruneCmd.Flags()

@@ -8,8 +8,8 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/frantjc/go-js v0.0.0-20220523162213-f8b7cd811083
-	github.com/google/uuid v1.3.0
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.4.0
 	github.com/mattn/go-colorable v0.1.12
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6

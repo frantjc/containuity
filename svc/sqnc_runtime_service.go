@@ -99,9 +99,9 @@ func (h *SqncRuntimeServiceHandler) AttachContainer(ctx context.Context, req *co
 		return connect.NewError(connect.CodeNotFound, err)
 	}
 
-	if err := container.Attach(ctx, &runtime.Streams{
-		In: os.Stdin,
-		Out: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
+	if err := container.Attach(ctx, runtime.NewStreams(
+		os.Stdin,
+		rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
 			return &sqnc.AttachContainerResponse{
 				Log: &rpcio.Log{
 					Data:   b,
@@ -109,7 +109,7 @@ func (h *SqncRuntimeServiceHandler) AttachContainer(ctx context.Context, req *co
 				},
 			}
 		}),
-		Err: rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
+		rpcio.NewServerStreamWriter[sqnc.AttachContainerResponse](stream, func(b []byte) *sqnc.AttachContainerResponse {
 			return &sqnc.AttachContainerResponse{
 				Log: &rpcio.Log{
 					Data:   b,
@@ -117,7 +117,7 @@ func (h *SqncRuntimeServiceHandler) AttachContainer(ctx context.Context, req *co
 				},
 			}
 		}),
-	}); err != nil {
+	)); err != nil {
 		return connect.NewError(connect.CodeInternal, err)
 	}
 

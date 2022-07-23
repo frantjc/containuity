@@ -18,7 +18,7 @@ func NewRunCmd() (Cmd, error) {
 		verbose      bool
 		githubToken  string
 		context      string
-		runCmd       = std(&cobra.Command{
+		runCmd       = &cobra.Command{
 			Use:   "run -f WORKFLOW_FILE [-V] [--github-token STRING] [--context DIR] [--runtime NAME]",
 			Short: "Run a workflow file",
 			Args:  cobra.NoArgs,
@@ -84,7 +84,7 @@ func NewRunCmd() (Cmd, error) {
 					cmd.PrintErrln(err)
 				}
 			},
-		})
+		}
 	)
 
 	flags := runCmd.Flags()
