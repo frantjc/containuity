@@ -12,8 +12,8 @@ config:
   cwd: $GOPATH/src/github.com/frantjc/sequence
 
   # Export additional ENV variables
-  env:
-    recording: true
+  env: {}
+    # RECORDING: true
 
   # Explicitly set the number of columns
   # or use `auto` to take the current
@@ -112,19 +112,19 @@ config:
 # Records, feel free to edit them
 records:
   - delay: 5
-    content: &terminal "\e[32m$\e[0m "
+    content: &prompt "\e[32m$\e[0m "
   - delay: 1000
     content: cat demo.yml
   - delay: 1000
-    content: "\r\n"
+    content: &nl "\r\n"
   - delay: 5
     content: "name: Demo\r\njobs:\r\n  checkout-build:\r\n    name: Checkout and build\r\n    steps:\r\n      - name: Checkout action\r\n        uses: actions/checkout@v2\r\n      - name: Go build\r\n        image: golang:1.18-alpine3.15\r\n        env:\r\n          CGO_ENABLED: 0\r\n        run: |\r\n          echo \"::notice::running \\\"$(which go) build ./cmd/sqnc\\\"\"\r\n          go build ./cmd/sqnc\r\n\e]7;\a"
   - delay: 5
-    content: *terminal
+    content: *prompt
   - delay: 1000
     content: "sqnc run -f demo.yml"
   - delay: 1000
-    content: "\r\n"
+    content: *nl
   - delay: 31
     content: "[\e[36mSQNC\e[0m] running workflow 'Demo'\r\n"
   - delay: 5
@@ -236,8 +236,8 @@ records:
   - delay: 5
     content: "[\e[36mSQNC\e[0m] pulling image 'docker.io/library/node:12'\r\n"
   - delay: 5
-    content: *terminal
+    content: *prompt
   - delay: 1000
     content: "clear"
   - delay: 1000
-    content: "\r\n"
+    content: *nl
